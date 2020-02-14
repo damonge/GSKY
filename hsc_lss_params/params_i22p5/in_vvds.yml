@@ -1,0 +1,52 @@
+modules: hsc_lss
+
+launcher: local
+
+stages: 
+    - name: ReduceCat
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: SystMapper
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: PDFMatch
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: COSMOSWeight
+      nprocess: 1
+      partition: debug
+      walltime: 30
+    - name: CatMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: MapDiagnoser
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: PowerSpecter
+      nprocess: 1
+      partition: regular
+      walltime: 120
+
+
+inputs:
+    raw_data: ./hsc_lss_params/input_list_vvds.txt
+    frames_data: /global/cscratch1/sd/damonge/HSC_ceci/PDR1_WIDE_frames.fits
+    pdf_dir: /global/cscratch1/sd/damonge/HSC_ceci/WIDE_VVDS
+    cosmos_data: /global/cscratch1/sd/damonge/HSC_ceci/COSMOS2015_Laigle+_v1.1.fits
+    cosmos_hsc: /global/cscratch1/sd/damonge/HSC_ceci/PDR1_DEEP_COSMOS_forced.fits
+    syst_masking_file: ./hsc_lss_params/systematic_cuts/WIDE_VVDS_syst_cuts.txt
+
+config: ./hsc_lss_params/params_i22p5/config.yml
+
+resume: True
+
+output_dir: /global/cscratch1/sd/damonge/HSC_ceci/WIDE_VVDS_sirius_i22p5_out
+
+log_dir: /global/cscratch1/sd/damonge/HSC_ceci/WIDE_VVDS_sirius_i22p5_out/logs
+
+pipeline_log: /global/cscratch1/sd/damonge/HSC_ceci/WIDE_VVDS_sirius_i22p5_out/logs/full_log.txt

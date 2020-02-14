@@ -1,0 +1,6 @@
+export CC=cc
+export CRAYPE_LINK_TYPE=dynamic
+export XTPE_LINK_TYPE=dynamic
+module load python/3.6-anaconda-5.2
+export PATH=$PATH:$HOME/.local/cori/3.6-anaconda-5.2/bin/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib:/usr/common/software/gsl/2.1/intel/lib:/usr/common/software/cfitsio/3.370-reentrant/hsw/intel/lib

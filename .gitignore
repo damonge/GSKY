@@ -1,0 +1,17 @@
+*pyc
+*.py~
+*.png
+*.jpg
+*.sublime-workspace
+*.sublime-project
+.ipynb_checkpoints/
+sql_utils/*.sql
+*.aux
+*.toc
+*log
+*blg
+*out
+*synctex*
+*bbl
+data_query/*.sql
+core.*
