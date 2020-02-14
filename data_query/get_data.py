@@ -10,15 +10,15 @@ import os
 ################################
 
 #Per-frame metadata
-write_frames("s16a_wide","frames_wide.sql",submit=True)
-write_frames("s16a_deep","frames_deep.sql",submit=True)
-write_frames("s16a_udeep","frames_udeep.sql",submit=True)
+#write_frames("s16a_wide","frames_wide.sql",submit=True)
+#write_frames("s16a_deep","frames_deep.sql",submit=True)
+#write_frames("s16a_udeep","frames_udeep.sql",submit=True)
 
-'''
 #WIDE fields
-for fld in ['aegis','gama09h','gama15h','hectomap','wide12h','xmm_lss'] :
-    write_fieldsearch("pdr1_wide",fld,"field_wide_"+fld+"_pz_strict.sql",do_field=True,
-                      submit=True,do_photoz=True,strict_cuts=True)
+for fld in ['aegis','gama09h','gama15h','hectomap','wide01h','wide12h','xmm']:
+    write_fieldsearch("s16a_wide",fld,"field_wide_"+fld+"_pz_strict.sql",
+                      submit=True, strict_cuts=True, do_download=False)
+'''
 write_fieldsearch("pdr1_wide",'vvds',"field_wide_vvds_h1_pz_strict.sql",do_field=True,
                   submit=True,ra_range=[330.,336.],do_photoz=True,strict_cuts=True,part=1)
 write_fieldsearch("pdr1_wide",'vvds',"field_wide_vvds_h2_pz_strict.sql",do_field=True,

@@ -1,6 +1,7 @@
+#!/bin/env python3
 import json
 import argparse
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 import sys
 import csv
@@ -11,19 +12,17 @@ import re
 import ssl
 
 
-version = 20170216.1
+version = 20190514.1
 
 
 args = None
-
-context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--user', '-u', required=True,
                         help='specify your account name')
-    parser.add_argument('--release-version', '-r', choices='pdr1'.split(), default='pdr1',
+    parser.add_argument('--release-version', '-r', choices='pdr1 pdr2'.split(), default='pdr2',
                         help='specify release version')
     parser.add_argument('--delete-job', '-D', action='store_true',
                         help='delete the job you submitted after your downloading')
@@ -34,11 +33,11 @@ def main():
     parser.add_argument('--nomail', '-M', action='store_true',
                         help='suppress email notice')
     parser.add_argument('--password-env', default='HSC_SSP_CAS_PASSWORD',
-                        help='specify the environment variable that has STARS password as its content')
+                        help='specify the environment variable that has password as its content')
     parser.add_argument('--preview', '-p', action='store_true',
                         help='quick mode (short timeout)')
     parser.add_argument('--skip-syntax-check', '-S', action='store_true',
-                        help='skip syntax check')
+                        help='skip syntax check (Use if you get 502: Proxy Error)')
     parser.add_argument('--api-url', default='https://hsc-release.mtk.nao.ac.jp/datasearch/api/catalog_jobs/',
                         help='for developers')
     parser.add_argument('sql-file', type=argparse.FileType('r'),
@@ -48,7 +47,6 @@ def main():
     args = parser.parse_args()
 
     credential = {'account_name': args.user, 'password': getPassword()}
-#    credential = {'account_name': 'damonge@local', 'password': 'CBIFEq5fmFXtDduTGvsfjrGCkNmS6Hm7dAkuEmFl'}
     sql = args.__dict__['sql-file'].read()
 
     job = None
@@ -60,18 +58,18 @@ def main():
             job = submitJob(credential, sql, args.out_format)
             if args.download_job :
                 blockUntilJobFinishes(credential, job['id'])
-                download(credential, job['id'], sys.stdout)
+                download(credential, job['id'], sys.stdout.buffer)
                 if args.delete_job:
                     deleteJob(credential, job['id'])
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         if e.code == 401:
-            print >> sys.stderr, 'invalid id or password.'
+            print('invalid id or password.', file=sys.stderr)
         if e.code == 406:
-            print >> sys.stderr, e.read()
+            print(e.read(), file=sys.stderr)
         else:
-            print >> sys.stderr, e
-    except QueryError, e:
-        print >> sys.stderr, e
+            print(e, file=sys.stderr)
+    except QueryError as e:
+        print(e, file=sys.stderr)
     except KeyboardInterrupt:
         if job is not None:
             jobCancel(credential, job['id'])
@@ -93,17 +91,8 @@ def httpJsonPost(url, data):
 
 
 def httpPost(url, postData, headers):
-    req = urllib2.Request(url, postData, headers)
-    skipVerifying = None
-    try:
-        skipVerifying = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    except AttributeError:
-        pass
-#    if skipVerifying:
-#        res = urllib2.urlopen(req, context=skipVerifying)
-#    else:
-#        res = urllib2.urlopen(req)
-    res = urllib2.urlopen(req,context=context)
+    req = urllib.request.Request(url, postData.encode('utf-8'), headers)
+    res = urllib.request.urlopen(req)
     return res
 
 
@@ -151,7 +140,7 @@ def preview(credential, sql, out):
         writer.writerow(row)
 
     if result['result']['count'] > len(result['result']['rows']):
-        raise QueryError, 'only top %d records are displayed !' % len(result['result']['rows'])
+        raise QueryError('only top %d records are displayed !' % len(result['result']['rows']))
 
 
 def blockUntilJobFinishes(credential, job_id):
@@ -161,7 +150,7 @@ def blockUntilJobFinishes(credential, job_id):
         time.sleep(interval)
         job = jobStatus(credential, job_id)
         if job['status'] == 'error':
-            raise QueryError, 'query error: ' + job['error']
+            raise QueryError('query error: ' + job['error'])
         if job['status'] == 'done':
             break
         interval *= 2
