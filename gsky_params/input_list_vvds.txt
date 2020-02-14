@@ -1,2 +1,0 @@
-/global/cscratch1/sd/damonge/HSC_ceci/PDR1_WIDE_VVDS_part1_forced.fits
-/global/cscratch1/sd/damonge/HSC_ceci/PDR1_WIDE_VVDS_part2_forced.fits
