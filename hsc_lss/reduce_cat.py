@@ -14,7 +14,7 @@ class ReduceCat(PipelineStage) :
              ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile)]
     config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
                     'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
-                    'flat_project':'CAR','mask_type':'sirius'}
+                    'flat_project':'CAR','mask_type':'sirius', 'ra': 'ira', 'dec': 'idec'}
     bands=['g','r','i','z','y']
 
     def make_dust_map(self,cat,fsk) :
@@ -27,7 +27,7 @@ class ReduceCat(PipelineStage) :
         dustmaps=[]
         dustdesc=[]
         for b in self.bands :
-            m,s=createMeanStdMaps(cat['ra'],cat['dec'],cat['a_'+b],fsk)
+            m,s=createMeanStdMaps(cat[self.config['ra']],cat[self.config['dec']],cat['a_'+b],fsk)
             dustmaps.append(m)
             dustdesc.append('Dust, '+b+'-band')
         return dustmaps,dustdesc
@@ -40,7 +40,7 @@ class ReduceCat(PipelineStage) :
         :param sel: mask used to select the stars to be used.
         """
         print("Creating star map")
-        mstar=createCountsMap(cat['ra'][sel],cat['dec'][sel],fsk)+0.
+        mstar=createCountsMap(cat[self.config['ra']][sel],cat[self.config['dec']][sel],fsk)+0.
         descstar='Stars, '+self.config['band']+'<%.2lf'%(self.config['depth_cut'])
         return mstar,descstar
 
@@ -58,7 +58,7 @@ class ReduceCat(PipelineStage) :
                         cat['iflags_pixel_bright_object_any']]
         else :
             raise ValueError('Mask type '+self.config['mask_type']+' not supported')
-        mask_bo,fsg=createMask(cat['ra'],cat['dec'],flags_mask,fsk,self.config['res_bo'])
+        mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,self.config['res_bo'])
         return mask_bo,fsg
 
     def make_masked_fraction(self,cat,fsk) :
@@ -76,7 +76,7 @@ class ReduceCat(PipelineStage) :
             masked*=np.logical_not(cat['iflags_pixel_bright_object_any'])
         else :
             raise ValueError('Mask type '+self.config['mask_type']+' not supported')
-        masked_fraction,_=createMeanStdMaps(cat['ra'],cat['dec'],masked,fsk)
+        masked_fraction,_=createMeanStdMaps(cat[self.config['ra']],cat[self.config['dec']],masked,fsk)
         masked_fraction_cont=removeDisconnected(masked_fraction,fsk)
         return masked_fraction_cont
 
@@ -96,7 +96,7 @@ class ReduceCat(PipelineStage) :
         else :
             arr1=cat['%scmodel_mag'%band]
             arr2=snrs
-        depth,_=get_depth(method,cat['ra'],cat['dec'],band,
+        depth,_=get_depth(method,cat[self.config['ra']],cat[self.config['dec']],band,
                           arr1=arr1,arr2=arr2,
                           flatSkyGrid=fsk,SNRthreshold=self.config['min_snr'])
         desc='%d-s depth, '%(self.config['min_snr'])+band+' '+method+' mean'
@@ -144,7 +144,7 @@ class ReduceCat(PipelineStage) :
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
 
-        fsk=FlatMapInfo.from_coords(cat['ra'],cat['dec'],self.config['res'],
+        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.config['res'],
                                     pad=self.config['pad']/self.config['res'],
                                     projection=self.config['flat_project'])
 

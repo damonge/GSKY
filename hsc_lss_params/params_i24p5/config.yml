@@ -34,10 +34,10 @@ PowerSpecter:
 #    noise_bias_type: pois_sim
     guess_spectrum: /global/homes/d/damonge/LSST/LSS_HSC/HyperSupremeStructure-HSC-LSS/hsc_lss_params/cls_guess_i24p5.txt
 #    guess_spectrum: NONE
-    mask_systematics: False
-#    mask_systematics: True
+#    mask_systematics: False
+    mask_systematics: True
     oc_dpj_list: [airmass,seeing,sigma_sky]
 #    oc_dpj_list: [airmass,ccdtemp,ellipt,exptime,nvisit,seeing,sigma_sky,skylevel]
     oc_all_bands: True
 #    oc_all_bands: False
-    output_run_dir: CovAna_NoiAna_MskSirius_ClFit_Dpj0_DpjBands1
+    output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClFit_Dpj0_DpjBands1

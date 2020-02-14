@@ -420,14 +420,20 @@ def read_flat_map(filename,i_map=0,hdu=None) :
             ny,nx=maps.shape
             maps=maps.flatten()
     else :
-        w=WCS(hdu.header)
-        maps=hdu.data
-        ny,nx=maps.shape
-        maps=maps.flatten()
+        if isinstance(hdu, list):
+            w = WCS(hdu[0].header)
+            maps = np.array([h.data for h in hdu])
+            nm, ny, nx = maps.shape
+            maps = maps.reshape([nm, ny*nx])
+        else:
+            w = WCS(hdu.header)
+            maps = hdu.data
+            ny, nx = maps.shape
+            maps = maps.flatten()
 
-    fmi=FlatMapInfo(w,nx=nx,ny=ny)
+    fmi = FlatMapInfo(w, nx=nx, ny=ny)
 
-    return fmi,maps
+    return fmi, maps
 
 def compare_infos(fsk1,fsk2) :
     """Checks whether two FlatMapInfo objects are compatible"""

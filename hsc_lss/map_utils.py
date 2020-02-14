@@ -1,4 +1,8 @@
 import numpy as np
+import copy
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def createCountsMap(ra, dec, flatSkyGrid):
     """
@@ -11,6 +15,72 @@ def createCountsMap(ra, dec, flatSkyGrid):
     mp= np.bincount(flatmap, weights= None, minlength= flatSkyGrid.get_size())
     
     return mp
+
+def createSpin2Map(ra, dec, q, u, flatSkyGrid, weights=None, shearrot=None):
+    """
+    Creates two maps containing the averages (optionally weighted) of the Q, U components of a
+    spin-2 field.
+    :param ra:
+    :param dec:
+    :param q:
+    :param u:
+    :param flatSkyGrid:
+    :param weights:
+    :param shearrot:
+    :return:
+    """
+
+    flatmap = flatSkyGrid.pos2pix(ra, dec)
+
+    if weights is not None:
+        q = weights*copy.deepcopy(q)
+        u = weights*copy.deepcopy(u)
+
+    qmap = np.bincount(flatmap, weights=q, minlength=flatSkyGrid.get_size())
+    umap = np.bincount(flatmap, weights=u, minlength=flatSkyGrid.get_size())
+    weightsmap = np.bincount(flatmap, weights=weights, minlength=flatSkyGrid.get_size())
+    nmap = np.bincount(flatmap, weights=None, minlength=flatSkyGrid.get_size())
+
+    qmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
+    umap[weightsmap != 0] /= weightsmap[weightsmap != 0]
+
+    if weights is not None:
+        logger.info('Weights provided.')
+        logger.info('Computing weightmask.')
+        weightmask = weightsmap
+        logger.info('Computing binary mask.')
+        mask = weightsmap != 0.
+        mask = mask.astype('int')
+    else:
+        logger.info('No weights provided.')
+        logger.info('Computing binary mask.')
+        mask = weightsmap != 0.
+        mask = mask.astype('int')
+        weightmask = copy.deepcopy(mask)
+
+    if shearrot is None:
+        logger.info('shearrot is None. Not applying shear transformation.')
+
+    else:
+        if shearrot == 'flipqu':
+            logger.info('shearrot is {}. Applying shear transformation.'.format(shearrot))
+            qmap *= (-1.)
+            umap *= (-1.)
+        elif shearrot == 'flipq':
+            logger.info('shearrot is {}. Applying shear transformation.'.format(shearrot))
+            qmap *= (-1.)
+        elif shearrot == 'flipu':
+            logger.info('shearrot is {}. Applying shear transformation.'.format(shearrot))
+            umap *= (-1.)
+        elif shearrot == 'noflip':
+            logger.info('shearrot is {}. Applying shear transformation.'.format(shearrot))
+        else:
+            logger.error('Accepted values of shearrot = [noflip, flipq, flipu, flipqu].')
+
+    mp = [qmap, umap]
+    ms = [weightmask, mask, nmap]
+
+    return mp, ms
 
 def createMeanStdMaps(ra, dec, quantity, flatSkyGrid) :
     """
