@@ -14,7 +14,7 @@ class ReduceShearCat(PipelineStage):
 
     name = "ReduceShearCat"
     inputs = [('clean_catalog', FitsFile)]
-    outputs = [('calib_catalog', FitsFile),('R', ASCIIFile),('mhat',ASCIIFile)]
+    outputs = [('calib_catalog', FitsFile),('shear_calib', ASCIIFile)]
     config_options = {'photoz_method': 'pz_best_eab', 'photoz_min':0.3, 'photoz_max': 1.5}
 
     def _responsivity(self, cat):
@@ -157,8 +157,10 @@ class ReduceShearCat(PipelineStage):
         # 3- Actual writing
         hdul = fits.HDUList([prm_hdu,cat_hdu])
         hdul.writeto(self.get_output('calib_catalog'), overwrite=True)
-
         ####
+
+        # Write shear calibration values
+        np.savetxt(self.get_output('shear_calib'), np.array([R, mhat]), header='R, mhat')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
