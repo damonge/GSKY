@@ -15,7 +15,7 @@ class ReduceShearCat(PipelineStage):
     name = "ReduceShearCat"
     inputs = [('raw_data', None)]
     outputs = [('calib_catalog', FitsFile),('R', ASCIIFile),('mhat',ASCIIFile)]
-    config_options = {'photoz_method': 'ephor_ab_photoz_best', 'photoz_min':0.3, 'photoz_max': 1.5}
+    config_options = {'photoz_method': 'pz_best_eab', 'photoz_min':0.3, 'photoz_max': 1.5}
 
     def _responsivity(self, cat):
         """
