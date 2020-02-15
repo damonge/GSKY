@@ -14,7 +14,7 @@ class ReduceCat(PipelineStage) :
              ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile)]
     config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
                     'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
-                    'flat_project':'CAR','mask_type':'sirius', 'ra': 'ira', 'dec': 'idec'}
+                    'flat_project':'CAR','mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
     bands=['g','r','i','z','y']
 
     def make_dust_map(self,cat,fsk) :
