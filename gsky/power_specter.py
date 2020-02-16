@@ -65,32 +65,75 @@ class PowerSpecter(PipelineStage) :
         """
 
         # Compute window functions
-        print("Computing window functions.")
+        logger.info("Computing window functions.")
         nbands = wsp[0, 0].wsp.bin.n_bands
         l_arr = np.arange(self.lmax + 1)
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
-        if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[0]):
-            print("Computing window functions for counts.")
-            windows_counts = np.zeros([nbands, self.lmax + 1])
-            t_hat = np.zeros(self.lmax + 1)
-            for il, l in enumerate(l_arr):
-                t_hat[il] = 1.
-                windows_counts[:, il] = wsp[0, 0].decouple_cell(wsp[0, 0].couple_cell(l_arr, [t_hat]))
-                t_hat[il] = 0.
-            np.savez(self.get_output_fname('windows_l')[0], windows=windows_counts)
+        if self.get_input('ngal_maps') != 'NONE':
+            logger.info('Number density maps provided.')
+            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[0]):
+                logger.info("Computing window functions for counts.")
+                windows_counts = np.zeros([nbands, self.lmax + 1])
+                t_hat = np.zeros(self.lmax + 1)
+                for il, l in enumerate(l_arr):
+                    t_hat[il] = 1.
+                    windows_counts[:, il] = wsp[0, 0].decouple_cell(wsp[0, 0].couple_cell(l_arr, [t_hat]))
+                    t_hat[il] = 0.
+                np.savez(self.get_output_fname('windows_l')[0], windows=windows_counts)
+            else:
+                logger.info("Reading window functions for counts.")
+                windows_counts = np.load(self.get_output_fname('windows_l', ext='npz')[0])['windows']
+
+            if self.get_input('shear_maps') != 'NONE':
+                logger.info('Number density and shear maps provided.')
+                for i in range(self.ntracers):
+                    for ii in range(i, self.ntracers):
+                        if i < self.ncounts_maps and ii < self.ncounts_maps:
+                            windows_list[i, ii] = windows_counts
+                        elif i == 0 and ii >= self.ncounts_maps:
+                            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
+                                logger.info("Computing window functions for counts x shear.")
+                                windows = np.zeros([nbands, self.lmax + 1])
+                                t_hat = np.zeros(self.lmax + 1)
+                                for il, l in enumerate(l_arr):
+                                    t_hat[il] = 1.
+                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
+                                    t_hat[il] = 0.
+                                np.savez(self.get_output_fname('windows_l')[0], windows=windows)
+                            else:
+                                logger.info("Reading window functions for counts x shear.")
+                                windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
+
+                            windows_list[i, ii] = windows
+                        elif i != 0 and i < self.ncounts_maps and ii >= self.ncounts_maps:
+                            windows_list[i, ii] = windows_list[0, ii]
+                        elif i >= self.ncounts_maps and ii >= self.ncounts_maps:
+                            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
+                                logger.info("Computing window functions for shear.")
+                                windows = np.zeros([nbands, self.lmax + 1])
+                                t_hat = np.zeros(self.lmax + 1)
+                                for il, l in enumerate(l_arr):
+                                    t_hat[il] = 1.
+                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
+                                    t_hat[il] = 0.
+                                np.savez(self.get_output_fname('windows_l')[0], windows=windows)
+                            else:
+                                logger.info("Reading window functions for shear.")
+                                windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
+
+                            windows_list[i, ii] = windows
+                        else:
+                            raise RuntimeError("Messed-up indexing in window function computation.")
+
+        # Only shear maps case
         else:
-            print("Reading window functions for counts.")
-            windows_counts = np.load(self.get_output_fname('windows_l', ext='npz')[0])['windows']
-
-        for i in range(self.ntracers):
-            for ii in range(i, self.ntracers):
-                if i < self.ncounts_maps and ii < self.ncounts_maps:
-                    windows_list[i, ii] = windows_counts
-                elif i == 0 and ii >= self.ncounts_maps:
+            logger.info('Shear maps provided.')
+            for i in range(self.ntracers):
+                for ii in range(i, self.ntracers):
                     if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
-                        print("Computing window functions for counts x shear.")
+                        logger.info("Computing window functions for shear.")
                         windows = np.zeros([nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
                         for il, l in enumerate(l_arr):
@@ -99,29 +142,10 @@ class PowerSpecter(PipelineStage) :
                             t_hat[il] = 0.
                         np.savez(self.get_output_fname('windows_l')[0], windows=windows)
                     else:
-                        print("Reading window functions for counts x shear.")
+                        logger.info("Reading window functions for shear.")
                         windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
 
                     windows_list[i, ii] = windows
-                elif i != 0 and i < self.ncounts_maps and ii >= self.ncounts_maps:
-                    windows_list[i, ii] = windows_list[0, ii]
-                elif i >= self.ncounts_maps and ii >= self.ncounts_maps:
-                    if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
-                        print("Computing window functions for shear.")
-                        windows = np.zeros([nbands, self.lmax + 1])
-                        t_hat = np.zeros(self.lmax + 1)
-                        for il, l in enumerate(l_arr):
-                            t_hat[il] = 1.
-                            windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
-                            t_hat[il] = 0.
-                        np.savez(self.get_output_fname('windows_l')[0], windows=windows)
-                    else:
-                        print("Reading window functions for shear.")
-                        windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
-
-                    windows_list[i, ii] = windows
-                else:
-                    raise RuntimeError("Messed-up indexing in window function computation.")
 
         return windows_list
 
@@ -438,47 +462,66 @@ class PowerSpecter(PipelineStage) :
         Get NmtWorkspaceFlat for our mask
         """
 
-        print("Computing MCM.")
+        logger.info("Computing MCM.")
         wsps = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
-        # Compute wsp for counts (is always the same as mask is the same)
-        wsp_counts = nmt.NmtWorkspaceFlat()
-        if not os.path.isfile(self.get_output_fname('mcm',ext='dat')[0]) :
-            print("Computing MCM for counts.")
-            wsp_counts.compute_coupling_matrix(tracers[0].field,tracers[0].field,bpws)
-            wsp_counts.write_to(self.get_output_fname('mcm',ext='dat')[0])
-        else :
-            print("Reading MCM for counts.")
-            wsp_counts.read_from(self.get_output_fname('mcm',ext='dat')[0])
+        if self.get_input('ngal_maps') != 'NONE':
+            logger.info('Number density maps provided.')
+            # Compute wsp for counts (is always the same as mask is the same)
+            wsp_counts = nmt.NmtWorkspaceFlat()
+            if not os.path.isfile(self.get_output_fname('mcm',ext='dat')[0]) :
+                logger.info("Computing MCM for counts.")
+                wsp_counts.compute_coupling_matrix(tracers[0].field,tracers[0].field,bpws)
+                wsp_counts.write_to(self.get_output_fname('mcm',ext='dat')[0])
+            else:
+                logger.info("Reading MCM for counts.")
+                wsp_counts.read_from(self.get_output_fname('mcm',ext='dat')[0])
 
-        for i in range(self.ntracers):
-            for ii in range(i, self.ntracers):
-                if i < self.ntracers_counts and ii < self.ntracers_counts:
-                    wsps[i, ii] = wsp_counts
-                elif i == 0 and ii >= self.ncounts_maps:
+            if self.get_input('shear_maps') != 'NONE':
+                logger.info('Number density and shear maps provided.')
+                for i in range(self.ntracers):
+                    for ii in range(i, self.ntracers):
+                        if i < self.ntracers_counts and ii < self.ntracers_counts:
+                            wsps[i, ii] = wsp_counts
+                        elif i == 0 and ii >= self.ncounts_maps:
+                            wsp = nmt.NmtWorkspaceFlat()
+                            if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
+                                logger.info("Computing MCM for counts x shear.")
+                                wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
+                                wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                            else:
+                                logger.info("Reading MCM for counts x shear.")
+                                wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                            wsps[i, ii] = wsp
+                        elif i != 0 and i < self.ntracers_counts and ii >= self.ntracers_counts:
+                            wsps[i, ii] = wsps[0, ii]
+                        elif i >= self.ntracers_counts and ii >= self.ntracers_counts:
+                            wsp = nmt.NmtWorkspaceFlat()
+                            if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
+                                logger.info("Computing MCM for shear.")
+                                wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
+                                wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                            else:
+                                logger.info("Reading MCM for shear.")
+                                wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                            wsps[i, ii] = wsp
+                        else:
+                            raise RuntimeError("Messed-up indexing in wsp computation.")
+        # Only shear maps case
+        else:
+            logger.info('Shear maps provided.')
+            for i in range(self.ntracers):
+                for ii in range(i, self.ntracers):
                     wsp = nmt.NmtWorkspaceFlat()
                     if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
-                        print("Computing MCM for counts x shear.")
+                        logger.info("Computing MCM for shear.")
                         wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
                         wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
                     else:
-                        print("Reading MCM for counts x shear.")
+                        logger.info("Reading MCM for shear.")
                         wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
                     wsps[i, ii] = wsp
-                elif i != 0 and i < self.ntracers_counts and ii >= self.ntracers_counts:
-                    wsps[i, ii] = wsps[0, ii]
-                elif i >= self.ntracers_counts and ii >= self.ntracers_counts:
-                    wsp = nmt.NmtWorkspaceFlat()
-                    if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
-                        print("Computing MCM for shear.")
-                        wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                        wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
-                    else:
-                        print("Reading MCM for shear.")
-                        wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
-                    wsps[i, ii] = wsp
-                else:
-                    raise RuntimeError("Messed-up indexing in wsp computation.")
+
         return wsps
 
     def get_covar_mcm(self,tracers,bpws):
@@ -496,12 +539,12 @@ class PowerSpecter(PipelineStage) :
             cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
             cwsp_counts.write_to(self.get_output_fname('cov_mcm', ext='dat')[0])
 
-            for i1 in enumerate(self.nmaps):
-                for j1 in enumerate(i1, self.nmaps):
-                    for i2 in enumerate(self.nmaps):
-                        for j2 in enumerate(i2, self.nmaps):
-                            tr_i1, tr_j1 = self.pss2tracers(i1, j1)
-                            tr_i2, tr_j2 = self.pss2tracers(i2, j2)
+            for i1 in range(self.nmaps):
+                for j1 in range(i1, self.nmaps):
+                    for i2 in range(self.nmaps):
+                        for j2 in range(i2, self.nmaps):
+                            tr_i1, tr_j1 = self.pss2tracers[i1, j1]
+                            tr_i2, tr_j2 = self.pss2tracers[i2, j2]
                             tr_indxs = np.array([tr_i1, tr_j1, tr_i2, tr_j2])
                             if np.all(tr_indxs < self.ntracers_counts):
                                 cwsp_curr = cwsp_counts
@@ -610,8 +653,8 @@ class PowerSpecter(PipelineStage) :
                 ix_2=0
                 for i2 in enumerate(self.nmaps) :
                     for j2 in enumerate(i2, self.nmaps) :
-                        tr_i1, tr_j1 = self.pss2tracers(i1, j1)
-                        tr_i2, tr_j2 = self.pss2tracers(i2, j2)
+                        tr_i1, tr_j1 = self.pss2tracers[i1, j1]
+                        tr_i2, tr_j2 = self.pss2tracers[i2, j2]
 
                         ca1b1=clth[i1, i2]
                         ca1b2=clth[i1, j2]
@@ -693,21 +736,21 @@ class PowerSpecter(PipelineStage) :
             logger.info('Creating number counts tracers.')
             if len(hdul)%2!=0 :
                 raise ValueError("Input file should have two HDUs per map")
-            nbins=len(hdul)//2
+            nmaps=len(hdul)//2
             tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None)
-                            for i in range(nbins)]
+                            for i in range(nmaps)]
             tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps)
-                           for i in range(nbins)]
+                           for i in range(nmaps)]
 
         elif map_type == 'shear_maps':
             logger.info('Creating shear tracers.')
             if len(hdul)%6!=0 :
                 raise ValueError("Input file should have six HDUs per map")
-            nbins=len(hdul)//6
+            nmaps=len(hdul)//6
             tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
-                            for i in range(nbins)]
+                            for i in range(nmaps)]
             tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
-                           for i in range(nbins)]
+                           for i in range(nmaps)]
 
         else:
             raise NotImplementedError()
@@ -1042,10 +1085,10 @@ class PowerSpecter(PipelineStage) :
         logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
 
-        self.ordering=np.zeros([self.nbins,self.nbins],dtype=int)
+        self.ordering = np.zeros([self.nmaps,self.nmaps],dtype=int)
         ix=0
-        for i in range(self.nbins) :
-            for j in range(i,self.nbins) :
+        for i in range(self.nmaps) :
+            for j in range(i,self.nmaps) :
                 self.ordering[i,j]=ix
                 if j!=i :
                     self.ordering[j,i]=ix
