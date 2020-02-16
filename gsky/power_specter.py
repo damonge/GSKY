@@ -482,7 +482,7 @@ class PowerSpecter(PipelineStage) :
                 for i in range(self.ntracers):
                     for ii in range(i, self.ntracers):
                         if i < self.ntracers_counts and ii < self.ntracers_counts:
-                            wsps[i, ii] = wsp_counts
+                            wsps[i][ii] = wsp_counts
                         elif i == 0 and ii >= self.ncounts_maps:
                             wsp = nmt.NmtWorkspaceFlat()
                             if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
@@ -492,9 +492,9 @@ class PowerSpecter(PipelineStage) :
                             else:
                                 logger.info("Reading MCM for counts x shear.")
                                 wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                            wsps[i, ii] = wsp
+                            wsps[i][ii] = wsp
                         elif i != 0 and i < self.ntracers_counts and ii >= self.ntracers_counts:
-                            wsps[i, ii] = wsps[0, ii]
+                            wsps[i][ii] = wsps[0][ii]
                         elif i >= self.ntracers_counts and ii >= self.ntracers_counts:
                             wsp = nmt.NmtWorkspaceFlat()
                             if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
@@ -504,7 +504,7 @@ class PowerSpecter(PipelineStage) :
                             else:
                                 logger.info("Reading MCM for shear.")
                                 wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                            wsps[i, ii] = wsp
+                            wsps[i][ii] = wsp
                         else:
                             raise RuntimeError("Messed-up indexing in wsp computation.")
         # Only shear maps case
@@ -520,7 +520,7 @@ class PowerSpecter(PipelineStage) :
                     else:
                         logger.info("Reading MCM for shear.")
                         wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                    wsps[i, ii] = wsp
+                    wsps[i][ii] = wsp
 
         return wsps
 
