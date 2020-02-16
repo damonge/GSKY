@@ -469,13 +469,13 @@ class PowerSpecter(PipelineStage) :
             logger.info('Number density maps provided.')
             # Compute wsp for counts (is always the same as mask is the same)
             wsp_counts = nmt.NmtWorkspaceFlat()
-            if not os.path.isfile(self.get_output_fname('mcm',ext='dat')[0]) :
+            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat'):
                 logger.info("Computing MCM for counts.")
                 wsp_counts.compute_coupling_matrix(tracers[0].field,tracers[0].field,bpws)
-                wsp_counts.write_to(self.get_output_fname('mcm',ext='dat')[0])
+                wsp_counts.write_to(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat')
             else:
                 logger.info("Reading MCM for counts.")
-                wsp_counts.read_from(self.get_output_fname('mcm',ext='dat')[0])
+                wsp_counts.read_from(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat')
 
             if self.get_input('shear_maps') != 'NONE':
                 logger.info('Number density and shear maps provided.')
@@ -485,25 +485,25 @@ class PowerSpecter(PipelineStage) :
                             wsps[i, ii] = wsp_counts
                         elif i == 0 and ii >= self.ncounts_maps:
                             wsp = nmt.NmtWorkspaceFlat()
-                            if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
+                            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
                                 logger.info("Computing MCM for counts x shear.")
                                 wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                                wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                                wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                             else:
                                 logger.info("Reading MCM for counts x shear.")
-                                wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                                wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                             wsps[i, ii] = wsp
                         elif i != 0 and i < self.ntracers_counts and ii >= self.ntracers_counts:
                             wsps[i, ii] = wsps[0, ii]
                         elif i >= self.ntracers_counts and ii >= self.ntracers_counts:
                             wsp = nmt.NmtWorkspaceFlat()
-                            if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
+                            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
                                 logger.info("Computing MCM for shear.")
                                 wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                                wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                                wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                             else:
                                 logger.info("Reading MCM for shear.")
-                                wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                                wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                             wsps[i, ii] = wsp
                         else:
                             raise RuntimeError("Messed-up indexing in wsp computation.")
@@ -516,10 +516,10 @@ class PowerSpecter(PipelineStage) :
                     if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
                         logger.info("Computing MCM for shear.")
                         wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                        wsp.write_to(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                        wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                     else:
                         logger.info("Reading MCM for shear.")
-                        wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
+                        wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
                     wsps[i, ii] = wsp
 
         return wsps
