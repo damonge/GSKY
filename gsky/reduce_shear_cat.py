@@ -109,14 +109,13 @@ class ReduceShearCat(PipelineStage):
 
         logger.info('Applying shear cuts to catalog.')
 
-        #ishape_flags_mask = cat['ishape_hsm_regauss_flags'] == False
+        ishape_flags_mask = cat['ishape_hsm_regauss_flags'] == False
         ishape_sigma_mask = ~np.isnan(cat['ishape_hsm_regauss_sigma'])
         ishape_resolution_mask = cat['ishape_hsm_regauss_resolution'] >= 0.3
         ishape_shear_mod_mask = (cat['ishape_hsm_regauss_e1']**2 + cat['ishape_hsm_regauss_e2']**2) < 2
         ishape_sigma_mask *= (cat['ishape_hsm_regauss_sigma'] >= 0.)*(cat['ishape_hsm_regauss_sigma'] <= 0.4)
 
-        #shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
-        shearmask = ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
+        shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
 
         cat = copy.deepcopy(cat)
         cat = cat[shearmask]
