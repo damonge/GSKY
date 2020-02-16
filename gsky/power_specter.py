@@ -24,7 +24,7 @@ class PowerSpecter(PipelineStage) :
             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),
             ('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),
             ('syst_masking_file',ASCIIFile)]
-    outputs=[('dummy',DummyFile)]
+    outputs=[('dummy',DummyFile), ('mcm', BinaryFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
                                 1000.0,1400.0,1800.0,
@@ -1072,8 +1072,8 @@ class PowerSpecter(PipelineStage) :
                 self.ntracers_shear = len(tracers_shear_nc)
 
                 logger.info("Appending shear tracers to number density tracers.")
-                tracers_nc.append(tracers_shear_nc)
-                tracers_wc.append(tracers_shear_wc)
+                tracers_nc.extend(tracers_shear_nc)
+                tracers_wc.extend(tracers_shear_wc)
             else:
                 self.ntracers_shear = 0
         else:
@@ -1097,7 +1097,7 @@ class PowerSpecter(PipelineStage) :
         logger.info("Getting MCM.")
         wsp = self.get_mcm(tracers_nc,bpws)
 
-        print("Computing window function.")
+        logger.info("Computing window function.")
         windows = self.get_windows(wsp)
 
         logger.info("Computing power spectra.")
