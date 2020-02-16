@@ -35,7 +35,7 @@ class PowerSpecter(PipelineStage) :
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
                     'gaus_covar_type':'analytic','oc_all_bands':True,
                     'mask_systematics':False,'noise_bias_type':'analytic',
-                    'output_run_dir':None,'sys_collapse_type':'average'}
+                    'output_run_dir': 'NONE','sys_collapse_type':'average'}
 
     def read_map_bands(self,fname,read_bands,bandname,offset=0) :
         """
@@ -799,7 +799,7 @@ class PowerSpecter(PipelineStage) :
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
         self.output_dir=self.get_output('dummy',final_name=True)[:-5]
-        if self.config['output_run_dir'] is not None:
+        if self.config['output_run_dir'] != 'NONE':
             self.output_dir+=self.config['output_run_dir']+'/'
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
