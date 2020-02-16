@@ -706,7 +706,7 @@ class PowerSpecter(PipelineStage) :
             nbins=len(hdul)//6
             tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
                             for i in range(nbins)]
-            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, is_shear=True, weightmask=True)
+            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
                            for i in range(nbins)]
 
         else:
@@ -813,7 +813,9 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts),
                                                       'cosmic_shear',
-                                                      spin=2)
+                                                      spin=2,
+                                                      z=np.linspace(0, 1, 100),
+                                                      nz=np.ones(100))
 
             sacc_tracers.append(tracer)
 
@@ -1019,6 +1021,8 @@ class PowerSpecter(PipelineStage) :
             else:
                 logger.info("No number density maps provided.")
                 self.ntracers_counts = 0
+                tracers_nc = []
+                tracers_wc = []
             if self.get_input('shear_maps') != 'NONE':
                 logger.info("Generating shear tracers.")
                 tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
