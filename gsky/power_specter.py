@@ -121,7 +121,7 @@ class PowerSpecter(PipelineStage) :
 
                     windows_list[i, ii] = windows
                 else:
-                    raise RunTimeError("Messed-up indexing in window function computation.")
+                    raise RuntimeError("Messed-up indexing in window function computation.")
 
         return windows_list
 
@@ -364,7 +364,7 @@ class PowerSpecter(PipelineStage) :
                     cls_coupled[map_i, map_j] = cl_coupled_temp[0]
                     cls_decoupled[map_i, map_j] = cl_decoupled_temp[0]
                     map_j += 1
-                elif trc[tr_i].spin == 0 and tr[tr_j].spin == 2:
+                elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -375,7 +375,7 @@ class PowerSpecter(PipelineStage) :
                     cls_decoupled[map_i, map_j] = cl_decoupled_tempe
                     cls_decoupled[map_i, map_j+1] = cl_decoupled_tempb
                     map_j += 2
-                elif trc[tr_i].spin == 2 and tr[tr_j].spin == 0:
+                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -478,7 +478,7 @@ class PowerSpecter(PipelineStage) :
                         wsp.read_from(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]])
                     wsps[i, ii] = wsp
                 else:
-                    raise RunTimeError("Messed-up indexing in wsp computation.")
+                    raise RuntimeError("Messed-up indexing in wsp computation.")
         return wsps
 
     def get_covar_mcm(self,tracers,bpws):
@@ -785,27 +785,35 @@ class PowerSpecter(PipelineStage) :
 
         for i_t,t in enumerate(tracers):
             if i_t < self.ntracers_counts:
-                z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
-                nz = t.nz_data['nz_cosmos']
+                # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
+                # nz = t.nz_data['nz_cosmos']
+                # tracer = sacc.tracers.BaseTracer.make('NZ',
+                #                                       'gc_{}'.format(i_t),
+                #                                       'delta_g',
+                #                                       spin=0,
+                #                                       z=z,
+                #                                       nz=nz,
+                #                                       extra_columns={'nz_'+c: t.nz_data['nz_'+c]
+                #                                         for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'gc_{}'.format(i_t),
                                                       'delta_g',
-                                                      spin=0,
-                                                      z=z,
-                                                      nz=nz,
-                                                      extra_columns={'nz_'+c: t.nz_data['nz_'+c]
-                                                        for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
+                                                      spin=0)
             else:
-                z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
-                nz = t.nz_data['nz_cosmos']
+                # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
+                # nz = t.nz_data['nz_cosmos']
+                # tracer = sacc.tracers.BaseTracer.make('NZ',
+                #                                       'wl_{}'.format(i_t-self.ntracers_counts),
+                #                                       'cosmic_shear',
+                #                                       spin=2,
+                #                                       z=z,
+                #                                       nz=nz,
+                #                                       extra_columns={'nz_'+c: t.nz_data['nz_'+c]
+                #                                         for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts),
                                                       'cosmic_shear',
-                                                      spin=2,
-                                                      z=z,
-                                                      nz=nz,
-                                                      extra_columns={'nz_'+c: t.nz_data['nz_'+c]
-                                                        for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
+                                                      spin=2)
 
             sacc_tracers.append(tracer)
 
@@ -970,7 +978,7 @@ class PowerSpecter(PipelineStage) :
                     self.pss2tracers[map_i+1, map_j+1] = (tr_i, tr_j)
                     map_j += 2
 
-            if trc[tr_i].spin == 2:
+            if trcs[tr_i].spin == 2:
                 map_i += 2
             else:
                 map_i += 1
@@ -986,31 +994,32 @@ class PowerSpecter(PipelineStage) :
         """
         self.parse_input()
 
-        print("Reading mask")
+        logger.info("Reading mask.")
         self.msk_bi,self.mskfrac,self.mp_depth=self.get_masks()
 
-        print("Computing area")
+        logger.info("Computing area.")
         self.area_pix=np.radians(self.fsk.dx)*np.radians(self.fsk.dy)
         self.area_patch=np.sum(self.msk_bi*self.mskfrac)*self.area_pix
         self.lmax=int(180.*np.sqrt(1./self.fsk.dx**2+1./self.fsk.dy**2))
 
-        print("Reading contaminants")
+        logger.info("Reading contaminants.")
         temps=self.get_contaminants()
 
-        print("Setting bandpowers")
+        logger.info("Setting bandpowers.")
         lini=np.array(self.config['ell_bpws'])[:-1]
         lend=np.array(self.config['ell_bpws'])[ 1:]
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
 
-        print("Generating number density tracers")
-        tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
+        if self.get_input('ngal_maps') is not None:
+            logger.info("Generating number density tracers.")
+            tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
         if self.get_input('shear_maps') is not None:
-            print("Generating shear tracers.")
+            logger.info("Generating shear tracers.")
             tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
             self.ntracers_shear = len(tracers_shear_nc)
             self.ntracers_counts = len(tracers_nc)
-            print("Appending shear tracers to counts tracers.")
+            logger.info("Appending shear tracers to number density tracers.")
             tracers_nc.append(tracers_shear_nc)
             tracers_wc.append(tracers_shear_wc)
         else:
@@ -1020,7 +1029,7 @@ class PowerSpecter(PipelineStage) :
         self.ntracers = len(tracers_nc)
         self.nmaps = self.ntracers_counts + 2*self.ntracers_shear
 
-        print("Translating into SACC tracers")
+        logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
 
         self.ordering=np.zeros([self.nbins,self.nbins],dtype=int)
@@ -1032,36 +1041,36 @@ class PowerSpecter(PipelineStage) :
                     self.ordering[j,i]=ix
                 ix+=1
 
-        print("Getting MCM")
+        logger.info("Getting MCM.")
         wsp = self.get_mcm(tracers_nc,bpws)
 
-        print("Computing window function")
+        print("Computing window function.")
         windows = self.get_windows(wsp)
 
-        print("Computing power spectra")
-        print(" No deprojections")
+        logger.info("Computing power spectra.")
+        logger.info(" No deprojections.")
         cls_wodpj,_=self.get_power_spectra(tracers_nc,wsp,bpws)
-        print(" W. deprojections")
+        logger.info(" W. deprojections.")
         cls_wdpj,cls_wdpj_coupled=self.get_power_spectra(tracers_wc,wsp,bpws)
         self.ncross,self.nell=cls_wodpj.shape
 
-        print("Getting guess power spectra")
+        logger.info("Getting guess power spectra.")
         lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
 
-        print("Computing deprojection bias")
+        logger.info("Computing deprojection bias.")
         cls_wdpj,cls_deproj=self.get_dpj_bias(tracers_wc,lth,clth,cls_wdpj_coupled,wsp,bpws)
 
-        print("Computing covariance")
+        logger.info("Computing covariance.")
         cov_wodpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,None,None)
         if self.config['gaus_covar_type']=='analytic' :
             cov_wdpj=cov_wodpj.copy()
         else :
             cov_wdpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,temps,cls_deproj)
 
-        print("Computing noise bias")
+        logger.info("Computing noise bias.")
         nls=self.get_noise(tracers_nc,wsp,bpws)
 
-        print("Writing output")
+        logger.info("Writing output")
         self.write_vector_to_sacc(self.get_output_fname('noi_bias',ext='sacc'),tracers_sacc,
                                   nls,windows)
         self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'),tracers_sacc,
