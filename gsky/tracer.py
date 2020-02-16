@@ -92,17 +92,17 @@ class Tracer(object) :
             if contaminants is not None:
                 conts = [[c.reshape([self.fsk.ny, self.fsk.nx])] for c in contaminants]
 
-            ndens = np.sum(nmap * mask_binary) / np.sum(weights)
+            ndens = np.sum(nmap * mask_binary) / np.sum(self.weight)
             self.ndens_perad = ndens / (np.radians(self.fsk.dx) * np.radians(self.fsk.dy))
-            self.e1_2rms_pix = np.average(gammamaps[0]**2, weights=weights)
-            self.e2_2rms_pix = np.average(gammamaps[1] ** 2, weights=weights)
+            self.e1_2rms_pix = np.average(gammamaps[0]**2, weights=self.weight)
+            self.e2_2rms_pix = np.average(gammamaps[1] ** 2, weights=self.weight)
             self.e1_2rms_cat, self.e2_2rms_cat = hdu_list[6*i_bin+5].data.copy()
 
             # Form NaMaster field
             if weightmask:
                 logger.info('Using weight mask.')
                 self.field = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly),
-                            weights.reshape([self.fsk.ny,self.fsk.nx]),
+                            self.weight.reshape([self.fsk.ny,self.fsk.nx]),
                             [gammamaps[0].reshape([self.fsk.ny,self.fsk.nx]), gammamaps[1].reshape([self.fsk.ny,self.fsk.nx])],
                             templates=conts)
             else:

@@ -1011,20 +1011,26 @@ class PowerSpecter(PipelineStage) :
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
 
-        if self.get_input('ngal_maps') is not None:
-            logger.info("Generating number density tracers.")
-            tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
-        if self.get_input('shear_maps') is not None:
-            logger.info("Generating shear tracers.")
-            tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
-            self.ntracers_shear = len(tracers_shear_nc)
-            self.ntracers_counts = len(tracers_nc)
-            logger.info("Appending shear tracers to number density tracers.")
-            tracers_nc.append(tracers_shear_nc)
-            tracers_wc.append(tracers_shear_wc)
+        if self.get_input('ngal_maps') != 'NONE' or self.get_input('shear_maps') != 'NONE':
+            if self.get_input('ngal_maps') != 'NONE':
+                logger.info("Generating number density tracers.")
+                tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
+                self.ntracers_counts = len(tracers_nc)
+            else:
+                logger.info("No number density maps provided.")
+                self.ntracers_counts = 0
+            if self.get_input('shear_maps') != 'NONE':
+                logger.info("Generating shear tracers.")
+                tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
+                self.ntracers_shear = len(tracers_shear_nc)
+
+                logger.info("Appending shear tracers to number density tracers.")
+                tracers_nc.append(tracers_shear_nc)
+                tracers_wc.append(tracers_shear_wc)
+            else:
+                self.ntracers_shear = 0
         else:
-            self.ntracers_shear = 0
-            self.ntracers_counts = len(tracers_nc)
+            raise RuntimeError('Either ngal_maps or shear_maps need to be provided. Aborting.')
 
         self.ntracers = len(tracers_nc)
         self.nmaps = self.ntracers_counts + 2*self.ntracers_shear
