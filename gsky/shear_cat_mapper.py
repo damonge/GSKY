@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class ShearCatMapper(CatMapper) :
     name="ShearCatMapper"
-    inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile)]
+    inputs=[('calib_catalog', FitsFile), ('masked_fraction', FitsFile)]
     outputs=[('gamma_maps', FitsFile)]
     config_options={'pz_code':'ephor_ab', 'pz_mark':'best',
                     'pz_bins':[0.15,0.50,0.75,1.00,1.50], 'nz_bin_num':200,
@@ -103,29 +103,31 @@ class ShearCatMapper(CatMapper) :
         - Stores the above into a single FITS file.
         """
 
+        self.parse_input()
+
         logger.info("Reading masked fraction from {}.".format(self.get_input("masked_fraction")))
         self.fsk, _ = read_flat_map(self.get_input("masked_fraction"))
 
-        logger.info("Reading calibrated shear catalog from {}.".format(self.get_input('clean_catalog')))
-        cat = fits.open(self.get_input('clean_catalog'))[1].data
+        logger.info("Reading calibrated shear catalog from {}.".format(self.get_input('calib_catalog')))
+        cat = fits.open(self.get_input('calib_catalog'))[1].data
 
-        logger.info("Reading pdf filenames.")
-        data_syst = np.genfromtxt(self.get_input('pdf_matched'),
-                                  dtype=[('pzname', '|U8'), ('fname', '|U256')])
-        self.pdf_files = {n: fn for n, fn in zip(data_syst['pzname'], data_syst['fname'])}
+        #logger.info("Reading pdf filenames.")
+        #data_syst = np.genfromtxt(self.get_input('pdf_matched'),
+        #                          dtype=[('pzname', '|U8'), ('fname', '|U256')])
+        #self.pdf_files = {n: fn for n, fn in zip(data_syst['pzname'], data_syst['fname'])}
 
         logger.info("Parsing photo-z bins.")
         self.zi_arr = self.config['pz_bins'][:-1]
         self.zf_arr = self.config['pz_bins'][1:]
         self.nbins = len(self.zi_arr)
 
-        logger.info("Getting COSMOS N(z)s.")
-        pzs_cosmos = self.get_nz_cosmos()
+        #logger.info("Getting COSMOS N(z)s.")
+        #pzs_cosmos = self.get_nz_cosmos()
 
-        logger.info("Getting pdf stacks.")
-        pzs_stack = {}
-        for n in self.pdf_files.keys():
-            pzs_stack[n] = self.get_nz_stack(cat, n)
+        #logger.info("Getting pdf stacks.")
+        #pzs_stack = {}
+        #for n in self.pdf_files.keys():
+        #    pzs_stack[n] = self.get_nz_stack(cat, n)
 
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat)
@@ -141,40 +143,40 @@ class ShearCatMapper(CatMapper) :
             if im == 0 :
                 head = header.copy()
                 head['DESCR'] = ('gamma1, bin %d'%(im+1), 'Description')
-                hdu = fits.PrimaryHDU(data=m_list[im][0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.PrimaryHDU(data=m_list[0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head = header.copy()
                 head['DESCR'] = ('gamma2, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][0][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[0][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head = header.copy()
                 head['DESCR'] = ('gamma weight mask, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('gamma binary mask, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('counts map (shear sample), bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
             else:
                 head = header.copy()
                 head['DESCR'] = ('gamma1, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head = header.copy()
                 head['DESCR'] = ('gamma2, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][0][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[0][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head = header.copy()
                 head['DESCR'] = ('gamma weight mask, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('gamma binary mask, bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('counts map (shear sample), bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[im][1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
 
             # e2rms
@@ -182,13 +184,14 @@ class ShearCatMapper(CatMapper) :
             hdus.append(fits.BinTableHDU.from_columns(cols))
 
             # Nz
-            cols=[fits.Column(name='z_i',array=pzs_cosmos[im,0,:],format='E'),
-                  fits.Column(name='z_f',array=pzs_cosmos[im,1,:],format='E'),
-                  fits.Column(name='nz_cosmos',array=pzs_cosmos[im,2,:],format='E'),
-                  fits.Column(name='enz_cosmos',array=pzs_cosmos[im,3,:],format='E')]
-            for n in self.pdf_files.keys() :
-                cols.append(fits.Column(name='nz_'+n,array=pzs_stack[n][im,2,:],format='E'))
-            hdus.append(fits.BinTableHDU.from_columns(cols))
+            cols = []
+            #cols=[fits.Column(name='z_i',array=pzs_cosmos[im,0,:],format='E'),
+            #      fits.Column(name='z_f',array=pzs_cosmos[im,1,:],format='E'),
+            #      fits.Column(name='nz_cosmos',array=pzs_cosmos[im,2,:],format='E'),
+            #      fits.Column(name='enz_cosmos',array=pzs_cosmos[im,3,:],format='E')]
+            #for n in self.pdf_files.keys() :
+            #    cols.append(fits.Column(name='nz_'+n,array=pzs_stack[n][im,2,:],format='E'))
+            #hdus.append(fits.BinTableHDU.from_columns(cols))
 
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('gamma_maps'), overwrite=True)
