@@ -66,34 +66,34 @@ class PowerSpecter(PipelineStage) :
 
         # Compute window functions
         logger.info("Computing window functions.")
-        nbands = wsp[0, 0].wsp.bin.n_bands
+        nbands = wsp[0][0].wsp.bin.n_bands
         l_arr = np.arange(self.lmax + 1)
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
         if self.get_input('ngal_maps') != 'NONE':
             logger.info('Number density maps provided.')
-            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[0]):
+            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz'):
                 logger.info("Computing window functions for counts.")
                 windows_counts = np.zeros([nbands, self.lmax + 1])
                 t_hat = np.zeros(self.lmax + 1)
                 for il, l in enumerate(l_arr):
                     t_hat[il] = 1.
-                    windows_counts[:, il] = wsp[0, 0].decouple_cell(wsp[0, 0].couple_cell(l_arr, [t_hat]))
+                    windows_counts[:, il] = wsp[0][0].decouple_cell(wsp[0][0].couple_cell(l_arr, [t_hat]))
                     t_hat[il] = 0.
-                np.savez(self.get_output_fname('windows_l')[0], windows=windows_counts)
+                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz', windows=windows_counts)
             else:
                 logger.info("Reading window functions for counts.")
-                windows_counts = np.load(self.get_output_fname('windows_l', ext='npz')[0])['windows']
+                windows_counts = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz')['windows']
 
             if self.get_input('shear_maps') != 'NONE':
                 logger.info('Number density and shear maps provided.')
                 for i in range(self.ntracers):
                     for ii in range(i, self.ntracers):
                         if i < self.ncounts_maps and ii < self.ncounts_maps:
-                            windows_list[i, ii] = windows_counts
+                            windows_list[i][ii] = windows_counts
                         elif i == 0 and ii >= self.ncounts_maps:
-                            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
+                            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                                 logger.info("Computing window functions for counts x shear.")
                                 windows = np.zeros([nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
@@ -101,29 +101,29 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
-                                np.savez(self.get_output_fname('windows_l')[0], windows=windows)
+                                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
                                 logger.info("Reading window functions for counts x shear.")
-                                windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
+                                windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
 
-                            windows_list[i, ii] = windows
+                            windows_list[i][ii] = windows
                         elif i != 0 and i < self.ncounts_maps and ii >= self.ncounts_maps:
-                            windows_list[i, ii] = windows_list[0, ii]
+                            windows_list[i][ii] = windows_list[0][ii]
                         elif i >= self.ncounts_maps and ii >= self.ncounts_maps:
-                            if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
+                            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                                 logger.info("Computing window functions for shear.")
                                 windows = np.zeros([nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
+                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
-                                np.savez(self.get_output_fname('windows_l')[0], windows=windows)
+                                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
                                 logger.info("Reading window functions for shear.")
-                                windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
+                                windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
 
-                            windows_list[i, ii] = windows
+                            windows_list[i][ii] = windows
                         else:
                             raise RuntimeError("Messed-up indexing in window function computation.")
 
@@ -132,20 +132,20 @@ class PowerSpecter(PipelineStage) :
             logger.info('Shear maps provided.')
             for i in range(self.ntracers):
                 for ii in range(i, self.ntracers):
-                    if not os.path.isfile(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]]):
+                    if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                         logger.info("Computing window functions for shear.")
                         windows = np.zeros([nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
                         for il, l in enumerate(l_arr):
                             t_hat[il] = 1.
-                            windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
+                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
                             t_hat[il] = 0.
-                        np.savez(self.get_output_fname('windows_l')[0], windows=windows)
+                        np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                     else:
                         logger.info("Reading window functions for shear.")
-                        windows = np.load(self.get_output_fname('windows_l', ext='npz')[self.ordering[i, ii]])['windows']
+                        windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
 
-                    windows_list[i, ii] = windows
+                    windows_list[i][ii] = windows
 
         return windows_list
 
