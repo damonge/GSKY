@@ -324,7 +324,7 @@ class PowerSpecter(PipelineStage) :
             # Compute and remove deprojection bias
             map_i = 0
             for tr_i in range(self.ntracers):
-                map_j = 0
+                map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
                     if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
@@ -439,7 +439,7 @@ class PowerSpecter(PipelineStage) :
 
         map_i = 0
         for tr_i in range(self.ntracers) :
-            map_j = 0
+            map_j = map_i
             for tr_j in range(tr_i, self.ntracers) :
                 cl_coupled_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field,trc[tr_j].field,bpws)
                 cl_decoupled_temp = wsp[tr_i][tr_j].decouple_cell(cl_coupled_temp)
@@ -592,8 +592,6 @@ class PowerSpecter(PipelineStage) :
 
         cwsp = [[[[0 for i in range(self.nmaps)] for ii in range(self.nmaps)]
                  for j in range(self.nmaps)] for jj in range(self.nmaps)]
-
-        print(self.pss2tracers)
 
         if self.get_input('ngal_maps') != 'NONE':
             logger.info('Number density maps provided.')
