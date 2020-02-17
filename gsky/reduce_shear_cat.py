@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 class ReduceShearCat(PipelineStage):
 
     name = "ReduceShearCat"
-    inputs = [('raw_data', None)]
-    outputs = [('calib_catalog', FitsFile),('R', ASCIIFile),('mhat',ASCIIFile)]
-    config_options = {'photoz_method': 'ephor_ab_photoz_best', 'photoz_min':0.3, 'photoz_max': 1.5}
+    inputs = [('clean_catalog', FitsFile)]
+    outputs = [('calib_catalog', FitsFile),('shear_calib', ASCIIFile)]
+    config_options = {'photoz_method': 'pz_best_eab', 'photoz_min':0.3, 'photoz_max': 1.5}
 
     def _responsivity(self, cat):
         """
@@ -77,11 +77,10 @@ class ReduceShearCat(PipelineStage):
         cat_calib = Table(cat_calib)
         cat_calib['ishape_hsm_regauss_e1_calib'] = e1_corr
         cat_calib['ishape_hsm_regauss_e2_calib'] = e2_corr
-        cat_calib = np.array(cat_calib)
 
         logger.info('Columns ishape_hsm_regauss_e1_calib, ishape_hsm_regauss_e2_calib added to shear catalog.')
 
-        return cat_calib, e1_corr, e2_corr
+        return cat_calib, R, mhat
 
     def pz_cut(self, cat):
         """
@@ -101,6 +100,28 @@ class ReduceShearCat(PipelineStage):
 
         return cat
 
+    def shear_cut(self, cat):
+        """
+        Apply additional shear cuts to catalog.
+        :param cat:
+        :return:
+        """
+
+        logger.info('Applying shear cuts to catalog.')
+
+        ishape_flags_mask = cat['ishape_hsm_regauss_flags'] == False
+        ishape_sigma_mask = ~np.isnan(cat['ishape_hsm_regauss_sigma'])
+        ishape_resolution_mask = cat['ishape_hsm_regauss_resolution'] >= 0.3
+        ishape_shear_mod_mask = (cat['ishape_hsm_regauss_e1']**2 + cat['ishape_hsm_regauss_e2']**2) < 2
+        ishape_sigma_mask *= (cat['ishape_hsm_regauss_sigma'] >= 0.)*(cat['ishape_hsm_regauss_sigma'] <= 0.4)
+
+        shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
+
+        cat = copy.deepcopy(cat)
+        cat = cat[shearmask]
+
+        return cat
+
     def run(self) :
         """
         Main function.
@@ -110,19 +131,13 @@ class ReduceShearCat(PipelineStage):
         - Computes calibrated shear components g1, g2 and writes calibrated catalog.
         """
 
-        # Read list of files
-        f = open(self.get_input('raw_data'))
-        files = [s.strip() for s in f.readlines()]
-        f.close()
-
         #Read catalog
-        cat = Table.read(files[0])
-        if len(cat) > 1 :
-            for fname in files[1:]:
-                c = Table.read(fname)
-                cat = vstack([cat, c], join_type='exact')
+        logger.info('Reading cleaned catalog from {}.'.format(self.get_input('clean_catalog')))
+        cat = fits.open(self.get_input('clean_catalog'))[1].data
 
         logger.info('Initial catalog size: {}.'.format(len(cat)))
+        cat = self.shear_cut(cat)
+        logger.info('Catalog size after shear cut: {}.'.format(len(cat)))
         cat = self.pz_cut(cat)
         logger.info('Catalog size after pz cut: {}.'.format(len(cat)))
 
@@ -140,9 +155,11 @@ class ReduceShearCat(PipelineStage):
         cat_hdu = fits.table_to_hdu(cat_calib)
         # 3- Actual writing
         hdul = fits.HDUList([prm_hdu,cat_hdu])
-        hdul.writeto(self.get_output('clean_catalog'), overwrite=True)
-
+        hdul.writeto(self.get_output('calib_catalog'), overwrite=True)
         ####
+
+        # Write shear calibration values
+        np.savetxt(self.get_output('shear_calib'), np.array([R, mhat]), header='R, mhat')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
