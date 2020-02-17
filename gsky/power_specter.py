@@ -323,18 +323,18 @@ class PowerSpecter(PipelineStage) :
 
             # Compute and remove deprojection bias
             map_i = 0
-            map_j = 0
             for tr_i in range(self.ntracers):
+                map_j = 0
                 for tr_j in range(tr_i, self.ntracers):
                     if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
-                        cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
+                        cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                             lth, [clth[map_i, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias_temp)
                         cl_deproj_bias[map_i, map_j] = cl_deproj_bias_temp[0]
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
                     elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
-                        cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
+                        cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i, map_j + 1]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
                                                            cl_bias=cl_deproj_bias_temp)
@@ -349,7 +349,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
                     elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
-                        cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
+                        cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i + 1, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
                                                            cl_bias=cl_deproj_bias_temp)
@@ -364,7 +364,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i + 1, map_j] = cl_deproj_tempb
                         map_j += 1
                     else:
-                        cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
+                        cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                         lth, [clth[map_i, map_j], clth[map_i, map_j + 1],
                                                               clth[map_i + 1, map_j], clth[map_i + 1, map_j + 1]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1],
@@ -438,8 +438,8 @@ class PowerSpecter(PipelineStage) :
         cls_coupled = np.zeros_like(cls_decoupled)
 
         map_i = 0
-        map_j = 0
         for tr_i in range(self.ntracers) :
+            map_j = 0
             for tr_j in range(tr_i, self.ntracers) :
                 cl_coupled_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field,trc[tr_j].field,bpws)
                 cl_decoupled_temp = wsp[tr_i][tr_j].decouple_cell(cl_coupled_temp)
