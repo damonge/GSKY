@@ -67,8 +67,8 @@ class PowerSpecter(PipelineStage) :
         # Compute window functions
         logger.info("Computing window functions.")
         nbands = wsp[0][0].wsp.bin.n_bands
-        self.nell = wsp[0][0].wsp.ncls
-        logger.info('nell = {}.'.format(self.nell))
+        self.nbands = nbands
+        logger.info('nbands = {}.'.format(self.nbands))
         l_arr = np.arange(self.lmax + 1)
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
@@ -266,7 +266,7 @@ class PowerSpecter(PipelineStage) :
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
             s=sacc.SACC.loadFromHDF(self.get_output_fname('dpj_bias',ext='sacc'))
-            cl_deproj_bias = s.mean.vector.reshape((self.nmaps, self.nmaps, self.nell))
+            cl_deproj_bias = s.mean.vector.reshape((self.nmaps, self.nmaps, self.nbands))
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Remove deprojection bias
@@ -318,7 +318,7 @@ class PowerSpecter(PipelineStage) :
         else :
             logger.info("Computing deprojection bias.")
 
-            cl_deproj_bias = np.zeros((self.nmaps, self.nmaps, self.nell))
+            cl_deproj_bias = np.zeros((self.nmaps, self.nmaps, self.nbands))
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Compute and remove deprojection bias
@@ -411,7 +411,7 @@ class PowerSpecter(PipelineStage) :
             data=np.loadtxt(self.config['guess_spectrum'],unpack=True)
             l_use=data[0]
             cl_use=data[1:]
-            if cl_use.shape != (self.nmaps, self.nmaps, self.nell):
+            if cl_use.shape != (self.nmaps, self.nmaps, self.nbands):
                 raise ValueError("Theory power spectra have a wrong shape.")
         #Interpolate
         lth=np.arange(2,self.lmax+1)
@@ -434,7 +434,7 @@ class PowerSpecter(PipelineStage) :
         :param bpws: NaMaster bandpowers.
         """
 
-        cls_decoupled = np.zeros((self.nmaps, self.nmaps, self.nell))
+        cls_decoupled = np.zeros((self.nmaps, self.nmaps, self.nbands))
         cls_coupled = np.zeros_like(cls_decoupled)
 
         map_i = 0
@@ -702,7 +702,7 @@ class PowerSpecter(PipelineStage) :
         f=open(self.get_output_fname('gaucov_sims',ext='npz'),"w")
         f.close()
 
-        covar=np.zeros([self.ncross, self.nell, self.ncross, self.nell])
+        covar=np.zeros([self.ncross, self.nbands, self.ncross, self.nbands])
         # Get covar MCM for counts tracers
         cwsp=self.get_covar_mcm(tracers,bpws)
 
@@ -727,7 +727,7 @@ class PowerSpecter(PipelineStage) :
                         ix_2+=1
                 ix_1+=1
 
-        covar = covar.reshape([self.ncross*self.nell, self.ncross*self.nell])
+        covar = covar.reshape([self.ncross*self.nbands, self.ncross*self.nbands])
 
         return covar
 
