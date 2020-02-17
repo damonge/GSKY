@@ -1098,10 +1098,10 @@ class PowerSpecter(PipelineStage) :
         self.maps2tracers = [0 for i in range(self.nmaps)]
 
         map_i = 0
-        map_j = 0
-        for tr_i in range(self.ntracers) :
+        for tr_i in range(self.ntracers):
+            map_j = 0
             self.maps2tracers[map_i] = tr_i
-            for tr_j in range(tr_i, self.ntracers) :
+            for tr_j in range(tr_i, self.ntracers):
                 if trcs[tr_i].spin == 0 and trcs[tr_j].spin == 0:
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     map_j += 1
@@ -1185,6 +1185,8 @@ class PowerSpecter(PipelineStage) :
         logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
 
+        # Set up ordering and mapping
+        self.mapping()
         self.ordering = np.zeros([self.nmaps,self.nmaps],dtype=int)
         ix=0
         for i in range(self.nmaps) :
