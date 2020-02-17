@@ -1186,7 +1186,7 @@ class PowerSpecter(PipelineStage) :
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
 
         # Set up ordering and mapping
-        self.mapping()
+        self.mapping(tracers_nc)
         self.ordering = np.zeros([self.nmaps,self.nmaps],dtype=int)
         ix=0
         for i in range(self.nmaps) :
