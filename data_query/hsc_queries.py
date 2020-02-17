@@ -107,6 +107,7 @@ def write_fieldsearch(tablename,fieldname,fname_out,output_format="fits",
     stout+="       ,c.ishape_hsm_regauss_e2 as ishape_hsm_regauss_e2\n"
     stout+="       ,c.ishape_hsm_regauss_sigma as ishape_hsm_regauss_sigma\n"
     stout+="       ,c.ishape_hsm_regauss_resolution as ishape_hsm_regauss_resolution\n"
+    stout+="       ,c.ishape_hsm_regauss_flags\n"
     stout+="       ,d.ishape_hsm_regauss_derived_shape_weight as ishape_hsm_regauss_derived_shape_weight\n"
     stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_m as ishape_hsm_regauss_derived_shear_bias_m\n"
     stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_c1 as ishape_hsm_regauss_derived_shear_bias_c1\n"
