@@ -97,11 +97,12 @@ class PowerSpecter(PipelineStage) :
                         elif i == 0 and ii >= self.ncounts_maps:
                             if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                                 logger.info("Computing window functions for counts x shear.")
+                                logger.info("Only using E-mode window function.")
                                 windows = np.zeros([nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))
+                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
                                     t_hat[il] = 0.
                                 np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
@@ -114,11 +115,12 @@ class PowerSpecter(PipelineStage) :
                         elif i >= self.ncounts_maps and ii >= self.ncounts_maps:
                             if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                                 logger.info("Computing window functions for shear.")
+                                logger.info("Only using E-mode window function.")
                                 windows = np.zeros([nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))
+                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
                                     t_hat[il] = 0.
                                 np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
@@ -136,11 +138,12 @@ class PowerSpecter(PipelineStage) :
                 for ii in range(i, self.ntracers):
                     if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
                         logger.info("Computing window functions for shear.")
+                        logger.info("Only using E-mode window function.")
                         windows = np.zeros([nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
                         for il, l in enumerate(l_arr):
                             t_hat[il] = 1.
-                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))
+                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
                             t_hat[il] = 0.
                         np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                     else:
