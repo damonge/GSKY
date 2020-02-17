@@ -513,7 +513,7 @@ class PowerSpecter(PipelineStage) :
             for i in range(self.ntracers):
                 for ii in range(i, self.ntracers):
                     wsp = nmt.NmtWorkspaceFlat()
-                    if not os.path.isfile(self.get_output_fname('mcm', ext='dat')[self.ordering[i, ii]]):
+                    if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
                         logger.info("Computing MCM for shear.")
                         wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
                         wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
