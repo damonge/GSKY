@@ -175,7 +175,7 @@ class PowerSpecter(PipelineStage) :
         :param tracers: list of Tracers.
         :param wsp: NaMaster workspace.
         """
-        nls_all=np.zeros([self.ncross,self.nell])
+        nls_all=np.zeros([self.ncross,self.nbands])
         i_x=0
         for i in range(self.ntracers) :
             for j in range(i,self.ntracers) :
@@ -184,11 +184,11 @@ class PowerSpecter(PipelineStage) :
                     t = tracers[tr_i]
                     if t.spin == 0:
                         corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl=np.ones(self.nell)*corrfac/t.ndens_perad
+                        nl=np.ones(self.nbands)*corrfac/t.ndens_perad
                         nls_all[i_x]=wsp[tr_i, tr_j].decouple_cell([nl])[0]
                     elif t.spin == 2:
                         corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl=np.mean(self.e1_2rms_cat+self.e1_2rms_cat)*corrfac/t.ndens_perad
+                        nl=np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
                         nls_all[i_x]=wsp[tr_i, tr_j].decouple_cell([nl])[0]
                 i_x+=1
         return nls_all
@@ -964,7 +964,7 @@ class PowerSpecter(PipelineStage) :
 
         return sacc_tracers
 
-    def write_vector_to_sacc(self, fname_out, sacc_t, cls, windows, covar=None) :
+    def write_vector_to_sacc(self, fname_out, sacc_t, cls, ells, windows, covar=None) :
         """
         Write a vector of power spectrum measurements into a SACC file.
         :param fname_out: path to output file
@@ -991,7 +991,7 @@ class PowerSpecter(PipelineStage) :
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell)
+                                 window_id=range(self.nbands)
                                  )
                     map_j += 1
                 elif sacc_t[tr_i].spin == 0 and sacc_t[tr_j].spin == 2:
@@ -1001,14 +1001,14 @@ class PowerSpecter(PipelineStage) :
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j+1, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     map_j += 2
                 elif sacc_t[tr_i].spin == 2 and sacc_t[tr_j].spin == 0:
                     saccfile.add_ell_cl('cl_0e',
@@ -1017,14 +1017,14 @@ class PowerSpecter(PipelineStage) :
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=windows[tr_i, tr_j],
-                                        window_id=range(n_ell))
+                                        window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
                                         'wl_{}'.format(tr_i),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i+1, map_j, :],
                                         window=windows[tr_i, tr_j],
-                                        window_id=range(n_ell))
+                                        window_id=range(self.nbands))
                     map_j += 1
                 else:
                     saccfile.add_ell_cl('cl_ee',
@@ -1033,28 +1033,28 @@ class PowerSpecter(PipelineStage) :
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_eb',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i+1, map_j, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_be',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j+1, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_bb',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i+1, map_j+1, :],
                                  window=windows[tr_i, tr_j],
-                                 window_id=range(n_ell))
+                                 window_id=range(self.nbands))
                     map_j += 2
 
                 if sacc_t[tr_i].spin == 2:
@@ -1239,14 +1239,14 @@ class PowerSpecter(PipelineStage) :
         nls=self.get_noise(tracers_nc,wsp,bpws)
 
         logger.info("Writing output")
-        self.write_vector_to_sacc(self.get_output_fname('noi_bias',ext='sacc'),tracers_sacc,
-                                  nls,windows)
-        self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'),tracers_sacc,
-                                  cls_deproj,windows)
-        self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'),tracers_sacc,
-                                  cls_wodpj,windows,covar=cov_wodpj)
-        self.write_vector_to_sacc(self.get_output_fname('power_spectra_wdpj',ext='sacc'),tracers_sacc,
-                                  cls_wdpj,windows,covar=cov_wdpj)
+        self.write_vector_to_sacc(self.get_output_fname('noi_bias',ext='sacc'), tracers_sacc,
+                                  nls, ell_eff, windows)
+        self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
+                                  cls_deproj, ell_eff, windows)
+        self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'), tracers_sacc,
+                                  cls_wodpj, ell_eff, windows,covar=cov_wodpj)
+        self.write_vector_to_sacc(self.get_output_fname('power_spectra_wdpj',ext='sacc'), tracers_sacc,
+                                  cls_wdpj, ell_eff, windows,covar=cov_wdpj)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

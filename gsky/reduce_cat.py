@@ -289,7 +289,7 @@ class ReduceCat(PipelineStage) :
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
 
-        if self.get_output('ePSF_map') is not None:
+        if self.get_output('ePSFres_map') is not None:
             # delta_e_PSF maps
             logger.info('Creating e_PSF residual map.')
             mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
