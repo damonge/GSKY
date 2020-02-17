@@ -71,6 +71,8 @@ class PowerSpecter(PipelineStage) :
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
+        zero_arr = np.zeros(self.lmax + 1)
+
         if self.get_input('ngal_maps') != 'NONE':
             logger.info('Number density maps provided.')
             if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz'):
@@ -99,7 +101,7 @@ class PowerSpecter(PipelineStage) :
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat]))
+                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))
                                     t_hat[il] = 0.
                                 np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
@@ -116,7 +118,7 @@ class PowerSpecter(PipelineStage) :
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
+                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))
                                     t_hat[il] = 0.
                                 np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                             else:
@@ -138,7 +140,7 @@ class PowerSpecter(PipelineStage) :
                         t_hat = np.zeros(self.lmax + 1)
                         for il, l in enumerate(l_arr):
                             t_hat[il] = 1.
-                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
+                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))
                             t_hat[il] = 0.
                         np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
                     else:
