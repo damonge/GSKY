@@ -67,6 +67,8 @@ class PowerSpecter(PipelineStage) :
         # Compute window functions
         logger.info("Computing window functions.")
         nbands = wsp[0][0].wsp.bin.n_bands
+        self.nell = wsp[0][0].wsp.ncls
+        logger.info('nell = {}.'.format(self.nell))
         l_arr = np.arange(self.lmax + 1)
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
@@ -264,9 +266,61 @@ class PowerSpecter(PipelineStage) :
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
             s=sacc.SACC.loadFromHDF(self.get_output_fname('dpj_bias',ext='sacc'))
-            cls_deproj_all=s.mean.vector.reshape([self.ncross,self.nell])
+            cl_deproj_bias = s.mean.vector.reshape((self.nmaps, self.nmaps, self.nell))
+            cl_deproj = np.zeros_like(cl_deproj_bias)
+
+            # Remove deprojection bias
+            map_i = 0
+            map_j = 0
+            for tr_i in range(self.ntracers):
+                for tr_j in range(tr_i, self.ntracers):
+                    if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias[map_i, map_j])
+                        cl_deproj[map_i, map_j] = cl_deproj_temp[0]
+                        map_j += 1
+                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
+                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                        # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
+                        cl_deproj_tempe = cl_deproj_temp[0]
+                        cl_deproj_tempb = cl_deproj_temp[1]
+                        cl_deproj[map_i, map_j] = cl_deproj_tempe
+                        cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
+                        map_j += 2
+                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
+                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                        # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
+                        cl_deproj_tempe = cl_deproj_temp[0]
+                        cl_deproj_tempb = cl_deproj_temp[1]
+                        cl_deproj[map_i, map_j] = cl_deproj_tempe
+                        cl_deproj[map_i + 1, map_j] = cl_deproj_tempb
+                        map_j += 1
+                    else:
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1],
+                                                            cl_coupled[map_i + 1, map_j], cl_coupled[map_i + 1, map_j + 1]],
+                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                        # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
+                        cl_deproj_tempe = cl_deproj_temp[0]
+                        cl_deproj_tempeb = cl_deproj_temp[1]
+                        cl_deproj_tempbe = cl_deproj_temp[2]
+                        cl_deproj_tempb = cl_deproj_temp[3]
+                        cl_deproj[map_i, map_j] = cl_deproj_tempe
+                        cl_deproj[map_i, map_j + 1] = cl_deproj_tempeb
+                        cl_deproj[map_i + 1, map_j] = cl_deproj_tempbe
+                        cl_deproj[map_i + 1, map_j + 1] = cl_deproj_tempb
+                        map_j += 2
+
+                if trc[tr_i].spin == 2:
+                    map_i += 2
+                else:
+                    map_i += 1
         else :
-            print("Computing deprojection bias")
+            logger.info("Computing deprojection bias.")
+
+            cl_deproj_bias = np.zeros((self.nmaps, self.nmaps, self.nell))
+            cl_deproj = np.zeros_like(cl_deproj_bias)
+
             # Compute and remove deprojection bias
             map_i = 0
             map_j = 0
@@ -275,14 +329,14 @@ class PowerSpecter(PipelineStage) :
                     if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                         cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                             lth, [clth[map_i, map_j]])
-                        cl_deproj_temp = wsp.decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias_temp)
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias_temp)
                         cl_deproj_bias[map_i, map_j] = cl_deproj_bias_temp[0]
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
-                    elif trc[tr_i].spin == 0 and tr[tr_j].spin == 2:
+                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                         cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i, map_j + 1]])
-                        cl_deproj_temp = wsp.decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
                                                            cl_bias=cl_deproj_bias_temp)
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                         cl_deproj_bias_tempe = cl_deproj_bias_temp[0]
@@ -294,10 +348,10 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j] = cl_deproj_tempe
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
-                    elif trc[tr_i].spin == 2 and tr[tr_j].spin == 0:
+                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                         cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i + 1, map_j]])
-                        cl_deproj_temp = wsp.decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
                                                            cl_bias=cl_deproj_bias_temp)
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                         cl_deproj_bias_tempe = cl_deproj_bias_temp[0]
@@ -313,7 +367,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj_bias_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                         lth, [clth[map_i, map_j], clth[map_i, map_j + 1],
                                                               clth[map_i + 1, map_j], clth[map_i + 1, map_j + 1]])
-                        cl_deproj_temp = wsp.decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1],
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1],
                                                             cl_coupled[map_i + 1, map_j], cl_coupled[map_i + 1, map_j + 1]],
                                                            cl_bias=cl_deproj_bias_temp)
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
@@ -388,7 +442,7 @@ class PowerSpecter(PipelineStage) :
         for tr_i in range(self.ntracers) :
             for tr_j in range(tr_i, self.ntracers) :
                 cl_coupled_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field,trc[tr_j].field,bpws)
-                cl_decoupled_temp = wsp[tr_i, tr_j].decouple_cell(cl_coupled_temp)
+                cl_decoupled_temp = wsp[tr_i][tr_j].decouple_cell(cl_coupled_temp)
                 if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                     cls_coupled[map_i, map_j] = cl_coupled_temp[0]
                     cls_decoupled[map_i, map_j] = cl_decoupled_temp[0]
@@ -1110,7 +1164,7 @@ class PowerSpecter(PipelineStage) :
         cls_wodpj,_=self.get_power_spectra(tracers_nc,wsp,bpws)
         logger.info(" W. deprojections.")
         cls_wdpj,cls_wdpj_coupled=self.get_power_spectra(tracers_wc,wsp,bpws)
-        self.ncross,self.nell=cls_wodpj.shape
+        self.ncross = cls_wodpj.shape[0]
 
         logger.info("Getting guess power spectra.")
         lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
