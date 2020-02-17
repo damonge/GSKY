@@ -180,7 +180,7 @@ class PowerSpecter(PipelineStage) :
         for i in range(self.ntracers) :
             for j in range(i,self.ntracers) :
                 if i==j : #Add shot noise in auto-correlation
-                    tr_i, tr_j = self.pss2tracers(i, j)
+                    tr_i, tr_j = self.pss2tracers[i][j]
                     t = tracers[tr_i]
                     if t.spin == 0:
                         corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
@@ -587,50 +587,91 @@ class PowerSpecter(PipelineStage) :
         """
         Get NmtCovarianceWorkspaceFlat for our mask
         """
-        cwsp=nmt.NmtCovarianceWorkspaceFlat()
-        if not os.path.isfile(self.get_output_fname('cov_mcm',ext='dat')) :
-            print("Computing covariance MCM")
-            cwsp = [[[[0 for i in range(self.nmaps)] for ii in self.nmaps]
-                     for j in range(self.nmaps)] for jj in range(self.nmaps)]
-            # Compute wsp for counts (is always the same as mask is the same)
-            cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
-            print("Computing covariance MCM for counts.")
-            cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
-            cwsp_counts.write_to(self.get_output_fname('cov_mcm', ext='dat')[0])
 
+        logger.info("Computing covariance MCM.")
+
+        cwsp = [[[[0 for i in range(self.nmaps)] for ii in range(self.nmaps)]
+                 for j in range(self.nmaps)] for jj in range(self.nmaps)]
+
+        if self.get_input('ngal_maps') != 'NONE':
+            logger.info('Number density maps provided.')
+            if not os.path.isfile(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')):
+                # Compute wsp for counts (is always the same as mask is the same)
+                cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
+                logger.info("Computing covariance MCM for counts.")
+                cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
+                cwsp_counts.write_to(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'))
+            else:
+                logger.info("Reading covariance MCM for counts.")
+                cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
+                cwsp_counts.read_from(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'))
+
+            if self.get_input('shear_maps') != 'NONE':
+                logger.info('Number density and shear maps provided.')
+                for i1 in range(self.nmaps):
+                    for j1 in range(i1, self.nmaps):
+                        for i2 in range(self.nmaps):
+                            for j2 in range(i2, self.nmaps):
+                                if not os.path.isfile(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat')):
+                                    logger.info("Computing covariance MCM for shear.")
+                                    tr_i1, tr_j1 = self.pss2tracers[i1][j1]
+                                    tr_i2, tr_j2 = self.pss2tracers[i2][j2]
+                                    tr_indxs = np.array([tr_i1, tr_j1, tr_i2, tr_j2])
+                                    if np.all(tr_indxs < self.ntracers_counts):
+                                        cwsp_curr = cwsp_counts
+                                    elif np.any(tr_indxs < self.ntracers_counts) and np.all(tr_indxs != 0):
+                                        i1_curr = i1
+                                        j1_curr = j1
+                                        i2_curr = i2
+                                        j2_curr = j2
+                                        if tr_i1 < self.ntracers_counts:
+                                            i1_curr = 0
+                                        if tr_j1 < self.ntracers_counts:
+                                            j1_curr = 0
+                                        if tr_i2 < self.ntracers_counts:
+                                            i2_curr = 0
+                                        if tr_j2 < self.ntracers_counts:
+                                            j2_curr = 0
+                                        cwsp_curr = cwsp[i1_curr][j1_curr][i2_curr][j2_curr]
+                                    else:
+                                        cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
+                                        cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
+                                                                                tracers[tr_i2].field, tracers[tr_j2].field, bpws)
+                                    cwsp_curr.write_to(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat'))
+
+                                else :
+                                    logger.info("Reading covariance MCM for shear.")
+                                    cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
+                                    cwsp_curr.read_from(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat'))
+                                cwsp[i1][j1][i2][j2] = cwsp_curr
+
+        # Only shear maps case
+        else:
+            logger.info('Shear maps provided.')
             for i1 in range(self.nmaps):
                 for j1 in range(i1, self.nmaps):
                     for i2 in range(self.nmaps):
                         for j2 in range(i2, self.nmaps):
-                            tr_i1, tr_j1 = self.pss2tracers[i1, j1]
-                            tr_i2, tr_j2 = self.pss2tracers[i2, j2]
-                            tr_indxs = np.array([tr_i1, tr_j1, tr_i2, tr_j2])
-                            if np.all(tr_indxs < self.ntracers_counts):
-                                cwsp_curr = cwsp_counts
-                            elif np.any(tr_indxs < self.ntracers_counts) and np.all(tr_indxs != 0):
-                                i1_curr = i1
-                                j1_curr = j1
-                                i2_curr = i2
-                                j2_curr = j2
-                                if tr_i1 < self.ntracers_counts:
-                                    i1_curr = 0
-                                if tr_j1 < self.ntracers_counts:
-                                    j1_curr = 0
-                                if tr_i2 < self.ntracers_counts:
-                                    i2_curr = 0
-                                if tr_j2 < self.ntracers_counts:
-                                    j2_curr = 0
-                                cwsp_curr = cwsp[i1_curr, j1_curr, i2_curr, j2_curr]
-                            else:
-                                cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                                cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
-                                                                        tracers[tr_i2].field, tracers[tr_j2].field, bpws)
+                            if not os.path.isfile(self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat')):
+                                logger.info("Computing covariance MCM for shear.")
+                                tr_i1, tr_j1 = self.pss2tracers[i1][j1]
+                                tr_i2, tr_j2 = self.pss2tracers[i2][j2]
 
-                            cwsp[i1, j1, i2, j2] = cwsp_curr
-                            cwsp_curr.write_to(self.get_output_fname('cov_mcm', ext='dat')[0])
-        else :
-            print("Reading covariance MCM")
-            cwsp.read_from(self.get_output_fname('cov_mcm',ext='dat'))
+                                cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
+                                cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field,
+                                                                        bpws,
+                                                                        tracers[tr_i2].field, tracers[tr_j2].field,
+                                                                        bpws)
+                                cwsp_curr.write_to(
+                                    self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat'))
+
+                            else:
+                                logger.info("Reading covariance MCM for shear.")
+                                cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
+                                cwsp_curr.read_from(
+                                    self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat'))
+                            cwsp[i1][j1][i2][j2] = cwsp_curr
+
         
         return cwsp
 
@@ -712,8 +753,8 @@ class PowerSpecter(PipelineStage) :
                 ix_2=0
                 for i2 in enumerate(self.nmaps) :
                     for j2 in enumerate(i2, self.nmaps) :
-                        tr_i1, tr_j1 = self.pss2tracers[i1, j1]
-                        tr_i2, tr_j2 = self.pss2tracers[i2, j2]
+                        tr_i1, tr_j1 = self.pss2tracers[i1][j1]
+                        tr_i2, tr_j2 = self.pss2tracers[i2][j2]
 
                         ca1b1=clth[i1, i2]
                         ca1b2=clth[i1, j2]
@@ -1062,24 +1103,24 @@ class PowerSpecter(PipelineStage) :
             self.maps2tracers[map_i] = tr_i
             for tr_j in range(tr_i, self.ntracers) :
                 if trcs[tr_i].spin == 0 and trcs[tr_j].spin == 0:
-                    self.pss2tracers[map_i, map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     map_j += 1
                 elif trcs[tr_i].spin == 0 and trcs[tr_j].spin == 2:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
-                    self.pss2tracers[map_i, map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_i, map_j+1] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
                     map_j += 2
                 elif trcs[tr_i].spin == 2 and trcs[tr_j].spin == 0:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
-                    self.pss2tracers[map_i, map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_i+1, map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
                     map_j += 1
                 else:
                     # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
-                    self.pss2tracers[map_i, map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_i+1, map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_i, map_j+1] = (tr_i, tr_j)
-                    self.pss2tracers[map_i+1, map_j+1] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
+                    self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
+                    self.pss2tracers[map_i+1][map_j+1] = (tr_i, tr_j)
                     map_j += 2
 
             if trcs[tr_i].spin == 2:
