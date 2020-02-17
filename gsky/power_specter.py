@@ -593,6 +593,8 @@ class PowerSpecter(PipelineStage) :
         cwsp = [[[[0 for i in range(self.nmaps)] for ii in range(self.nmaps)]
                  for j in range(self.nmaps)] for jj in range(self.nmaps)]
 
+        print(self.pss2tracers)
+
         if self.get_input('ngal_maps') != 'NONE':
             logger.info('Number density maps provided.')
             if not os.path.isfile(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')):
@@ -1099,26 +1101,29 @@ class PowerSpecter(PipelineStage) :
 
         map_i = 0
         for tr_i in range(self.ntracers):
-            map_j = 0
+            map_j = map_i
             self.maps2tracers[map_i] = tr_i
             for tr_j in range(tr_i, self.ntracers):
                 if trcs[tr_i].spin == 0 and trcs[tr_j].spin == 0:
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
+                    if map_j != map_j:
+                        self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
                     map_j += 1
                 elif trcs[tr_i].spin == 0 and trcs[tr_j].spin == 2:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
-                    self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
+                    if map_j != map_j:
+                        self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
+                        self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
                     map_j += 2
                 elif trcs[tr_i].spin == 2 and trcs[tr_j].spin == 0:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i+1] = (tr_i, tr_j)
+                    if map_j != map_j:
+                        self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
+                        self.pss2tracers[map_j][map_i+1] = (tr_i, tr_j)
                     map_j += 1
                 else:
                     # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
@@ -1126,10 +1131,11 @@ class PowerSpecter(PipelineStage) :
                     self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
                     self.pss2tracers[map_i+1][map_j+1] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
-                    self.pss2tracers[map_j][map_i+1] = (tr_i, tr_j)
-                    self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
-                    self.pss2tracers[map_j+1][map_i+1] = (tr_i, tr_j)
+                    if map_j != map_j:
+                        self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
+                        self.pss2tracers[map_j][map_i+1] = (tr_i, tr_j)
+                        self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
+                        self.pss2tracers[map_j+1][map_i+1] = (tr_i, tr_j)
                     map_j += 2
 
             if trcs[tr_i].spin == 2:
