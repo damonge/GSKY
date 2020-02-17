@@ -157,7 +157,7 @@ class ShearCatMapper(CatMapper) :
                 hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('counts map (shear sample), bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][2].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
             else:
                 head = header.copy()
@@ -176,7 +176,7 @@ class ShearCatMapper(CatMapper) :
                 hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
                 head['DESCR'] = ('counts map (shear sample), bin %d'%(im+1), 'Description')
-                hdu = fits.ImageHDU(data=m_list[1][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
+                hdu = fits.ImageHDU(data=m_list[1][2].reshape([self.fsk.ny,self.fsk.nx]), header=head)
                 hdus.append(hdu)
 
             # e2rms
