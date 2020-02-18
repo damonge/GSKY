@@ -762,33 +762,38 @@ class PowerSpecter(PipelineStage) :
         :param wsp: NaMaster workspace.
         """
         #Create a dummy file for the covariance MCM
-        f=open(self.get_output_fname('gaucov_sims',ext='npz'),"w")
+        f=open(self.get_output_fname('gaucov_analytic',ext='npz'),"w")
         f.close()
 
         covar=np.zeros([self.ncross, self.nbands, self.ncross, self.nbands])
         # Get covar MCM for counts tracers
         cwsp=self.get_covar_mcm(tracers,bpws)
 
-        ix_1=0
-        for i1 in enumerate(self.nmaps) :
-            for j1 in enumerate(i1, self.nmaps) :
-                ix_2=0
-                for i2 in enumerate(self.nmaps) :
-                    for j2 in enumerate(i2, self.nmaps) :
-                        tr_i1, tr_j1 = self.pss2tracers[i1][j1]
-                        tr_i2, tr_j2 = self.pss2tracers[i2][j2]
+        tracer_combs = []
+        for i1 in range(self.nmaps):
+            for j1 in range(i1, self.nmaps):
+                tracer_combs.append((i1, j1))
 
-                        ca1b1=clth[i1, i2]
-                        ca1b2=clth[i1, j2]
-                        ca2b1=clth[j1, i2]
-                        ca2b2=clth[j1, j2]
-                        cov_here=nmt.gaussian_covariance_flat(cwsp[i1, j1, i2, j2], tracers[tr_i1].spin, tracers[tr_i2].spin,
-                                                              tracers[tr_j1].spin, tracers[tr_j2].spin, lth,
-                                                              [ca1b1], [ca1b2], [ca2b1], [ca2b2], wsp[tr_i1, tr_j1],
-                                                              wsp[tr_i2, tr_j2])
-                        covar[ix_1, :, ix_2, :] = cov_here
-                        ix_2+=1
-                ix_1+=1
+        ix_1 = 0
+        for k1, tup1 in enumerate(tracer_combs):
+            i1, j1 = tup1
+            ix_2 = 0
+            for i2, j2 in tracer_combs[k1:]:
+                tr_i1, tr_j1 = self.pss2tracers[i1][j1]
+                tr_i2, tr_j2 = self.pss2tracers[i2][j2]
+
+                ca1b1=clth[i1, i2]
+                ca1b2=clth[i1, j2]
+                ca2b1=clth[j1, i2]
+                ca2b2=clth[j1, j2]
+
+                cov_here = nmt.gaussian_covariance_flat(cwsp[i1][j1][i2][j2], tracers[tr_i1].spin, tracers[tr_i2].spin,
+                                                      tracers[tr_j1].spin, tracers[tr_j2].spin, lth,
+                                                      [ca1b1], [ca1b2], [ca2b1], [ca2b2], wsp[tr_i1][tr_j1],
+                                                      wsp[tr_i2][tr_j2])
+                covar[ix_1, :, ix_2, :] = cov_here
+                ix_2+=1
+            ix_1+=1
 
         covar = covar.reshape([self.ncross*self.nbands, self.ncross*self.nbands])
 
