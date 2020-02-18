@@ -22,6 +22,7 @@ class Tracer(object) :
 
         if not is_shear:
             logger.info('Creating tracer object for number density.')
+            self.spin = 0
             #Read numbers map
             self.fsk,nmap=read_flat_map(None,hdu=hdu_list[2*i_bin])
             compare_infos(fsk,self.fsk)
@@ -64,6 +65,7 @@ class Tracer(object) :
 
         else:
             logger.info('Creating tracer object for shear.')
+            self.spin = 2
             # Read shear map
             self.fsk, gammamaps = read_flat_map(None, hdu=[hdu_list[6*i_bin], hdu_list[6*i_bin+1]])
             compare_infos(fsk, self.fsk)

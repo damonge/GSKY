@@ -3,15 +3,21 @@ from .types import FitsFile
 from astropy.table import Table,vstack
 import numpy as np
 from .flatmaps import FlatMapInfo
-from .map_utils import createCountsMap, createMeanStdMaps, createMask, removeDisconnected
+from .map_utils import createCountsMap, createMeanStdMaps, createMask, removeDisconnected, createSpin2Map
 from .estDepth import get_depth
 from astropy.io import fits
+import copy
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage) :
     name="ReduceCat"
     inputs=[('raw_data',None)]
     outputs=[('clean_catalog',FitsFile),('dust_map',FitsFile),('star_map',FitsFile),
-             ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile)]
+             ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile),
+             ('ePSF_map', None), ('ePSFres_map', None)]
     config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
                     'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
                     'flat_project':'CAR','mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
@@ -100,7 +106,69 @@ class ReduceCat(PipelineStage) :
                           arr1=arr1,arr2=arr2,
                           flatSkyGrid=fsk,SNRthreshold=self.config['min_snr'])
         desc='%d-s depth, '%(self.config['min_snr'])+band+' '+method+' mean'
+
         return depth,desc
+
+    def make_PSF_maps(self, cat, fsk, sel):
+        """
+        Get e_PSF, 1, e_PSF, 2 maps from catalog.
+        Here we go from weighted moments to ellipticities following Hirata & Seljak, 2003, arXiv:0301054
+        :param cat:
+        :return:
+        """
+
+        # PSF of stars
+        star_cat = copy.deepcopy(cat)[sel]
+        Mxx = star_cat['ishape_psf_moments_11']
+        Myy = star_cat['ishape_psf_moments_22']
+        Mxy = star_cat['ishape_psf_moments_12']
+        T_I = Mxx + Myy
+        e_plus_I = (Mxx - Myy)/T_I
+        e_cross_I = 2*Mxy/T_I
+        ePSFmaps, ePSFmasks = createSpin2Map(star_cat[self.config['ra']], star_cat[self.config['dec']], e_plus_I, \
+                                             e_cross_I, fsk, \
+                                 weights=star_cat['ishape_hsm_regauss_derived_shape_weight'], \
+                                 shearrot=self.config['shearrot'])
+
+        maps = [ePSFmaps, ePSFmasks]
+
+        return maps
+
+    def make_PSF_res_maps(self, cat, fsk, sel):
+        """
+        Get e_PSF, 1, e_PSF, 2 residual maps from catalog.
+        Here we go from weighted moments to ellipticities following Hirata & Seljak, 2003, arXiv:0301054
+        :param cat:
+        :return:
+        """
+
+        # PSF of stars
+        star_cat = copy.deepcopy(cat)[sel]
+        Mxx = star_cat['ishape_psf_moments_11']
+        Myy = star_cat['ishape_psf_moments_22']
+        Mxy = star_cat['ishape_psf_moments_12']
+        T_I = Mxx + Myy
+        e_plus_PSF = (Mxx - Myy)/T_I
+        e_cross_PSF = 2*Mxy/T_I
+
+        Mxx = star_cat['ishape_hsm_moments_11']
+        Myy = star_cat['ishape_hsm_moments_22']
+        Mxy = star_cat['ishape_hsm_moments_12']
+        T_I = Mxx + Myy
+        e_plus_I = (Mxx - Myy)/T_I
+        e_cross_I = 2*Mxy/T_I
+
+        delta_e_plus = e_plus_PSF - e_plus_I
+        delta_e_cross = e_cross_PSF - e_cross_I
+
+        ePSFresmaps, ePSFresmasks = createSpin2Map(star_cat[self.config['ra']], star_cat[self.config['dec']], delta_e_plus, \
+                                             delta_e_cross, fsk, \
+                                 weights=star_cat['ishape_hsm_regauss_derived_shape_weight'], \
+                                 shearrot=self.config['shearrot'])
+
+        maps = [ePSFresmaps, ePSFresmasks]
+
+        return maps
 
     def run(self) :
         """
@@ -194,6 +262,59 @@ class ReduceCat(PipelineStage) :
         mstar,descstar=self.make_star_map(cat,fsk,sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
+        if self.get_output('ePSF_map') is not None:
+            # e_PSF maps
+            logger.info('Creating e_PSF map.')
+            mPSFstar = self.make_PSF_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            header = fsk.wcs.to_header()
+            hdus = []
+            head = header.copy()
+            head['DESCR'] = ('e_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('e_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
+
+        if self.get_output('ePSFres_map') is not None:
+            # delta_e_PSF maps
+            logger.info('Creating e_PSF residual map.')
+            mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            header = fsk.wcs.to_header()
+            hdus = []
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('e_PSFres binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape([fsk.ny, fsk.nx]), header=head)
+            hdus.append(hdu)
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
         
         #Binary BO mask
         mask_bo,fsg=self.make_bo_mask(cat,fsk)
