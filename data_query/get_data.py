@@ -8,7 +8,6 @@ import os
 #  Download catalog-level data #
 #                              #
 ################################
-
 #Per-frame metadata
 write_frames("s16a_wide","frames_wide.sql",submit=True)
 write_frames("s16a_deep","frames_deep.sql",submit=True)
@@ -24,18 +23,19 @@ write_fieldsearch("s16a_wide",'vvds',"field_wide_vvds_h1_pz_strict.sql",
 write_fieldsearch("s16a_wide",'vvds',"field_wide_vvds_h2_pz_strict.sql",
                   submit=True,ra_range=[336.,342.],strict_cuts=True,part=2,
                   do_download=False)
-'''
-
 #DEEP fields
-for fld in ['cosmos','deep2_3','elais_n1','xmm_lss'] :
-    write_fieldsearch("pdr1_deep",fld,"field_deep_"+fld+"_pz_strict.sql",do_field=True,
-                      submit=True,do_photoz=True,strict_cuts=True)
+#for fld in ['cosmos','deep2_3','elais_n1','xmm_lss'] :
+for fld in ['deep2_3','elais_n1','xmm_lss'] :
+    write_fieldsearch("s16a_deep",fld,"field_deep_"+fld+"_pz_strict.sql",
+                      submit=True,strict_cuts=True,do_download=False,
+                      w_lensing=False)
 
 #UDEEP fields
 for fld in ['cosmos','sxds'] :
-    write_fieldsearch("pdr1_udeep",fld,"field_udeep_"+fld+"_pz_strict.sql",do_field=True,
-                      submit=True,do_photoz=True,strict_cuts=True)
-
+    write_fieldsearch("s16a_udeep",fld,"field_udeep_"+fld+"_pz_strict.sql",
+                      submit=True,strict_cuts=True,do_download=False,
+                      w_lensing=False)
+'''
 #WIDE-depth COSMOS
 for see in ['best','median','worst'] :
     write_fieldsearch("pdr1_cosmos_widedepth_"+see,"none","field_cosmo_wide_"+see+".sql",
@@ -96,7 +96,7 @@ for fld in ['cosmos','sxds'] :
 for see in ['best','median','worst'] :
     fname=prd.predir_saving+'PDR1_COSMOS_WIDEDEPTH_'+see.upper()+'_NONE_shearcat_forced.fits'
     add_Arcturus_flag(fname)
-
+'''
 
 ###########################
 #                         #
@@ -137,24 +137,22 @@ get_cosmos30band()
 #                        #
 ##########################
 
-def get_pdfs(fld,pzcode) :
-    predir=prd.predir_saving+fld.upper()+'/'+pzcode+'/'
+def get_pdfs(fld):
+    predir=prd.predir_saving+'pzs/'+fld.upper()+'/'
     if os.path.isfile(predir+'done') :
-        print("Found pdfs - ("+fld+","+pzcode+")")
+        print("Found pdfs - ("+fld+")")
         return
 
-    tarfile='pdr1_'+pzcode+'_'+fld+'.tar.xz'
-    url='https://hsc-release.mtk.nao.ac.jp/archive/photoz/pdr1/pdf/'+pzcode
-    url+='/'+tarfile
-    os.system('wget '+url)
+    print(predir)
+    url='https://hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/Sirius/'+fld.upper()+'_tracts/'
+    os.system('wget -np -r --user=damonge --password=$HSC_SSP_CAS_PASSWORD '+url)
+    predir_i = 'hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/Sirius/'+fld.upper()+'_tracts/'
+    os.system('rm ' + predir_i + 'index.html')
     os.system('mkdir -p '+predir)
+    os.system('mv '+predir_i+'*.fits '+predir)
+    os.system('rm -r '+predir_i)
     os.system('touch '+predir+'done')
-    os.system('tar -C '+predir+' -xf '+tarfile)
-    os.system('rm '+tarfile)
 
-for pc in ['nnpz','ephor','ephor_ab','demp','frankenz'] :
-    for f in ['wide_aegis','wide_gama09h','wide_gama15h','wide_hectomap','wide_vvds',
-              'wide_wide12h','wide_xmmlss',
-              'deep_cosmos','deep_elaisn1','deep_xmmlss','deep_deep23'] :
-        get_pdfs(f,pc)
-'''
+for f in ['aegis','gama09h','gama15h','hectomap','vvds',
+          'wide12h','xmm']:
+    get_pdfs(f)
