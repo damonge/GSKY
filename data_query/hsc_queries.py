@@ -48,7 +48,7 @@ def write_frames(tablename,fname_out,output_format='fits',submit=False,do_downlo
 
 def write_fieldsearch(tablename,fieldname,fname_out,output_format="fits",
                       submit=False,ra_range=None,exhaustive=False,
-                      strict_cuts=False,do_download=True,part=None) :
+                      strict_cuts=False,do_download=True,part=None, w_lensing=True) :
     filters=['g','r','i','z','y']
     stout="-- Run field, "+fname_out+"\n"
 
@@ -108,18 +108,20 @@ def write_fieldsearch(tablename,fieldname,fname_out,output_format="fits",
     stout+="       ,c.ishape_hsm_regauss_sigma as ishape_hsm_regauss_sigma\n"
     stout+="       ,c.ishape_hsm_regauss_resolution as ishape_hsm_regauss_resolution\n"
     stout+="       ,c.ishape_hsm_regauss_flags\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_shape_weight as ishape_hsm_regauss_derived_shape_weight\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_m as ishape_hsm_regauss_derived_shear_bias_m\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_c1 as ishape_hsm_regauss_derived_shear_bias_c1\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_c2 as ishape_hsm_regauss_derived_shear_bias_c2\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_sigma_e as ishape_hsm_regauss_derived_sigma_e\n"
-    stout+="       ,d.ishape_hsm_regauss_derived_rms_e as ishape_hsm_regauss_derived_rms_e\n"    
+    if w_lensing:
+        stout+="       ,d.ishape_hsm_regauss_derived_shape_weight as ishape_hsm_regauss_derived_shape_weight\n"
+        stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_m as ishape_hsm_regauss_derived_shear_bias_m\n"
+        stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_c1 as ishape_hsm_regauss_derived_shear_bias_c1\n"
+        stout+="       ,d.ishape_hsm_regauss_derived_shear_bias_c2 as ishape_hsm_regauss_derived_shear_bias_c2\n"
+        stout+="       ,d.ishape_hsm_regauss_derived_sigma_e as ishape_hsm_regauss_derived_sigma_e\n"
+        stout+="       ,d.ishape_hsm_regauss_derived_rms_e as ishape_hsm_regauss_derived_rms_e\n"    
     stout+="FROM\n"
     stout+="       "+tablename+".forced as a\n"
     stout+="       LEFT JOIN "+tablename+".meas b USING (object_id)\n"
     stout+="       LEFT JOIN "+tablename+".meas2 c USING (object_id)\n"
     stout+="       LEFT JOIN "+tablename+".photoz_ephor_ab peab USING (object_id)\n"
-    stout+="       LEFT JOIN "+tablename+".weaklensing_hsm_regauss d USING (object_id)\n"
+    if w_lensing:
+        stout+="       LEFT JOIN "+tablename+".weaklensing_hsm_regauss d USING (object_id)\n"
     stout+="WHERE\n"
     stout+="       a.detect_is_primary=True and\n"
     stout+="       a.icmodel_flags_badcentroid=False and\n"
