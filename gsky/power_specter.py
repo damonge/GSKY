@@ -1001,8 +1001,8 @@ class PowerSpecter(PipelineStage) :
             saccfile.add_tracer_object(trc)
 
         map_i = 0
-        map_j = 0
         for tr_i in range(self.ntracers):
+            map_j = map_i
             for tr_j in range(tr_i, self.ntracers):
                 if sacc_t[tr_i].spin == 0 and sacc_t[tr_j].spin == 0:
                     saccfile.add_ell_cl('cl_00',
@@ -1077,10 +1077,10 @@ class PowerSpecter(PipelineStage) :
                                  window_id=range(self.nbands))
                     map_j += 2
 
-                if sacc_t[tr_i].spin == 2:
-                    map_i += 2
-                else:
-                    map_i += 1
+            if sacc_t[tr_i].spin == 2:
+                map_i += 2
+            else:
+                map_i += 1
 
         if covar is not None :
             saccfile.add_covariance(covar)
