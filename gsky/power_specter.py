@@ -1010,7 +1010,7 @@ class PowerSpecter(PipelineStage) :
                                  'gc_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands)
                                  )
                     map_j += 1
@@ -1020,14 +1020,14 @@ class PowerSpecter(PipelineStage) :
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j+1, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     map_j += 2
                 elif sacc_t[tr_i].spin == 2 and sacc_t[tr_j].spin == 0:
@@ -1036,14 +1036,14 @@ class PowerSpecter(PipelineStage) :
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=windows[tr_i, tr_j],
+                                        window=windows[tr_i][tr_j],
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
                                         'wl_{}'.format(tr_i),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i+1, map_j, :],
-                                        window=windows[tr_i, tr_j],
+                                        window=windows[tr_i][tr_j],
                                         window_id=range(self.nbands))
                     map_j += 1
                 else:
@@ -1052,28 +1052,28 @@ class PowerSpecter(PipelineStage) :
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_eb',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i+1, map_j, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_be',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j+1, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_bb',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
                                  ells,
                                  cls[map_i+1, map_j+1, :],
-                                 window=windows[tr_i, tr_j],
+                                 window=windows[tr_i][tr_j],
                                  window_id=range(self.nbands))
                     map_j += 2
 
