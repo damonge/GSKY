@@ -24,9 +24,7 @@ class PowerSpecter(PipelineStage) :
             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),
             ('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),
             ('syst_masking_file',ASCIIFile)]
-    outputs=[('dummy',DummyFile), ('mcm', BinaryFile), ('windows_l', NpzFile),
-             ('noi_bias', SACCFile), ('dpj_bias', SACCFile), ('power_spectra_wodpj', SACCFile),
-             ('power_spectra_wdpj', SACCFile)]
+    outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
                                 1000.0,1400.0,1800.0,
@@ -612,44 +610,42 @@ class PowerSpecter(PipelineStage) :
 
         logger.info("Computing covariance MCM.")
 
-        cwsp = [[[[0 for i in range(self.nmaps)] for ii in range(self.nmaps)]
-                 for j in range(self.nmaps)] for jj in range(self.nmaps)]
+        cwsp = [[[[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
+                 for j in range(self.ntracers)] for jj in range(self.ntracers)]
 
         tracer_combs = []
-        for i1 in range(self.nmaps):
-            for j1 in range(i1, self.nmaps):
+        for i1 in range(self.ntracers):
+            for j1 in range(i1, self.ntracers):
                 tracer_combs.append((i1, j1))
 
         if self.get_input('ngal_maps') != 'NONE':
             logger.info('Number density maps provided.')
-            if not os.path.isfile(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')):
+            if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'):
                 # Compute wsp for counts (is always the same as mask is the same)
                 cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
                 logger.info("Computing covariance MCM for counts.")
                 cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
-                cwsp_counts.write_to(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'))
+                cwsp_counts.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')
             else:
                 logger.info("Reading covariance MCM for counts.")
                 cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
-                cwsp_counts.read_from(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'))
+                cwsp_counts.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')
 
             if self.get_input('shear_maps') != 'NONE':
                 logger.info('Number density and shear maps provided.')
                 for k1, tup1 in enumerate(tracer_combs):
-                    i1, j1 = tup1
-                    for i2, j2 in tracer_combs[k1:]:
-                        if not os.path.isfile(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat')):
+                    tr_i1, tr_j1 = tup1
+                    for tr_i2, tr_j2 in tracer_combs[k1:]:
+                        if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat'):
                             logger.info("Computing covariance MCM for shear.")
-                            tr_i1, tr_j1 = self.pss2tracers[i1][j1]
-                            tr_i2, tr_j2 = self.pss2tracers[i2][j2]
                             tr_indxs = np.array([tr_i1, tr_j1, tr_i2, tr_j2])
                             if np.all(tr_indxs < self.ntracers_counts):
                                 cwsp_curr = cwsp_counts
                             elif np.any(tr_indxs < self.ntracers_counts) and np.all(tr_indxs != 0):
-                                i1_curr = i1
-                                j1_curr = j1
-                                i2_curr = i2
-                                j2_curr = j2
+                                i1_curr = tr_i1
+                                j1_curr = tr_j1
+                                i2_curr = tr_i2
+                                j2_curr = tr_j2
                                 if tr_i1 < self.ntracers_counts:
                                     i1_curr = 0
                                 if tr_j1 < self.ntracers_counts:
@@ -663,39 +659,36 @@ class PowerSpecter(PipelineStage) :
                                 cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                                 cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
                                                                         tracers[tr_i2].field, tracers[tr_j2].field, bpws)
-                            cwsp_curr.write_to(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat'))
+                            cwsp_curr.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
 
                         else :
                             logger.info("Reading covariance MCM for shear.")
                             cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                            cwsp_curr.read_from(self.get_output_fname('cov_mcm'+'_{}{}{}{}'.format(i1, j1, i2, j2)+'.dat'))
-                        cwsp[i1][j1][i2][j2] = cwsp_curr
+                            cwsp_curr.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
+                        cwsp[tr_i1][tr_j1][tr_i2][tr_j2] = cwsp_curr
 
         # Only shear maps case
         else:
             logger.info('Shear maps provided.')
             for k1, tup1 in enumerate(tracer_combs):
-                i1, j1 = tup1
-                for i2, j2 in tracer_combs[k1:]:
-                    if not os.path.isfile(self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat')):
+                tr_i1, tr_j1 = tup1
+                for tr_i2, tr_j2 in tracer_combs[k1:]:
+                    if not os.path.isfile(self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat'):
                         logger.info("Computing covariance MCM for shear.")
-                        tr_i1, tr_j1 = self.pss2tracers[i1][j1]
-                        tr_i2, tr_j2 = self.pss2tracers[i2][j2]
-
                         cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                         cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field,
                                                                 bpws,
                                                                 tracers[tr_i2].field, tracers[tr_j2].field,
                                                                 bpws)
                         cwsp_curr.write_to(
-                            self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat'))
+                            self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
 
                     else:
                         logger.info("Reading covariance MCM for shear.")
                         cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                         cwsp_curr.read_from(
-                            self.get_output_fname('cov_mcm' + '_{}{}{}{}'.format(i1, j1, i2, j2) + '.dat'))
-                    cwsp[i1][j1][i2][j2] = cwsp_curr
+                            self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
+                    cwsp[tr_i1][tr_j1][tr_i2][tr_j2] = cwsp_curr
 
         
         return cwsp
@@ -749,7 +742,7 @@ class PowerSpecter(PipelineStage) :
             cells_sims.append(np.array(cells_this).flatten())
         cells_sims=np.array(cells_sims)
         #Save simulations for further 
-        np.savez(self.get_output_fname('gaucov_sims'),cl_sims=cells_sims)
+        np.savez(self.get_output_fname('gaucov_sims',ext='npz'), cl_sims=cells_sims)
         
         #Compute covariance
         covar=np.cov(cells_sims.T)
@@ -790,7 +783,7 @@ class PowerSpecter(PipelineStage) :
                 ca2b1=clth[j1, i2]
                 ca2b2=clth[j1, j2]
 
-                cov_here = nmt.gaussian_covariance_flat(cwsp[i1][j1][i2][j2], tracers[tr_i1].spin, tracers[tr_i2].spin,
+                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin, tracers[tr_i2].spin,
                                                       tracers[tr_j1].spin, tracers[tr_j2].spin, lth,
                                                       [ca1b1], [ca1b2], [ca2b1], [ca2b2], wsp[tr_i1][tr_j1],
                                                       wsp[tr_i2][tr_j2])
