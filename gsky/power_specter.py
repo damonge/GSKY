@@ -1261,12 +1261,16 @@ class PowerSpecter(PipelineStage) :
         logger.info("Writing output")
         self.write_vector_to_sacc(self.get_output_fname('noi_bias',ext='sacc'), tracers_sacc,
                                   nls, ell_eff, windows)
+        logger.info('Written noise bias.')
         self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
                                   cls_deproj, ell_eff, windows)
+        logger.info('Written deprojection bias.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'), tracers_sacc,
                                   cls_wodpj, ell_eff, windows,covar=cov_wodpj)
+        logger.info('Written power spectra without deprojection.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wdpj',ext='sacc'), tracers_sacc,
                                   cls_wdpj, ell_eff, windows,covar=cov_wdpj)
+        logger.info('Written deprojected power spectra.')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
