@@ -175,23 +175,43 @@ class PowerSpecter(PipelineStage) :
         :param tracers: list of Tracers.
         :param wsp: NaMaster workspace.
         """
-        nls_all=np.zeros([self.ncross,self.nbands])
-        i_x=0
-        for i in range(self.ntracers) :
-            for j in range(i,self.ntracers) :
-                if i==j : #Add shot noise in auto-correlation
-                    tr_i, tr_j = self.pss2tracers[i][j]
-                    t = tracers[tr_i]
+
+        nls = np.zeros((self.nmaps, self.nmaps, self.nbands))
+
+        zero_arr = np.zeros(self.lmax + 1)
+
+        map_i = 0
+        for tr_i in range(self.ntracers):
+            map_j = map_i
+            for tr_j in range(tr_i, self.ntracers):
+                if tr_i == tr_j:
+                    t = tracers[tr_j]
                     if t.spin == 0:
-                        corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl=np.ones(self.nbands)*corrfac/t.ndens_perad
-                        nls_all[i_x]=wsp[tr_i][tr_j].decouple_cell([nl])[0]
+
+                        corrfac = np.sum(t.weight) / (t.fsk.nx * t.fsk.ny)
+                        nl = np.ones(self.nbands) * corrfac / t.ndens_perad
+
+                        nls[map_i, map_j] = wsp[tr_i][tr_j].decouple_cell([nl])[0]
+                        map_j += 1
                     elif t.spin == 2:
-                        corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl=np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
-                        nls_all[i_x]=wsp[tr_i][tr_j].decouple_cell([nl])[0]
-                i_x+=1
-        return nls_all
+                        # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
+
+                        corrfac = np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
+                        nl = np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
+                        nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+
+                        nls_tempe = nls_temp[0]
+                        nls_tempb = nls_temp[3]
+                        nls[map_i, map_j] = nls_tempe
+                        nls[map_i+1, map_j+1] = nls_tempb
+                        map_j += 2
+
+                if t.spin == 2:
+                    map_i += 2
+                else:
+                    map_i += 1
+
+        return nls
         
     def get_noise_simulated(self,tracers,wsp,bpws,nsims) :
         """
