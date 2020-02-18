@@ -287,7 +287,7 @@ class PowerSpecter(PipelineStage) :
         #Compute deprojection bias
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
-            s=sacc.SACC.loadFromHDF(self.get_output_fname('dpj_bias',ext='sacc'))
+            s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
             cl_deproj_bias = s.mean.vector.reshape((self.nmaps, self.nmaps, self.nbands))
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
