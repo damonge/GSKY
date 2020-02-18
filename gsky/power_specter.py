@@ -178,7 +178,7 @@ class PowerSpecter(PipelineStage) :
 
         nls = np.zeros((self.nmaps, self.nmaps, self.nbands))
 
-        zero_arr = np.zeros(self.lmax + 1)
+        zero_arr = np.zeros(self.nbands)
 
         map_i = 0
         for tr_i in range(self.ntracers):
@@ -206,10 +206,10 @@ class PowerSpecter(PipelineStage) :
                         nls[map_i+1, map_j+1] = nls_tempb
                         map_j += 2
 
-                if t.spin == 2:
-                    map_i += 2
-                else:
-                    map_i += 1
+            if t.spin == 2:
+                map_i += 2
+            else:
+                map_i += 1
 
         return nls
         
