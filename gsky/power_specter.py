@@ -185,11 +185,11 @@ class PowerSpecter(PipelineStage) :
                     if t.spin == 0:
                         corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
                         nl=np.ones(self.nbands)*corrfac/t.ndens_perad
-                        nls_all[i_x]=wsp[tr_i, tr_j].decouple_cell([nl])[0]
+                        nls_all[i_x]=wsp[tr_i][tr_j].decouple_cell([nl])[0]
                     elif t.spin == 2:
                         corrfac=np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
                         nl=np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
-                        nls_all[i_x]=wsp[tr_i, tr_j].decouple_cell([nl])[0]
+                        nls_all[i_x]=wsp[tr_i][tr_j].decouple_cell([nl])[0]
                 i_x+=1
         return nls_all
         

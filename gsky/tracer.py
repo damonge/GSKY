@@ -98,7 +98,9 @@ class Tracer(object) :
             self.ndens_perad = ndens / (np.radians(self.fsk.dx) * np.radians(self.fsk.dy))
             self.e1_2rms_pix = np.average(gammamaps[0]**2, weights=self.weight)
             self.e2_2rms_pix = np.average(gammamaps[1] ** 2, weights=self.weight)
-            self.e1_2rms_cat, self.e2_2rms_cat = hdu_list[6*i_bin+5].data.copy()
+            e1_2rms_cat, e2_2rms_cat = hdu_list[6*i_bin+5].data.copy()
+            self.e1_2rms_cat = e1_2rms_cat[0]
+            self.e2_2rms_cat = e2_2rms_cat[0]
 
             # Form NaMaster field
             if weightmask:
