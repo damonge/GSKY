@@ -24,7 +24,9 @@ class PowerSpecter(PipelineStage) :
             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),
             ('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),
             ('syst_masking_file',ASCIIFile)]
-    outputs=[('dummy',DummyFile), ('mcm', BinaryFile), ('windows_l', NpzFile)]
+    outputs=[('dummy',DummyFile), ('mcm', BinaryFile), ('windows_l', NpzFile),
+             ('noi_bias', SACCFile), ('dpj_bias', SACCFile), ('power_spectra_wodpj', SACCFile),
+             ('power_spectra_wdpj', SACCFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
                                 1000.0,1400.0,1800.0,
