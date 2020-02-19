@@ -218,9 +218,9 @@ class ReduceCat(PipelineStage) :
         cat.remove_rows(~sel)
 
         fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.mpp)
-        exit(1)
 
         #Collect sample cuts
+        sel_clean = cat['wl_fulldepth_fullcolor'] & cat['clean_photometry']
         sel_maglim=np.ones(len(cat),dtype=bool);
         sel_maglim[cat['%scmodel_mag'%band]-
                    cat['a_%s'%band]>self.config['depth_cut']]=0
@@ -263,13 +263,14 @@ class ReduceCat(PipelineStage) :
         #    This needs to be done for stars passing the same cuts as the sample 
         #    (except for the s/g separator)
         # Above magnitude limit
-        mstar,descstar=self.make_star_map(cat,fsk,sel_maglim*sel_stars*sel_fluxcut*sel_blended)
+        mstar,descstar=self.make_star_map(cat,fsk,sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
+        '''
         if self.get_output('ePSF_map') is not None:
             # e_PSF maps
             logger.info('Creating e_PSF map.')
-            mPSFstar = self.make_PSF_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            mPSFstar = self.make_PSF_maps(cat, fsk, sel_clean * sel_maglim * sel_stars * sel_fluxcut * sel_blended)
             header = fsk.wcs.to_header()
             hdus = []
             head = header.copy()
@@ -296,7 +297,7 @@ class ReduceCat(PipelineStage) :
         if self.get_output('ePSFres_map') is not None:
             # delta_e_PSF maps
             logger.info('Creating e_PSF residual map.')
-            mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_clean * sel_maglim * sel_stars * sel_fluxcut * sel_blended)
             header = fsk.wcs.to_header()
             hdus = []
             head = header.copy()
@@ -319,13 +320,14 @@ class ReduceCat(PipelineStage) :
             hdus.append(hdu)
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
+        '''
 
         #Binary BO mask
-        mask_bo,fsg=self.make_bo_mask(cat,fsk)
+        mask_bo,fsg=self.make_bo_mask(cat[sel_clean],fsk)
         fsg.write_flat_map(self.get_output('bo_mask'),mask_bo,descript='Bright-object mask')
 
         #Masked fraction
-        masked_fraction_cont=self.make_masked_fraction(cat,fsk)
+        masked_fraction_cont=self.make_masked_fraction(cat[sel_clean],fsk)
         fsk.write_flat_map(self.get_output('masked_fraction'),masked_fraction_cont,
                            descript='Masked fraction')
 
@@ -340,14 +342,10 @@ class ReduceCat(PipelineStage) :
         # - S/N cut
         # - Star-galaxy separator
         # - Blending
-        sel=~(sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        sel=~(sel_clean * sel_maglim * sel_gals * sel_fluxcut * sel_blended)
         print("Will lose %d objects to depth, S/N and stars"%(np.sum(sel)))
         cat.remove_rows(sel)
 
-        #import matplotlib.pyplot as plt
-        for key in cat.keys():
-            print(key, np.sum(np.isnan(cat[key])))
-        print(np.sum(cat['ishape_hsm_regauss_derived_shape_weight']>0))
         ####
         # Write final catalog
         # 1- header

@@ -6,6 +6,15 @@ import pymaster as nmt
 from astropy.io import fits
 from astropy.wcs import WCS
 
+
+def _wrap_ra(ra):
+    if ra>=360:
+        return _wrap_ra(ra-360)
+    elif ra<0:
+        return _wrap_ra(ra+360)
+    else:
+        return ra
+
 class FlatMapInfo(object) :
     def __init__(self,wcs,nx=None,ny=None,lx=None,ly=None) :
         """
@@ -39,14 +48,6 @@ class FlatMapInfo(object) :
         self.dy=self.ly/self.ny
 
         self.npix=self.nx*self.ny
-
-    def _wrap_ra(ra):
-        if ra>=360:
-            return _wrap_ra(ra-360)
-        elif ra<0:
-            return _wrap_ra(ra+360)
-        else:
-            return ra
 
     def is_map_compatible(self,mp) :
         return self.npix==len(mp)
@@ -383,15 +384,13 @@ class FlatMapInfo(object) :
         if mpdict.get('wcs'):
             d = fits.open(mpdict['wcs'])[0]
             wcs_d = WCS(d.header)
-            if np.fabs(wcs_d.wcs.cdelt[0]/wcs_d.wcs.cdelt[1]-1)>0.001:
+            if np.fabs(np.fabs(wcs_d.wcs.cdelt[0]/wcs_d.wcs.cdelt[1])-1)>0.001:
                 raise ValueError("Pixels are not squares")
             reso = np.fabs(wcs_d.wcs.cdelt[0])
             ny_d, nx_d = d.data.shape
             projection = wcs_d.wcs.ctype[0][-3:]
-            ra0 = self._wrap_ra(wcs_d.all_pix2world([[0, 0]], 0)[0][0])
+            ra0 = _wrap_ra(wcs_d.all_pix2world([[0, 0]], 0)[0][0])
         else:
-            print(mpdict)
-            exit(1)
             reso = mpdict['res']
             projection = mpdict['projection']
             ra0 = None
@@ -427,10 +426,10 @@ class FlatMapInfo(object) :
 
         # Correct RA alignment if needed
         if ra0 is not None:
-            ix0 = wcs_d.all_world2pix([[phi0, 0]], 0)[0][0]
+            ix0 = wcs_d.all_world2pix([[ra0, 0]], 0)[0][0]
             offx = int(ix0)+1-ix0
             w.wcs.crpix[0] += offx
-            ix1 = wcs_d.all_world2pix([[phi0, 0]], 0)[0][0]
+            ix1 = wcs_d.all_world2pix([[ra0, 0]], 0)[0][0]
             print(ix0, ix1)
             
 

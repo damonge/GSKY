@@ -35,18 +35,18 @@ stages:
 
 inputs:
     raw_data: ./gsky_params/input_list_test_david.txt
-    frames_data: ./outputs/dum
-    pdf_dir: ./outputs/dum
-    cosmos_data: ./outputs/dum
-    cosmos_hsc: ./outputs/dum
-    syst_masking_file: ./outputs/dum
+    frames_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    pdf_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    cosmos_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    cosmos_hsc: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    syst_masking_file: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
 
 config: ./gsky_params/test_david_config.yml
 
 resume: True
 
-output_dir: ./outputs/test_david
+output_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david
 
-log_dir: ./outputs/test_david/log.txt
+log_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
 
-pipeline_log: ./outputs/test_david/log.txt
+pipeline_log: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
