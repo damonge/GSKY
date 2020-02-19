@@ -390,8 +390,10 @@ class FlatMapInfo(object) :
             projection = wcs_d.wcs.ctype[0][-3:]
             ra0 = self._wrap_ra(wcs_d.all_pix2world([[0, 0]], 0)[0][0])
         else:
+            print(mpdict)
+            exit(1)
             reso = mpdict['res']
-            projection = mpdict['CAR']
+            projection = mpdict['projection']
             ra0 = None
         pad = mpdict['pad']/reso
 
