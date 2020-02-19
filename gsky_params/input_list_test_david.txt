@@ -1,0 +1,1 @@
+/home/alonso/Science/PossibleProjects/2020_GSKY/data/HSC_WIDE_WIDE12H.fits

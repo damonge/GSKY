@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage) :
     name="ReduceCat"
-    inputs=[('raw_data',None)]
+    inputs=[('raw_data',FitsFile)]
     outputs=[('clean_catalog',FitsFile),('dust_map',FitsFile),('star_map',FitsFile),
              ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile),
-             ('ePSF_map', None), ('ePSFres_map', None)]
+             ('ePSF_map', FitsFile), ('ePSFres_map', FitsFile)]
     config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
                     'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
                     'flat_project':'CAR','mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
@@ -203,10 +203,10 @@ class ReduceCat(PipelineStage) :
         isnull_names=[]
         for key in cat.keys() :
             if key.__contains__('isnull') :
-                sel[cat[key]]=0
+                #sel[cat[key]]=0
                 isnull_names.append(key)
             else :
-                if not key.startswith("pz_") : #Keep photo-z's even if they're NaNs
+                if (not key.startswith("pz_")) and (not key.startswith('ishape')) : #Keep photo-z's even if they're NaNs
                     sel[np.isnan(cat[key])]=0
         print("Will drop %d rows"%(len(sel)-np.sum(sel)))
         cat.remove_columns(isnull_names)
@@ -262,6 +262,7 @@ class ReduceCat(PipelineStage) :
         mstar,descstar=self.make_star_map(cat,fsk,sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
+        '''
         if self.get_output('ePSF_map') is not None:
             # e_PSF maps
             logger.info('Creating e_PSF map.')
@@ -315,7 +316,8 @@ class ReduceCat(PipelineStage) :
             hdus.append(hdu)
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
-        
+        '''
+
         #Binary BO mask
         mask_bo,fsg=self.make_bo_mask(cat,fsk)
         fsg.write_flat_map(self.get_output('bo_mask'),mask_bo,descript='Bright-object mask')
@@ -340,6 +342,10 @@ class ReduceCat(PipelineStage) :
         print("Will lose %d objects to depth, S/N and stars"%(np.sum(sel)))
         cat.remove_rows(sel)
 
+        #import matplotlib.pyplot as plt
+        for key in cat.keys():
+            print(key, np.sum(np.isnan(cat[key])))
+        print(np.sum(cat['ishape_hsm_regauss_derived_shape_weight']>0))
         ####
         # Write final catalog
         # 1- header
