@@ -119,9 +119,9 @@ class ReduceCat(PipelineStage) :
 
         # PSF of stars
         star_cat = copy.deepcopy(cat)[sel]
-        Mxx = star_cat['ishape_psf_moments_11']
-        Myy = star_cat['ishape_psf_moments_22']
-        Mxy = star_cat['ishape_psf_moments_12']
+        Mxx = star_cat['ishape_hsm_psfmoments_11']
+        Myy = star_cat['ishape_hsm_psfmoments_22']
+        Mxy = star_cat['ishape_hsm_psfmoments_12']
         T_I = Mxx + Myy
         e_plus_I = (Mxx - Myy)/T_I
         e_cross_I = 2*Mxy/T_I
