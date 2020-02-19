@@ -40,6 +40,14 @@ class FlatMapInfo(object) :
 
         self.npix=self.nx*self.ny
 
+    def _wrap_ra(ra):
+        if ra>=360:
+            return _wrap_ra(ra-360)
+        elif ra<0:
+            return _wrap_ra(ra+360)
+        else:
+            return ra
+
     def is_map_compatible(self,mp) :
         return self.npix==len(mp)
 
@@ -362,7 +370,7 @@ class FlatMapInfo(object) :
         return fm_dg,mp_dg
 
     @classmethod
-    def from_coords(FlatMapInfo,ra_arr,dec_arr,reso,pad=None,projection='TAN') :
+    def from_coords(FlatMapInfo,ra_arr,dec_arr,mpdict):
         """
         Generates a FlatMapInfo object that can encompass all points with coordinates
         given by ra_arr (R.A.) and dec_arr (dec.) with pixel resolution reso.
@@ -371,6 +379,21 @@ class FlatMapInfo(object) :
         The flat-sky maps will use a spherical projection given by the corresponding
         parameter. Tested values are 'TAN' (gnomonic) and 'CAR' (Plate carree).
         """
+
+        if mpdict.get('wcs'):
+            d = fits.open(mpdict['wcs'])[0]
+            wcs_d = WCS(d.header)
+            if np.fabs(wcs_d.wcs.cdelt[0]/wcs_d.wcs.cdelt[1]-1)>0.001:
+                raise ValueError("Pixels are not squares")
+            reso = np.fabs(wcs_d.wcs.cdelt[0])
+            ny_d, nx_d = d.data.shape
+            projection = wcs_d.wcs.ctype[0][-3:]
+            ra0 = self._wrap_ra(wcs_d.all_pix2world([[0, 0]], 0)[0][0])
+        else:
+            reso = mpdict['res']
+            projection = mpdict['CAR']
+            ra0 = None
+        pad = mpdict['pad']/reso
 
         if len(ra_arr.flatten())!=len(dec_arr.flatten()) :
             raise ValueError("ra_arr and dec_arr must have the same size")
@@ -382,13 +405,14 @@ class FlatMapInfo(object) :
 
         # Find median coordinates
         ramean=0.5*(np.amax(ra_arr)+np.amin(ra_arr))
-        decmean=0.5*(np.amax(dec_arr)+np.amin(dec_arr))
+        #decmean=0.5*(np.amax(dec_arr)+np.amin(dec_arr))
 
         #Compute projection on the tangent plane
         w=WCS(naxis=2)
         w.wcs.crpix=[0,0]
         w.wcs.cdelt=[-reso,reso]
-        w.wcs.crval=[ramean,decmean]
+        #w.wcs.crval=[ramean,decmean]
+        w.wcs.crval=[ramean, 0]
         w.wcs.ctype=['RA---'+projection,'DEC--'+projection]
         ix,iy=np.transpose(w.wcs_world2pix(np.transpose(np.array([ra_arr,dec_arr])),0))
         #Estimate map size
@@ -398,6 +422,15 @@ class FlatMapInfo(object) :
         offx=-np.amin(ix)+pad
         offy=-np.amin(iy)+pad
         w.wcs.crpix=[offx,offy]
+
+        # Correct RA alignment if needed
+        if ra0 is not None:
+            ix0 = wcs_d.all_world2pix([[phi0, 0]], 0)[0][0]
+            offx = int(ix0)+1-ix0
+            w.wcs.crpix[0] += offx
+            ix1 = wcs_d.all_world2pix([[phi0, 0]], 0)[0][0]
+            print(ix0, ix1)
+            
 
         return FlatMapInfo(w,nx=nsidex,ny=nsidey)
 

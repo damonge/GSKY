@@ -18,9 +18,11 @@ class ReduceCat(PipelineStage) :
     outputs=[('clean_catalog',FitsFile),('dust_map',FitsFile),('star_map',FitsFile),
              ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile),
              ('ePSF_map', FitsFile), ('ePSFres_map', FitsFile)]
-    config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
-                    'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
-                    'flat_project':'CAR','mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
+    config_options={'min_snr':10.,'depth_cut':24.5,
+                    'mapping':{'wcs':None,'res':0.0285, 'res_bo':0.003,'pad':0.1,
+                               'projection':'CAR'},
+                    'band':'i','depth_method':'fluxerr',
+                    'mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
     bands=['g','r','i','z','y']
 
     def make_dust_map(self,cat,fsk) :
@@ -64,7 +66,8 @@ class ReduceCat(PipelineStage) :
                         cat['iflags_pixel_bright_object_any']]
         else :
             raise ValueError('Mask type '+self.config['mask_type']+' not supported')
-        mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,self.config['res_bo'])
+        mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,
+                               self.mpp['res_bo'])
         return mask_bo,fsg
 
     def make_masked_fraction(self,cat,fsk) :
@@ -144,9 +147,9 @@ class ReduceCat(PipelineStage) :
 
         # PSF of stars
         star_cat = copy.deepcopy(cat)[sel]
-        Mxx = star_cat['ishape_psf_moments_11']
-        Myy = star_cat['ishape_psf_moments_22']
-        Mxy = star_cat['ishape_psf_moments_12']
+        Mxx = star_cat['ishape_hsm_psfmoments_11']
+        Myy = star_cat['ishape_hsm_psfmoments_22']
+        Mxy = star_cat['ishape_hsm_psfmoments_12']
         T_I = Mxx + Myy
         e_plus_PSF = (Mxx - Myy)/T_I
         e_cross_PSF = 2*Mxy/T_I
@@ -178,6 +181,7 @@ class ReduceCat(PipelineStage) :
         - Produces mask maps, dust maps, depth maps and star density maps.
         """
         band=self.config['band']
+        self.mpp = self.config['mapping']
 
         #Read list of files
         f=open(self.get_input('raw_data'))
@@ -203,7 +207,8 @@ class ReduceCat(PipelineStage) :
         isnull_names=[]
         for key in cat.keys() :
             if key.__contains__('isnull') :
-                #sel[cat[key]]=0
+                if not key.startswith('ishape'):
+                    sel[cat[key]]=0
                 isnull_names.append(key)
             else :
                 if (not key.startswith("pz_")) and (not key.startswith('ishape')) : #Keep photo-z's even if they're NaNs
@@ -212,9 +217,8 @@ class ReduceCat(PipelineStage) :
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
 
-        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.config['res'],
-                                    pad=self.config['pad']/self.config['res'],
-                                    projection=self.config['flat_project'])
+        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.mpp)
+        exit(1)
 
         #Collect sample cuts
         sel_maglim=np.ones(len(cat),dtype=bool);
@@ -262,7 +266,6 @@ class ReduceCat(PipelineStage) :
         mstar,descstar=self.make_star_map(cat,fsk,sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
-        '''
         if self.get_output('ePSF_map') is not None:
             # e_PSF maps
             logger.info('Creating e_PSF map.')
@@ -316,7 +319,6 @@ class ReduceCat(PipelineStage) :
             hdus.append(hdu)
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
-        '''
 
         #Binary BO mask
         mask_bo,fsg=self.make_bo_mask(cat,fsk)
