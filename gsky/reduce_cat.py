@@ -14,13 +14,15 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage) :
     name="ReduceCat"
-    inputs=[('raw_data',None)]
+    inputs=[('raw_data',FitsFile)]
     outputs=[('clean_catalog',FitsFile),('dust_map',FitsFile),('star_map',FitsFile),
              ('bo_mask',FitsFile),('masked_fraction',FitsFile),('depth_map',FitsFile),
-             ('ePSF_map', None), ('ePSFres_map', None)]
-    config_options={'min_snr':10.,'depth_cut':24.5,'res':0.0285,
-                    'res_bo':0.003,'pad':0.1,'band':'i','depth_method':'fluxerr',
-                    'flat_project':'CAR','mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
+             ('ePSF_map', FitsFile), ('ePSFres_map', FitsFile)]
+    config_options={'min_snr':10.,'depth_cut':24.5,
+                    'mapping':{'wcs':None,'res':0.0285, 'res_bo':0.003,'pad':0.1,
+                               'projection':'CAR'},
+                    'band':'i','depth_method':'fluxerr',
+                    'mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
     bands=['g','r','i','z','y']
 
     def make_dust_map(self,cat,fsk) :
@@ -64,7 +66,8 @@ class ReduceCat(PipelineStage) :
                         cat['iflags_pixel_bright_object_any']]
         else :
             raise ValueError('Mask type '+self.config['mask_type']+' not supported')
-        mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,self.config['res_bo'])
+        mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,
+                               self.mpp['res_bo'])
         return mask_bo,fsg
 
     def make_masked_fraction(self,cat,fsk) :
@@ -144,9 +147,9 @@ class ReduceCat(PipelineStage) :
 
         # PSF of stars
         star_cat = copy.deepcopy(cat)[sel]
-        Mxx = star_cat['ishape_psf_moments_11']
-        Myy = star_cat['ishape_psf_moments_22']
-        Mxy = star_cat['ishape_psf_moments_12']
+        Mxx = star_cat['ishape_hsm_psfmoments_11']
+        Myy = star_cat['ishape_hsm_psfmoments_22']
+        Mxy = star_cat['ishape_hsm_psfmoments_12']
         T_I = Mxx + Myy
         e_plus_PSF = (Mxx - Myy)/T_I
         e_cross_PSF = 2*Mxy/T_I
@@ -178,6 +181,7 @@ class ReduceCat(PipelineStage) :
         - Produces mask maps, dust maps, depth maps and star density maps.
         """
         band=self.config['band']
+        self.mpp = self.config['mapping']
 
         #Read list of files
         f=open(self.get_input('raw_data'))
@@ -203,20 +207,20 @@ class ReduceCat(PipelineStage) :
         isnull_names=[]
         for key in cat.keys() :
             if key.__contains__('isnull') :
-                sel[cat[key]]=0
+                if not key.startswith('ishape'):
+                    sel[cat[key]]=0
                 isnull_names.append(key)
             else :
-                if not key.startswith("pz_") : #Keep photo-z's even if they're NaNs
+                if (not key.startswith("pz_")) and (not key.startswith('ishape')) : #Keep photo-z's even if they're NaNs
                     sel[np.isnan(cat[key])]=0
         print("Will drop %d rows"%(len(sel)-np.sum(sel)))
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
 
-        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.config['res'],
-                                    pad=self.config['pad']/self.config['res'],
-                                    projection=self.config['flat_project'])
+        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.mpp)
 
         #Collect sample cuts
+        sel_clean = cat['wl_fulldepth_fullcolor'] & cat['clean_photometry']
         sel_maglim=np.ones(len(cat),dtype=bool);
         sel_maglim[cat['%scmodel_mag'%band]-
                    cat['a_%s'%band]>self.config['depth_cut']]=0
@@ -259,13 +263,14 @@ class ReduceCat(PipelineStage) :
         #    This needs to be done for stars passing the same cuts as the sample 
         #    (except for the s/g separator)
         # Above magnitude limit
-        mstar,descstar=self.make_star_map(cat,fsk,sel_maglim*sel_stars*sel_fluxcut*sel_blended)
+        mstar,descstar=self.make_star_map(cat,fsk,sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
+        '''
         if self.get_output('ePSF_map') is not None:
             # e_PSF maps
             logger.info('Creating e_PSF map.')
-            mPSFstar = self.make_PSF_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            mPSFstar = self.make_PSF_maps(cat, fsk, sel_clean * sel_maglim * sel_stars * sel_fluxcut * sel_blended)
             header = fsk.wcs.to_header()
             hdus = []
             head = header.copy()
@@ -292,7 +297,7 @@ class ReduceCat(PipelineStage) :
         if self.get_output('ePSFres_map') is not None:
             # delta_e_PSF maps
             logger.info('Creating e_PSF residual map.')
-            mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_maglim * sel_stars * sel_fluxcut * sel_blended)
+            mPSFresstar = self.make_PSF_res_maps(cat, fsk, sel_clean * sel_maglim * sel_stars * sel_fluxcut * sel_blended)
             header = fsk.wcs.to_header()
             hdus = []
             head = header.copy()
@@ -315,13 +320,14 @@ class ReduceCat(PipelineStage) :
             hdus.append(hdu)
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
-        
+        '''
+
         #Binary BO mask
-        mask_bo,fsg=self.make_bo_mask(cat,fsk)
+        mask_bo,fsg=self.make_bo_mask(cat[sel_clean],fsk)
         fsg.write_flat_map(self.get_output('bo_mask'),mask_bo,descript='Bright-object mask')
 
         #Masked fraction
-        masked_fraction_cont=self.make_masked_fraction(cat,fsk)
+        masked_fraction_cont=self.make_masked_fraction(cat[sel_clean],fsk)
         fsk.write_flat_map(self.get_output('masked_fraction'),masked_fraction_cont,
                            descript='Masked fraction')
 
@@ -336,7 +342,7 @@ class ReduceCat(PipelineStage) :
         # - S/N cut
         # - Star-galaxy separator
         # - Blending
-        sel=~(sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        sel=~(sel_clean * sel_maglim * sel_gals * sel_fluxcut * sel_blended)
         print("Will lose %d objects to depth, S/N and stars"%(np.sum(sel)))
         cat.remove_rows(sel)
 

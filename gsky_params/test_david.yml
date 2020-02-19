@@ -1,0 +1,52 @@
+modules: gsky
+
+launcher: local
+
+stages: 
+    - name: ReduceCat
+      nprocess: 1
+      partition: debug
+      walltime: 10
+#    - name: SystMapper
+#      nprocess: 1
+#      partition: regular
+#      walltime: 60
+#    - name: PDFMatch
+#      nprocess: 1
+#      partition: regular
+#      walltime: 60
+#    - name: COSMOSWeight
+#      nprocess: 1
+#      partition: debug
+#      walltime: 30
+#    - name: CatMapper
+#      nprocess: 1
+#      partition: debug
+#      walltime: 10
+#    - name: MapDiagnoser
+#      nprocess: 1
+#      partition: debug
+#      walltime: 10
+#    - name: PowerSpecter
+#      nprocess: 1
+#      partition: regular
+#      walltime: 120
+
+
+inputs:
+    raw_data: ./gsky_params/input_list_test_david.txt
+    frames_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    pdf_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    cosmos_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    cosmos_hsc: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    syst_masking_file: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+
+config: ./gsky_params/test_david_config.yml
+
+resume: True
+
+output_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david
+
+log_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
+
+pipeline_log: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
