@@ -421,17 +421,14 @@ class FlatMapInfo(object) :
         nsidey=int(np.amax(iy))-int(np.amin(iy))+1+2*int(pad)
         #Off-set to make sure every pixel has positive coordinates
         offx=-np.amin(ix)+pad
-        offy=-np.amin(iy)+pad
+        offy=int(-np.amin(iy)+pad)
         w.wcs.crpix=[offx,offy]
 
         # Correct RA alignment if needed
         if ra0 is not None:
-            ix0 = wcs_d.all_world2pix([[ra0, 0]], 0)[0][0]
-            offx = int(ix0)+1-ix0
+            ix0 = w.all_world2pix([[ra0, 0]], 0)[0][0]
+            offx = int(np.floor(ix0))+1-ix0
             w.wcs.crpix[0] += offx
-            ix1 = wcs_d.all_world2pix([[ra0, 0]], 0)[0][0]
-            print(ix0, ix1)
-            
 
         return FlatMapInfo(w,nx=nsidex,ny=nsidey)
 

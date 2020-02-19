@@ -12,7 +12,7 @@ def createCountsMap(ra, dec, flatSkyGrid):
     :param flatSkyGrid: a flatmaps.FlatMapInfo object describing the geometry of the output map.
     """
     flatmap= flatSkyGrid.pos2pix(ra, dec)
-    mp= np.bincount(flatmap, weights= None, minlength= flatSkyGrid.get_size())
+    mp= np.bincount(flatmap[flatmap>=0], weights= None, minlength= flatSkyGrid.get_size())
     
     return mp
 
@@ -31,15 +31,18 @@ def createSpin2Map(ra, dec, q, u, flatSkyGrid, weights=None, shearrot=None):
     """
 
     flatmap = flatSkyGrid.pos2pix(ra, dec)
+    id_good = flatmap >= 0
 
     if weights is not None:
         q = weights*copy.deepcopy(q)
         u = weights*copy.deepcopy(u)
+    else:
+        weights = weights[id_good]
 
-    qmap = np.bincount(flatmap, weights=q, minlength=flatSkyGrid.get_size())
-    umap = np.bincount(flatmap, weights=u, minlength=flatSkyGrid.get_size())
-    weightsmap = np.bincount(flatmap, weights=weights, minlength=flatSkyGrid.get_size())
-    nmap = np.bincount(flatmap, weights=None, minlength=flatSkyGrid.get_size())
+    qmap = np.bincount(flatmap[id_good], weights=q[id_good], minlength=flatSkyGrid.get_size())
+    umap = np.bincount(flatmap[id_good], weights=u[id_good], minlength=flatSkyGrid.get_size())
+    weightsmap = np.bincount(flatmap[id_good], weights=weights, minlength=flatSkyGrid.get_size())
+    nmap = np.bincount(flatmap[id_good], weights=None, minlength=flatSkyGrid.get_size())
 
     qmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
     umap[weightsmap != 0] /= weightsmap[weightsmap != 0]
@@ -92,9 +95,10 @@ def createMeanStdMaps(ra, dec, quantity, flatSkyGrid) :
     :param flatSkyGrid: a flatmaps.FlatMapInfo object describing the geometry of the output map.
     """
     pix_ids=flatSkyGrid.pos2pix(ra, dec)
-    mp= np.bincount(pix_ids, weights= None, minlength= flatSkyGrid.get_size())
-    mpWeighted= np.bincount(pix_ids, weights= quantity, minlength= flatSkyGrid.get_size())
-    mpWeightedSq= np.bincount(pix_ids, weights= quantity**2, minlength= flatSkyGrid.get_size())
+    id_good = pix_ids >= 0
+    mp= np.bincount(pix_ids[id_good], weights= None, minlength= flatSkyGrid.get_size())
+    mpWeighted= np.bincount(pix_ids[id_good], weights= quantity[id_good], minlength= flatSkyGrid.get_size())
+    mpWeightedSq= np.bincount(pix_ids[id_good], weights= quantity[id_good]**2, minlength= flatSkyGrid.get_size())
     idgood=np.where(mp>0)[0];
     mean=np.zeros(len(mp)); std=np.zeros(len(mp))
     mean[idgood]= mpWeighted[idgood]/mp[idgood]
