@@ -514,6 +514,12 @@ class PowerSpecter(PipelineStage) :
             else:
                 map_i += 1
 
+        for i in range(cls_coupled.shape[0]):
+            for ii in range(i, cls_coupled.shape[1]):
+                if i != ii:
+                    cls_coupled[ii][i] = cls_coupled[i][ii]
+                    cls_decoupled[ii][i] = cls_decoupled[i][ii]
+
         return cls_decoupled, cls_coupled
 
     def get_covar(self,lth,clth,bpws,tracers,wsp,temps,cl_dpj_all) :
@@ -766,30 +772,184 @@ class PowerSpecter(PipelineStage) :
         cwsp=self.get_covar_mcm(tracers,bpws)
 
         tracer_combs = []
-        for i1 in range(self.nmaps):
-            for j1 in range(i1, self.nmaps):
+        for i1 in range(self.ntracers):
+            for j1 in range(i1, self.ntracers):
                 tracer_combs.append((i1, j1))
 
         ix_1 = 0
         for k1, tup1 in enumerate(tracer_combs):
-            i1, j1 = tup1
+            tr_i1, tr_j1 = tup1
             ix_2 = 0
-            for i2, j2 in tracer_combs[k1:]:
-                tr_i1, tr_j1 = self.pss2tracers[i1][j1]
-                tr_i2, tr_j2 = self.pss2tracers[i2][j2]
+            for tr_i2, tr_j2 in tracer_combs[k1:]:
+                ps_inds1 = self.tracers2maps[tr_i1][tr_i2]
+                ps_inds2 = self.tracers2maps[tr_i1][tr_j2]
+                ps_inds3 = self.tracers2maps[tr_j1][tr_i2]
+                ps_inds4 = self.tracers2maps[tr_j1][tr_j2]
 
-                ca1b1=clth[i1, i2]
-                ca1b2=clth[i1, j2]
-                ca2b1=clth[j1, i2]
-                ca2b2=clth[j1, j2]
+                ca1b1 = clth[ps_inds1[:, 0][:4], ps_inds1[:, 1][:4]]
+                ca1b2 = clth[ps_inds2[:, 0][:4], ps_inds2[:, 1][:4]]
+                ca2b1 = clth[ps_inds3[:, 0][:4], ps_inds3[:, 1][:4]]
+                ca2b2 = clth[ps_inds4[:, 0][:4], ps_inds4[:, 1][:4]]
 
-                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin, tracers[tr_i2].spin,
-                                                      tracers[tr_j1].spin, tracers[tr_j2].spin, lth,
-                                                      [ca1b1], [ca1b2], [ca2b1], [ca2b2], wsp[tr_i1][tr_j1],
+                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin, tracers[tr_j1].spin,
+                                                      tracers[tr_i2].spin, tracers[tr_j2].spin, lth,
+                                                      ca1b1, ca1b2, ca2b1, ca2b2, wsp[tr_i1][tr_j1],
                                                       wsp[tr_i2][tr_j2])
-                covar[ix_1, :, ix_2, :] = cov_here
-                ix_2+=1
-            ix_1+=1
+
+                if set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                    covar[ix_1, :, ix_2, :] = cov_here
+                    ix_2 += 1
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
+                    cov_te_te = cov_here[:, 0, :, 0]
+                    cov_te_tb = cov_here[:, 0, :, 1]
+                    cov_tb_te = cov_here[:, 1, :, 0]
+                    cov_tb_tb = cov_here[:, 1, :, 1]
+
+                    covar[ix_1, :, ix_2, :] = cov_te_te
+                    covar[ix_1, :, ix_2+1, :] = cov_te_tb
+                    covar[ix_1+1, :, ix_2, :] = cov_tb_te
+                    covar[ix_1+1, :, ix_2+1, :] = cov_tb_tb
+                    ix_2+=2
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
+                    cov_tt_te = cov_here[:, 0, :, 0]
+                    cov_tt_tb = cov_here[:, 0, :, 1]
+
+                    covar[ix_1, :, ix_2, :] = cov_tt_te
+                    covar[ix_1, :, ix_2+1, :] = cov_tt_tb
+                    ix_2+=2
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
+                    cov_tt_te = cov_here[:, 0, :, 0]
+                    cov_tt_tb = cov_here[:, 0, :, 1]
+
+                    covar[ix_1, :, ix_2, :] = cov_tt_te
+                    covar[ix_1+1, :, ix_2, :] = cov_tt_tb
+                    ix_2+=1
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
+                    cov_tt_ee = cov_here[:, 0, :, 0]
+                    cov_tt_eb = cov_here[:, 0, :, 1]
+                    cov_tt_be = cov_here[:, 0, :, 2]
+                    cov_tt_bb = cov_here[:, 0, :, 3]
+
+                    covar[ix_1, :, ix_2, :] = cov_tt_ee
+                    covar[ix_1, :, ix_2+1, :] = cov_tt_eb
+                    covar[ix_1, :, ix_2+2, :] = cov_tt_be
+                    covar[ix_1, :, ix_2+3, :] = cov_tt_bb
+                    ix_2+=4
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
+                    cov_tt_ee = cov_here[:, 0, :, 0]
+                    cov_tt_eb = cov_here[:, 0, :, 1]
+                    cov_tt_be = cov_here[:, 0, :, 2]
+                    cov_tt_bb = cov_here[:, 0, :, 3]
+
+                    covar[ix_1, :, ix_2, :] = cov_tt_ee
+                    covar[ix_1+2, :, ix_2, :] = cov_tt_eb
+                    covar[ix_1+2, :, ix_2, :] = cov_tt_be
+                    covar[ix_1+3, :, ix_2, :] = cov_tt_bb
+                    ix_2 += 1
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
+                    cov_te_ee = cov_here[:, 0, :, 0]
+                    cov_te_eb = cov_here[:, 0, :, 1]
+                    cov_te_be = cov_here[:, 0, :, 2]
+                    cov_te_bb = cov_here[:, 0, :, 3]
+                    cov_tb_ee = cov_here[:, 1, :, 0]
+                    cov_tb_eb = cov_here[:, 1, :, 1]
+                    cov_tb_be = cov_here[:, 1, :, 2]
+                    cov_tb_bb = cov_here[:, 1, :, 3]
+
+                    covar[ix_1, :, ix_2, :] = cov_te_ee
+                    covar[ix_1, :, ix_2+1, :] = cov_te_eb
+                    covar[ix_1, :, ix_2+2, :] = cov_te_be
+                    covar[ix_1, :, ix_2+3, :] = cov_te_bb
+                    covar[ix_1+1, :, ix_2, :] = cov_tb_ee
+                    covar[ix_1+1, :, ix_2+1, :] = cov_tb_eb
+                    covar[ix_1+1, :, ix_2+2, :] = cov_tb_be
+                    covar[ix_1+1, :, ix_2+3, :] = cov_tb_bb
+                    ix_2+=4
+                elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
+                    cov_te_ee = cov_here[:, 0, :, 0]
+                    cov_te_eb = cov_here[:, 0, :, 1]
+                    cov_te_be = cov_here[:, 0, :, 2]
+                    cov_te_bb = cov_here[:, 0, :, 3]
+                    cov_tb_ee = cov_here[:, 1, :, 0]
+                    cov_tb_eb = cov_here[:, 1, :, 1]
+                    cov_tb_be = cov_here[:, 1, :, 2]
+                    cov_tb_bb = cov_here[:, 1, :, 3]
+
+                    covar[ix_1, :, ix_2, :] = cov_te_ee
+                    covar[ix_1+1, :, ix_2, :] = cov_te_eb
+                    covar[ix_1+2, :, ix_2, :] = cov_te_be
+                    covar[ix_1+3, :, ix_2, :] = cov_te_bb
+                    covar[ix_1, :, ix_2+1, :] = cov_tb_ee
+                    covar[ix_1+1, :, ix_2+1, :] = cov_tb_eb
+                    covar[ix_1+2, :, ix_2+1, :] = cov_tb_be
+                    covar[ix_1+3, :, ix_2+1, :] = cov_tb_bb
+                    ix_2 += 2
+                else:
+                    cov_here = cov_here.reshape([self.nbands, 4, self.nbands, 4])
+                    cov_ee_ee = cov_here[:, 0, :, 0]
+                    cov_ee_eb = cov_here[:, 0, :, 1]
+                    cov_ee_be = cov_here[:, 0, :, 2]
+                    cov_ee_bb = cov_here[:, 0, :, 3]
+                    cov_eb_ee = cov_here[:, 1, :, 0]
+                    cov_eb_eb = cov_here[:, 1, :, 1]
+                    cov_eb_be = cov_here[:, 1, :, 2]
+                    cov_eb_bb = cov_here[:, 1, :, 3]
+                    cov_be_ee = cov_here[:, 2, :, 0]
+                    cov_be_eb = cov_here[:, 2, :, 1]
+                    cov_be_be = cov_here[:, 2, :, 2]
+                    cov_be_bb = cov_here[:, 2, :, 3]
+                    cov_bb_ee = cov_here[:, 3, :, 0]
+                    cov_bb_eb = cov_here[:, 3, :, 1]
+                    cov_bb_be = cov_here[:, 3, :, 2]
+                    cov_bb_bb = cov_here[:, 3, :, 3]
+
+                    covar[ix_1, :, ix_2, :] = cov_ee_ee
+                    covar[ix_1, :, ix_2+1, :] = cov_ee_eb
+                    covar[ix_1, :, ix_2+2, :] = cov_ee_be
+                    covar[ix_1, :, ix_2+3, :] = cov_ee_bb
+                    covar[ix_1+1, :, ix_2, :] = cov_eb_ee
+                    covar[ix_1+1, :, ix_2+1, :] = cov_eb_eb
+                    covar[ix_1+1, :, ix_2+2, :] = cov_eb_be
+                    covar[ix_1+1, :, ix_2+3, :] = cov_eb_bb
+                    covar[ix_1+2, :, ix_2, :] = cov_be_ee
+                    covar[ix_1+2, :, ix_2+1, :] = cov_be_eb
+                    covar[ix_1+2, :, ix_2+2, :] = cov_be_be
+                    covar[ix_1+2, :, ix_2+3, :] = cov_be_bb
+                    covar[ix_1+3, :, ix_2, :] = cov_bb_ee
+                    covar[ix_1+3, :, ix_2+1, :] = cov_bb_eb
+                    covar[ix_1+3, :, ix_2+2, :] = cov_bb_be
+                    covar[ix_1+3, :, ix_2+3, :] = cov_bb_bb
+                    ix_2+=4
+            if set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                ix_1+=1
+
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                ix_1+=1
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                ix_1+=2
+
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                ix_1+=2
+
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                ix_1+=1
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                ix_1+=4
+
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                ix_1+=2
+            elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                ix_1 += 4
+                
+            else:
+                ix_1 += 4
 
         covar = covar.reshape([self.ncross*self.nbands, self.ncross*self.nbands])
 
@@ -1166,6 +1326,25 @@ class PowerSpecter(PipelineStage) :
                 map_i += 2
             else:
                 map_i += 1
+
+        tracer_combs = []
+        for i1 in range(self.ntracers):
+            for j1 in range(i1, self.ntracers):
+                tracer_combs.append((i1, j1))
+
+        self.tracers2maps = [[[] for i in range(self.ntracers)] for ii in range(self.ntracers)]
+
+        for trcs in tracer_combs:
+            tr_i, tr_j = trcs
+            for i in range(len(self.pss2tracers)):
+                for ii in range(len(self.pss2tracers[i])):
+                    if self.pss2tracers[i][ii] == trcs:
+                        self.tracers2maps[tr_i][tr_j].append([i, ii])
+
+        for i in range(len(self.tracers2maps)):
+            for ii in range(len(self.tracers2maps[i])):
+                self.tracers2maps[i][ii] = np.array(self.tracers2maps[i][ii])
+                self.tracers2maps[ii][i] = self.tracers2maps[i][ii]
                 
     def run(self) :
         """
@@ -1246,7 +1425,7 @@ class PowerSpecter(PipelineStage) :
         cls_wodpj,_=self.get_power_spectra(tracers_nc,wsp,bpws)
         logger.info(" W. deprojections.")
         cls_wdpj,cls_wdpj_coupled=self.get_power_spectra(tracers_wc,wsp,bpws)
-        self.ncross = cls_wodpj.shape[0]
+        self.ncross = self.nmaps*(self.nmaps + 1)//2 + self.ntracers_shear
 
         logger.info("Getting guess power spectra.")
         lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
