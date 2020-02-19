@@ -14,7 +14,7 @@ write_frames("s16a_deep","frames_deep.sql",submit=True)
 write_frames("s16a_udeep","frames_udeep.sql",submit=True)
 
 #WIDE fields
-for fld in ['aegis','gama09h','gama15h','hectomap','wide01h','wide12h','xmm']:
+for fld in ['aegis','gama09h','gama15h','hectomap','wide12h','xmm']:
     write_fieldsearch("s16a_wide",fld,"field_wide_"+fld+"_pz_strict.sql",
                       submit=True, strict_cuts=True, do_download=False)
 write_fieldsearch("s16a_wide",'vvds',"field_wide_vvds_h1_pz_strict.sql",
@@ -23,9 +23,9 @@ write_fieldsearch("s16a_wide",'vvds',"field_wide_vvds_h1_pz_strict.sql",
 write_fieldsearch("s16a_wide",'vvds',"field_wide_vvds_h2_pz_strict.sql",
                   submit=True,ra_range=[336.,342.],strict_cuts=True,part=2,
                   do_download=False)
+
 #DEEP fields
-#for fld in ['cosmos','deep2_3','elais_n1','xmm_lss'] :
-for fld in ['deep2_3','elais_n1','xmm_lss'] :
+for fld in ['cosmos','deep2_3','elais_n1','xmm_lss'] :
     write_fieldsearch("s16a_deep",fld,"field_deep_"+fld+"_pz_strict.sql",
                       submit=True,strict_cuts=True,do_download=False,
                       w_lensing=False)
@@ -35,6 +35,7 @@ for fld in ['cosmos','sxds'] :
     write_fieldsearch("s16a_udeep",fld,"field_udeep_"+fld+"_pz_strict.sql",
                       submit=True,strict_cuts=True,do_download=False,
                       w_lensing=False)
+
 '''
 #WIDE-depth COSMOS
 for see in ['best','median','worst'] :
@@ -117,10 +118,10 @@ def get_cosmos30band() :
         url = 'ftp://ftp.iap.fr/pub/from_users/hjmcc/COSMOS2015/'
         url+= 'COSMOS2015_Laigle+_v1.1.fits.gz'
         
-        print 'Downloading COSMOS2015_Laigle+_v1.1.fits.gz...'
+        print('Downloading COSMOS2015_Laigle+_v1.1.fits.gz...')
         urllib.urlretrieve(url, 'COSMOS2015_Laigle+_v1.1.fits.gz')
         
-        print 'Decompressing COSMOS2015_Laigle+_v1.1.fits.gz...'
+        print('Decompressing COSMOS2015_Laigle+_v1.1.fits.gz...')
         with gzip.open('./COSMOS2015_Laigle+_v1.1.fits.gz', 'rb') as readfile:
             with open('./COSMOS2015_Laigle+_v1.1.fits', 'wb') as writefile:
                 gzdata = readfile.read()
