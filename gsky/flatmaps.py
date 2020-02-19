@@ -421,7 +421,7 @@ class FlatMapInfo(object) :
         nsidey=int(np.amax(iy))-int(np.amin(iy))+1+2*int(pad)
         #Off-set to make sure every pixel has positive coordinates
         offx=-np.amin(ix)+pad
-        offy=-np.amin(iy)+pad
+        offy=int(-np.amin(iy)+pad)
         w.wcs.crpix=[offx,offy]
 
         # Correct RA alignment if needed
