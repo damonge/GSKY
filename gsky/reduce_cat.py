@@ -211,13 +211,12 @@ class ReduceCat(PipelineStage) :
                     sel[cat[key]]=0
                 isnull_names.append(key)
             else :
-                if (not key.startswith("pz_")) and (not key.startswith('ishape')) : #Keep photo-z's even if they're NaNs
+                #Keep photo-zs and shapes even if they're NaNs
+                if (not key.startswith("pz_")) and (not key.startswith('ishape')) :
                     sel[np.isnan(cat[key])]=0
         print("Will drop %d rows"%(len(sel)-np.sum(sel)))
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
-
-        fsk=FlatMapInfo.from_coords(cat[self.config['ra']],cat[self.config['dec']],self.mpp)
 
         #Collect sample cuts
         sel_clean = cat['wl_fulldepth_fullcolor'] & cat['clean_photometry']
@@ -254,6 +253,11 @@ class ReduceCat(PipelineStage) :
         sel_gals[cat['iclassification_extendedness']<0.99]=0
 
         ####
+        # Generate sky projection
+        fsk=FlatMapInfo.from_coords(cat[sel_clean][self.config['ra']],
+                                    cat[sel_clean][self.config['dec']],self.mpp)
+
+        ####
         # Generate systematics maps
         # 1- Dust
         dustmaps,dustdesc=self.make_dust_map(cat,fsk)
@@ -263,9 +267,9 @@ class ReduceCat(PipelineStage) :
         #    This needs to be done for stars passing the same cuts as the sample 
         #    (except for the s/g separator)
         # Above magnitude limit
-        mstar,descstar=self.make_star_map(cat,fsk,sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
+        mstar,descstar=self.make_star_map(cat,fsk,
+                                          sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
-
         '''
         if self.get_output('ePSF_map') is not None:
             # e_PSF maps

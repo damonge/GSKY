@@ -3,7 +3,7 @@ global:
   mapping:
     wcs: /home/alonso/Science/PossibleProjects/2020_GSKY/data/k_mask_boss.fits
     res: 0.01
-    pad: 0.1
+    pad: 0.2
     res_bo: 0.003
     projection: CAR
   mask_type: sirius
