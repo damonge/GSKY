@@ -22,7 +22,9 @@ class ReduceCat(PipelineStage) :
                     'mapping':{'wcs':None,'res':0.0285, 'res_bo':0.003,'pad':0.1,
                                'projection':'CAR'},
                     'band':'i','depth_method':'fluxerr','shearrot':'flipqu',
-                    'mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
+                    'mask_type':'sirius', 'ra': 'ra', 'dec': 'dec',
+                    'pz_code':'ephor_ab', 'pz_mark':'best',
+                    'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.5]}
     bands=['g','r','i','z','y']
 
     def make_dust_map(self,cat,fsk) :
@@ -173,6 +175,79 @@ class ReduceCat(PipelineStage) :
 
         return maps
 
+    def shear_cut(self, cat):
+        """
+        Apply additional shear cuts to catalog.
+        :param cat:
+        :return:
+        """
+
+        logger.info('Applying shear cuts to catalog.')
+
+        ishape_flags_mask = cat['ishape_hsm_regauss_flags'] == False
+        ishape_sigma_mask = ~np.isnan(cat['ishape_hsm_regauss_sigma'])
+        ishape_resolution_mask = cat['ishape_hsm_regauss_resolution'] >= 0.3
+        ishape_shear_mod_mask = (cat['ishape_hsm_regauss_e1']**2 + cat['ishape_hsm_regauss_e2']**2) < 2
+        ishape_sigma_mask *= (cat['ishape_hsm_regauss_sigma'] >= 0.)*(cat['ishape_hsm_regauss_sigma'] <= 0.4)
+
+        shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
+        return shearmask
+
+    def shear_calibrate(self, cat):
+        # Galaxies used for shear
+        mask_shear = cat['shear_cat'] & (cat['tomo_bin']>=0)
+
+        # Compute responsivity
+        resp = 1. - np.average(cat[mask_shear]['ishape_hsm_regauss_derived_rms_e']**2,
+                               weights=cat[mask_shear]['ishape_hsm_regauss_derived_shape_weight'])
+
+        # Calibrate shears per redshift bin
+        e1cal = np.zeros(len(cat))
+        e2cal = np.zeros(len(cat))
+        mhats = np.zeros(self.nbins)
+        for ibin in range(self.nbins):
+            mask_bin = mask_shear & (cat['tomo_bin'] == ibin)
+            mhat = np.average(cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_m'],
+                              weights=cat[mask_bin]['ishape_hsm_regauss_derived_shape_weight'])
+            mhats[ibin] = mhat
+            e1 = (cat[mask_bin]['ishape_hsm_regauss_e1']/(2.*resp) -
+                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c1']) / mhat
+            e2 = (cat[mask_bin]['ishape_hsm_regauss_e2']/(2.*resp) -
+                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c2']) / mhat
+            e1cal[mask_bin] = e1
+            e1cal[mask_bin] = e2
+        return e1cal, e2cal, mhats, resp
+        
+    def pz_binning(self, cat):
+        zi_arr = self.config['pz_bins'][:-1]
+        zf_arr = self.config['pz_bins'][ 1:]
+        self.nbins = len(zi_arr)
+
+        if self.config['pz_code']=='ephor_ab' :
+            self.pz_code='eab'
+        elif self.config['pz_code']=='frankenz' :
+            self.pz_code='frz'
+        elif self.config['pz_code']=='nnpz' :
+            self.pz_code='nnz'
+        else :
+            raise KeyError("Photo-z method "+self.config['pz_code']+
+                           " unavailable. Choose ephor_ab, frankenz or nnpz")
+
+        if self.config['pz_mark']  not in ['best','mean','mode','mc'] :
+            raise KeyError("Photo-z mark "+self.config['pz_mark']+
+                           " unavailable. Choose between best, mean, mode and mc")
+
+        self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
+        zs = cat[self.column_mark]
+        
+        # Assign all galaxies to bin -1
+        bin_number = np.zeros(len(cat),dtype=int) - 1
+
+        for ib,(zi,zf) in enumerate(zip(zi_arr,zf_arr)):
+            msk = (zs<=zf) & (zs>zi)
+            bin_number[msk] = ib
+        return bin_number
+
     def run(self) :
         """
         Main function.
@@ -321,10 +396,27 @@ class ReduceCat(PipelineStage) :
         cat.remove_rows(sel)
 
         ####
+        # Define shear catalog
+        cat['shear_cat'] = self.shear_cut(cat)
+
+        ####
+        # Photo-z binning
+        cat['tomo_bin'] = self.pz_binning(cat)
+
+        ####
+        # Calibrated shears
+        e1c, e2c, mhat, resp = self.shear_calibrate(cat)
+        cat['ishape_hsm_regauss_e1_calib'] = e1c
+        cat['ishape_hsm_regauss_e2_calib'] = e2c
+        
+        ####
         # Write final catalog
         # 1- header
         logger.info("Writing output")
         hdr=fits.Header()
+        for ibin in range(self.nbins):
+            hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
+        hdr['RESPONS'] = resp
         hdr['BAND']=self.config['band']
         hdr['DEPTH']=self.config['depth_cut']
         prm_hdu=fits.PrimaryHDU(header=hdr)

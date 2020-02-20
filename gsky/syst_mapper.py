@@ -9,6 +9,10 @@ from astropy.io import fits
 from shapely.geometry.polygon import Polygon
 from shapely.prepared import prep
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class SystMapper(PipelineStage) :
     name="SystMapper"
     inputs=[('frames_data',FitsFile),('masked_fraction',FitsFile)]
@@ -18,21 +22,21 @@ class SystMapper(PipelineStage) :
     config_options={'ccd_drop':[9]}
 
     def run(self) :
-        bands=['g','r','i','z','y']
         quants=['ccdtemp','airmass','exptime','skylevel','sigma_sky','seeing','ellipt']
 
-        print("Reading sample map")
+        logger.info("Reading sample map")
         fsk,mp=read_flat_map(self.get_input('masked_fraction'))
 
-        print("Reading metadata")
+        logger.info("Reading metadata")
         data=fits.open(self.get_input('frames_data'))[1].data
         #Drop CCDs if needed
         for ccd_id in self.config['ccd_drop']:
             msk=data['ccd_id']!=ccd_id
-            print('will drop %d frames from bad CCDs'%(np.sum(~msk)))
+            logger.info('will drop %d frames from bad CCDs'%(np.sum(~msk)))
             data=data[msk]
+        bands=np.unique(data['filter'])
 
-        print("Computing frame coords")
+        logger.info("Computing frame coords")
         ix_ll,iy_ll,in_ll=fsk.pos2pix2d(data['llcra'],data['llcdecl'])
         ix_ul,iy_ul,in_ul=fsk.pos2pix2d(data['ulcra'],data['ulcdecl'])
         ix_ur,iy_ur,in_ur=fsk.pos2pix2d(data['urcra'],data['urcdecl'])
@@ -47,7 +51,7 @@ class SystMapper(PipelineStage) :
         ix_ur=ix_ur[is_in]; iy_ur=iy_ur[is_in]; 
         ix_lr=ix_lr[is_in]; iy_lr=iy_lr[is_in];
         
-        print("Building poliygons")
+        logger.info("Building poliygons")
         polyfield=Polygon([(0,0),(0,fsk.ny),(fsk.nx,fsk.ny),(fsk.nx,0)])
         polyframe=np.array([Polygon([(ix_ll[i],iy_ll[i]),
                                      (ix_ul[i],iy_ul[i]),
@@ -58,14 +62,14 @@ class SystMapper(PipelineStage) :
                           for iy in np.arange(fsk.ny)])
         indpix=np.arange(fsk.nx*fsk.ny).reshape([fsk.ny,fsk.nx])
 
-        print("Getting pixel intersects and areas")
+        logger.info("Getting pixel intersects and areas")
         pix_indices=[]
         pix_areas=[]
         percent_next=0
         for ip,pfr in enumerate(polyframe) :
             percent_done=int(100*(ip+0.)/nframes)
             if percent_done==percent_next :
-                print("%d%% done"%percent_done)
+                logger.info("%d%% done"%percent_done)
                 percent_next+=10
             c=np.array(pfr.exterior.coords)
             
@@ -89,13 +93,13 @@ class SystMapper(PipelineStage) :
             areas=np.array(list(map(get_intersect_area,pix_in_range[touched])))
             pix_areas.append(areas)
 
-        print("Computing systematics maps")
+        logger.info("Computing systematics maps")
         #Initialize maps
         nvisits={b:np.zeros_like(mp) for b in bands}
         oc_maps={}
         for q in quants :
             oc_maps[q]={b:ObsCond(q,fsk.nx,fsk.ny) for b in bands}
-        #Fill maps    
+        #Fill maps
         for ip,pfr in enumerate(polyframe) :
             band=data['filter'][ip]
             indices=pix_indices[ip]
@@ -110,7 +114,7 @@ class SystMapper(PipelineStage) :
             for b in bands:
                 oc_maps[q][b].complete_map()
 
-        print("Saving maps")
+        logger.info("Saving maps")
         #Nvisits
         maps_save=np.array([nvisits[b] for b in bands])
         descripts=np.array(['Nvisits-'+b for b in bands])

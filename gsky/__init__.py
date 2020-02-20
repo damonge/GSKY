@@ -1,6 +1,5 @@
 from ceci import PipelineStage
 from .reduce_cat import ReduceCat
-from .reduce_shear_cat import ReduceShearCat
 from .syst_mapper import SystMapper
 from .pdf_match import PDFMatch
 from .cosmos_weight import COSMOSWeight
