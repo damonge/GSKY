@@ -73,8 +73,8 @@ class MockSurvey(object):
         if 'lmax' in self.params:
             self.params['nell'] = self.params['lmax']+1
         elif 'ell_bpws'in self.params:
-            self.params['l0_bins'] = np.array(self.config['ell_bpws'])[:-1]
-            self.params['lf_bins'] = np.array(self.config['ell_bpws'])[1:]
+            self.params['l0_bins'] = np.array(self.params['ell_bpws'])[:-1]
+            self.params['lf_bins'] = np.array(self.params['ell_bpws'])[1:]
             self.params['nell'] = int(self.params['l0_bins'].shape[0])
         self.params['nspin2'] = np.sum(self.params['spins'] == 2).astype('int')
         self.params['nautocls'] = self.params['nprobes']+self.params['nspin2']
