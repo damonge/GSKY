@@ -1,14 +1,15 @@
 global:
   depth_cut: 24.5
   mapping:
-    wcs: /home/alonso/Science/PossibleProjects/2020_GSKY/data/k_mask_boss.fits
-    res: 0.01
+    wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_y_boss.fits
+    res: 0.00833333333333
     pad: 0.2
     res_bo: 0.003
     projection: CAR
   mask_type: sirius
   band: i
   mask_thr: 0.5
+  shearrot: flipqu
   sys_collapse_type: average
 
 ReduceCat:

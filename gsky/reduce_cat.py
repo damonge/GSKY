@@ -21,7 +21,7 @@ class ReduceCat(PipelineStage) :
     config_options={'min_snr':10.,'depth_cut':24.5,
                     'mapping':{'wcs':None,'res':0.0285, 'res_bo':0.003,'pad':0.1,
                                'projection':'CAR'},
-                    'band':'i','depth_method':'fluxerr',
+                    'band':'i','depth_method':'fluxerr','shearrot':'flipqu',
                     'mask_type':'sirius', 'ra': 'ra', 'dec': 'dec'}
     bands=['g','r','i','z','y']
 
@@ -31,7 +31,7 @@ class ReduceCat(PipelineStage) :
         :param cat: input catalog
         :param fsk: FlatMapInfo object describing the geometry of the output map
         """
-        print("Creating dust map")
+        logger.info("Creating dust map")
         dustmaps=[]
         dustdesc=[]
         for b in self.bands :
@@ -47,7 +47,7 @@ class ReduceCat(PipelineStage) :
         :param fsk: FlatMapInfo object describing the geometry of the output map
         :param sel: mask used to select the stars to be used.
         """
-        print("Creating star map")
+        logger.info("Creating star map")
         mstar=createCountsMap(cat[self.config['ra']][sel],cat[self.config['dec']][sel],fsk)+0.
         descstar='Stars, '+self.config['band']+'<%.2lf'%(self.config['depth_cut'])
         return mstar,descstar
@@ -58,7 +58,7 @@ class ReduceCat(PipelineStage) :
         :param cat: input catalog
         :param fsk: FlatMapInfo object describing the geometry of the output map
         """
-        print("Generating bright-object mask")
+        logger.info("Generating bright-object mask")
         if self.config['mask_type']=='arcturus' :
             flags_mask=[~cat['mask_Arcturus'].astype(bool)]
         elif self.config['mask_type']=='sirius' :
@@ -76,7 +76,7 @@ class ReduceCat(PipelineStage) :
         :param cat: input catalog
         :param fsk: FlatMapInfo object describing the geometry of the output map
         """
-        print("Generating masked fraction map")
+        logger.info("Generating masked fraction map")
         masked=np.ones(len(cat))
         if self.config['mask_type']=='arcturus' :
             masked*=cat['mask_Arcturus']
@@ -95,7 +95,7 @@ class ReduceCat(PipelineStage) :
         :param cat: input catalog
         :param fsk: FlatMapInfo object describing the geometry of the output map
         """
-        print("Creating depth maps")
+        logger.info("Creating depth maps")
         method=self.config['depth_method']
         band=self.config['band']
         snrs=cat['%scmodel_flux'%band]/cat['%scmodel_flux_err'%band]
@@ -198,10 +198,10 @@ class ReduceCat(PipelineStage) :
         if band not in self.bands :
             raise ValueError("Band "+band+" not available")
 
-        print('Initial catalog size: %d'%(len(cat)))
+        logger.info('Initial catalog size: %d'%(len(cat)))
             
         # Clean nulls and nans
-        print("Basic cleanup")
+        logger.info("Basic cleanup")
         sel=np.ones(len(cat),dtype=bool)
         names=[n for n in cat.keys()]
         isnull_names=[]
@@ -214,12 +214,13 @@ class ReduceCat(PipelineStage) :
                 #Keep photo-zs and shapes even if they're NaNs
                 if (not key.startswith("pz_")) and (not key.startswith('ishape')) :
                     sel[np.isnan(cat[key])]=0
-        print("Will drop %d rows"%(len(sel)-np.sum(sel)))
+        logger.info("Will drop %d rows"%(len(sel)-np.sum(sel)))
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
 
         #Collect sample cuts
-        sel_clean = cat['wl_fulldepth_fullcolor'] & cat['clean_photometry']
+        sel_area = cat['wl_fulldepth_fullcolor']
+        sel_clean = sel_area & cat['clean_photometry']
         sel_maglim=np.ones(len(cat),dtype=bool);
         sel_maglim[cat['%scmodel_mag'%band]-
                    cat['a_%s'%band]>self.config['depth_cut']]=0
@@ -254,8 +255,8 @@ class ReduceCat(PipelineStage) :
 
         ####
         # Generate sky projection
-        fsk=FlatMapInfo.from_coords(cat[sel_clean][self.config['ra']],
-                                    cat[sel_clean][self.config['dec']],self.mpp)
+        fsk=FlatMapInfo.from_coords(cat[sel_area][self.config['ra']],
+                                    cat[sel_area][self.config['dec']],self.mpp)
 
         ####
         # Generate systematics maps
@@ -271,89 +272,41 @@ class ReduceCat(PipelineStage) :
                                           sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
         fsk.write_flat_map(self.get_output('star_map'),mstar,descript=descstar)
 
-        '''
-        if self.get_output('ePSF_map') is not None:
-            # e_PSF maps
-            logger.info('Creating e_PSF map.')
-            mPSFstar = self.make_PSF_maps(cat, fsk,
-                                          sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
-            fsk.write_flat_map(self.get_output('ePSF_map'),
-                               np.array([mPSFstar[0][0], mPSFstar[0][1],
-                                         mPSFstar[1][0], mPSFstar[1][1],
-                                         mPSFstar[1][2]]),
-                               descript=['e_PSF1','e_PSF2',
-                                         'e_PSF weight mask', 'e_PSF binary mask',
-                                         'counts map (PSF star sample)'])
-            #header = fsk.wcs.to_header()
-            #hdus = []
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSF1', 'Description')
-            #hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSF2', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSF weight mask', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head['DESCR'] = ('e_PSF binary mask', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #hdulist = fits.HDUList(hdus)
-            #hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
+        # 3- e_PSF
+        # TODO: do these stars need to have the same cuts as our sample?
+        logger.info('Creating e_PSF map.')
+        mPSFstar = self.make_PSF_maps(cat, fsk,
+                                      sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
+        fsk.write_flat_map(self.get_output('ePSF_map'),
+                           np.array([mPSFstar[0][0], mPSFstar[0][1],
+                                     mPSFstar[1][0], mPSFstar[1][1],
+                                     mPSFstar[1][2]]),
+                           descript=['e_PSF1','e_PSF2',
+                                     'e_PSF weight mask', 'e_PSF binary mask',
+                                     'counts map (PSF star sample)'])
 
-        if self.get_output('ePSFres_map') is not None:
-            # delta_e_PSF maps
-            logger.info('Creating e_PSF residual map.')
-            mPSFresstar = self.make_PSF_res_maps(cat, fsk,
-                                                 sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
-            fsk.write_flat_map(self.get_output('ePSFres_map'),
-                               np.array([mPSFresstar[0][0], mPSFresstar[0][1],
-                                         mPSFresstar[1][0], mPSFresstar[1][1],
-                                         mPSFresstar[1][2]]),
-                               descript=['e_PSFres1','e_PSFres2',
-                                         'e_PSFres weight mask', 'e_PSFres binary mask',
-                                         'counts map (PSF star sample)'])
-            #header = fsk.wcs.to_header()
-            #hdus = []
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSFres1', 'Description')
-            #hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSFres2', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head = header.copy()
-            #head['DESCR'] = ('e_PSFres weight mask', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head['DESCR'] = ('e_PSFres binary mask', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            #hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape([fsk.ny, fsk.nx]), header=head)
-            #hdus.append(hdu)
-            #hdulist = fits.HDUList(hdus)
-            #hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
-        '''
+        # 4- delta_e_PSF
+        logger.info('Creating e_PSF residual map.')
+        mPSFresstar = self.make_PSF_res_maps(cat, fsk,
+                                             sel_clean*sel_maglim*sel_stars*sel_fluxcut*sel_blended)
+        fsk.write_flat_map(self.get_output('ePSFres_map'),
+                           np.array([mPSFresstar[0][0], mPSFresstar[0][1],
+                                     mPSFresstar[1][0], mPSFresstar[1][1],
+                                     mPSFresstar[1][2]]),
+                           descript=['e_PSFres1','e_PSFres2',
+                                     'e_PSFres weight mask', 'e_PSFres binary mask',
+                                     'counts map (PSF star sample)'])
 
-        #Binary BO mask
-        mask_bo,fsg=self.make_bo_mask(cat[sel_clean],fsk)
+        # 5- Binary BO mask
+        mask_bo,fsg=self.make_bo_mask(cat[sel_area],fsk)
         fsg.write_flat_map(self.get_output('bo_mask'),mask_bo,descript='Bright-object mask')
 
-        #Masked fraction
-        masked_fraction_cont=self.make_masked_fraction(cat[sel_clean],fsk)
+        # 6- Masked fraction
+        masked_fraction_cont=self.make_masked_fraction(cat[sel_area],fsk)
         fsk.write_flat_map(self.get_output('masked_fraction'),masked_fraction_cont,
                            descript='Masked fraction')
 
-        ####
-        # Compute depth map
+        # 7- Compute depth map
         depth,desc=self.make_depth_map(cat,fsk)
         fsk.write_flat_map(self.get_output('depth_map'),depth,descript=desc)
 
@@ -364,13 +317,13 @@ class ReduceCat(PipelineStage) :
         # - Star-galaxy separator
         # - Blending
         sel=~(sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
-        print("Will lose %d objects to depth, S/N and stars"%(np.sum(sel)))
+        logger.info("Will lose %d objects to depth, S/N and stars"%(np.sum(sel)))
         cat.remove_rows(sel)
 
         ####
         # Write final catalog
         # 1- header
-        print("Writing output")
+        logger.info("Writing output")
         hdr=fits.Header()
         hdr['BAND']=self.config['band']
         hdr['DEPTH']=self.config['depth_cut']
