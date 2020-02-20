@@ -3,7 +3,6 @@
 import numpy as np
 from operator import add
 import multiprocessing
-# import sharedmem
 import copy
 # from .SimulatedMaps import SimulatedMaps
 import sys
@@ -118,18 +117,15 @@ class MockSurvey(object):
         realisations = np.arange(self.params['nrealiz'])
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
-        ncpus = 1
+        # ncpus = 1
         logger.info('Number of available CPUs {}.'.format(ncpus))
         pool = multiprocessing.Pool(processes = ncpus)
 
         # Pool map preserves the call order!
-        reslist = pool.map(self, realisations)
+        reslist = pool.map(self, realisations, chunksize=int(realisations.shape[0]/ncpus))
 
         pool.close() # no more tasks
         pool.join()  # wrap up current tasks
-
-        # with sharedmem.MapReduce(np=ncpus) as pool:
-        #     reslist = pool.map(self, realisations)
 
         # cls, noisecls, tempells = self(realisations)
 
@@ -190,9 +186,6 @@ class MockSurvey(object):
         self.maskmat = self.init_maps()
 
         logger.info('Running realization : {}.'.format(realis))
-        logger.info(multiprocessing.current_process())
-        logger.info(self.wsps)
-        logger.info(self.wsps[0][0])
 
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
         noisecls = np.zeros_like(cls)
@@ -378,6 +371,8 @@ class MockSurvey(object):
         Convenience method for calculating the NaMaster workspaces for all the probes in the simulation.
         :return wsps: wsps list
         """
+
+        self.maskmat = self.init_maps()
 
         self.wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
 
