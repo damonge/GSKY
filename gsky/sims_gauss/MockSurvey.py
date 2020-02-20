@@ -86,7 +86,7 @@ class MockSurvey(object):
         if not hasattr(self, 'wsps'):
             logger.info('Applying workspace caching.')
             logger.info('Setting up workspace attribute.')
-            self.wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
+            wsps = self.compute_wsps()
 
     def enrich_noise_params(self, noiseparams):
         """
@@ -139,7 +139,7 @@ class MockSurvey(object):
         tempells = reslist[0][2]
 
         # Compute all workspaces
-        wsps = self.compute_wsps()
+        # wsps = self.compute_wsps()
 
         # Remove the noise bias from the auto power spectra
         if self.params['signal'] and self.params['noise']:
@@ -185,6 +185,9 @@ class MockSurvey(object):
         """
 
         logger.info('Running realization : {}.'.format(realis))
+        logger.info(multiprocessing.current_process())
+        logger.info(self.wsps)
+        logger.info(self.wsps[0][0])
 
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
         noisecls = np.zeros_like(cls)
@@ -371,9 +374,20 @@ class MockSurvey(object):
         :return wsps: wsps list
         """
 
-        wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
+        self.wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
 
-        maps = self.simmaps.generate_maps()
+        if self.params['signal']:
+            signalmaps = self.simmaps.generate_maps()
+        if self.params['noise']:
+            # We need to add noise maps to the signal maps
+            noisemaps = self.noisemaps.generate_maps()
+
+        if self.params['signal']:
+            maps = copy.deepcopy(signalmaps)
+        elif self.params['noise']:
+            maps = copy.deepcopy(noisemaps)
+        else:
+            raise RuntimeError('Either signal or noise must be True. Aborting.')
 
         b = nmt.NmtBinFlat(self.params['l0_bins'], self.params['lf_bins'])
 
@@ -395,9 +409,9 @@ class MockSurvey(object):
                     logger.info('Computing workspace element.')
                     wsp = nmt.NmtWorkspaceFlat()
                     wsp.compute_coupling_matrix(f2_1, f0_1, b)
-                    wsps[j][jj] = wsp
+                    self.wsps[j][jj] = wsp
                     if j != jj:
-                       wsps[jj][j] = wsp
+                        self.wsps[jj][j] = wsp
 
                 elif spin1 == 2 and spin2 == 2:
                     # Define flat sky spin-2 field
@@ -410,9 +424,9 @@ class MockSurvey(object):
                     logger.info('Computing workspace element.')
                     wsp = nmt.NmtWorkspaceFlat()
                     wsp.compute_coupling_matrix(f2_1, f2_2, b)
-                    wsps[j][jj] = wsp
+                    self.wsps[j][jj] = wsp
                     if j != jj:
-                       wsps[jj][j] = wsp
+                        self.wsps[jj][j] = wsp
 
                 else:
                     # Define flat sky spin-0 field
@@ -425,9 +439,9 @@ class MockSurvey(object):
                     logger.info('Computing workspace element.')
                     wsp = nmt.NmtWorkspaceFlat()
                     wsp.compute_coupling_matrix(f0_1, f0_2, b)
-                    wsps[j][jj] = wsp
+                    self.wsps[j][jj] = wsp
                     if j != jj:
-                       wsps[jj][j] = wsp
+                        self.wsps[jj][j] = wsp
 
         return wsps
 
