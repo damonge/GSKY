@@ -3,7 +3,7 @@
 import numpy as np
 from operator import add
 import multiprocessing
-import sharedmem
+# import sharedmem
 import copy
 # from .SimulatedMaps import SimulatedMaps
 import sys
@@ -55,13 +55,6 @@ class MockSurvey(object):
             logger.info('Not generating noise realizations.')
             self.params['noise'] = False
 
-        self.maskmat = self.init_maps()
-
-        if not hasattr(self, 'wsps'):
-            logger.info('Applying workspace caching.')
-            logger.info('Setting up workspace attribute.')
-            wsps = self.compute_wsps()
-
         self.print_params()
 
     def print_params(self):
@@ -92,6 +85,11 @@ class MockSurvey(object):
         self.params['nspin2'] = np.sum(self.params['spins'] == 2).astype('int')
         self.params['nautocls'] = self.params['nprobes']+self.params['nspin2']
 
+        if not hasattr(self, 'wsps'):
+            logger.info('Applying workspace caching.')
+            logger.info('Setting up workspace attribute.')
+            self.wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
+
     def enrich_noise_params(self, noiseparams):
         """
         Infers the unspecified parameters from the parameters provided and
@@ -120,18 +118,18 @@ class MockSurvey(object):
         realisations = np.arange(self.params['nrealiz'])
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
-        # ncpus = 1
+        ncpus = 1
         logger.info('Number of available CPUs {}.'.format(ncpus))
-        # pool = multiprocessing.Pool(processes = ncpus)
-        #
-        # # Pool map preserves the call order!
-        # reslist = pool.map(self, realisations)
-        #
-        # pool.close() # no more tasks
-        # pool.join()  # wrap up current tasks
+        pool = multiprocessing.Pool(processes = ncpus)
 
-        with sharedmem.MapReduce(np=ncpus) as pool:
-            reslist = pool.map(self, realisations)
+        # Pool map preserves the call order!
+        reslist = pool.map(self, realisations)
+
+        pool.close() # no more tasks
+        pool.join()  # wrap up current tasks
+
+        # with sharedmem.MapReduce(np=ncpus) as pool:
+        #     reslist = pool.map(self, realisations)
 
         # cls, noisecls, tempells = self(realisations)
 
@@ -144,14 +142,14 @@ class MockSurvey(object):
         tempells = reslist[0][2]
 
         # Compute all workspaces
-        # wsps = self.compute_wsps()
+        wsps = self.compute_wsps()
 
         # Remove the noise bias from the auto power spectra
         if self.params['signal'] and self.params['noise']:
             logger.info('Removing noise bias.')
             cls = self.remove_noise(cls, noisecls)
 
-        return cls, noisecls, tempells, self.wsps
+        return cls, noisecls, tempells, wsps
 
     def remove_noise(self, cls, noisecls):
         """
@@ -188,6 +186,8 @@ class MockSurvey(object):
         to this configuration
         :return tempells: array of the ell range of the power spectra
         """
+
+        self.maskmat = self.init_maps()
 
         logger.info('Running realization : {}.'.format(realis))
         logger.info(multiprocessing.current_process())
