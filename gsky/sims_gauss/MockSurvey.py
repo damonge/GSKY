@@ -437,7 +437,7 @@ class MockSurvey(object):
         This is different for separate masks for the cross correlation or combined masks for the cross correlation
         """
 
-        maskmat = np.zeros((self.params['nprobes'], self.params['nprobes']) + self.params['mapshape'])
+        maskmat = np.zeros((self.params['nprobes'], self.params['nprobes']) + (self.fsk.ny, self.fsk.nx))
         k = 0
         # 1st case: We give a combined mask to the cross power spectrum
         if len(self.masks) > self.params['nprobes']:
