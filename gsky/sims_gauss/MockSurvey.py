@@ -36,10 +36,11 @@ class MockSurvey(object):
 
         if simparams['path2cls'] != 'NONE':
             logger.info('path2cls provided. Generating signal realizations.')
+            self.params['signal'] = True
             self.simmaps = SimulatedMaps(simparams)
         else:
             logger.info('path2cls is NONE. Not generating signal realizations.')
-            self.params['sigmaps'] = False
+            self.params['signal'] = False
         if noiseparams != {}:
             logger.info('Generating noise realizations.')
             # Need to generate noise realisations as well
