@@ -29,7 +29,8 @@ if __name__ == '__main__':
     nrealiz = config['simparams']['nrealiz']
 
     logger.info("Reading masked fraction from {}.".format(config['simparams']['path2fsk']))
-    _, mask = read_flat_map(config['simparams']['path2fsk'])
+    fsk, mask = read_flat_map(config['simparams']['path2fsk'])
+    mask = mask.reshape([fsk.ny, fsk.nx])
 
     # Here assuming for simplicity that masks are the same
     masks = [mask]
