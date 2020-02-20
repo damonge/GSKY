@@ -29,10 +29,10 @@ if __name__ == '__main__':
     nrealiz = config['simparams']['nrealiz']
 
     logger.info("Reading masked fraction from {}.".format(config['simparams']['path2fsk']))
-    mask, _ = read_flat_map(config['simparams']['path2fsk'])
+    _, mask = read_flat_map(config['simparams']['path2fsk'])
 
     # Here assuming for simplicity that masks are the same
-    masks = [mask, mask, mask, mask, mask, mask]
+    masks = [mask]
 
     if 'l0_bins' in config['simparams']:
         config['simparams']['l0_bins'] = np.array(config['simparams']['l0_bins'])
