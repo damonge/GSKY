@@ -19,7 +19,7 @@ noiseparams:
     probes: ['gamma']
     noisemodel: data
     path2fsk: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/masked_fraction.fits'
-    path2shearcat: '../HSC/data/shape_cat_calibrated_blinded_m_anicola_0.fits'
+    path2shearcat: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/calib_catalog.fits'
     posfromshearcat: 1
     # path2deltagmask: '../HSC/data/map_gamma_HSC.fits'
     # Ngal: 2057541 # Number of galaxies in WL catalog
