@@ -4,7 +4,7 @@ import numpy as np
 from operator import add
 import multiprocessing
 import copy
-from .SimulatedMaps import SimulatedMaps
+# from .SimulatedMaps import SimulatedMaps
 from .NoiseMaps import NoiseMaps
 import pymaster as nmt
 from ..flatmaps import read_flat_map
