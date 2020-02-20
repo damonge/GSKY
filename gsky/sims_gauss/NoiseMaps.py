@@ -146,7 +146,7 @@ class NoiseMaps(object):
                                                weights=randomized_cat['ishape_hsm_regauss_derived_shape_weight'], \
                                                shearrot=self.params['shearrot'])
 
-        return gammamaps[0], gammamaps[1]
+        return gammamaps[0].reshape([data['fsk'].ny, data['fsk'].nx]), gammamaps[1].reshape([data['fsk'].ny, data['fsk'].nx])
 
     def randomize_shear_cat(self, cat):
         """
