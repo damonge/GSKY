@@ -5,9 +5,12 @@ from operator import add
 import multiprocessing
 import copy
 # from .SimulatedMaps import SimulatedMaps
-from .NoiseMaps import NoiseMaps
+import sys
+sys.path.append('../../gsky')
+sys.path.append('../sims_gauss')
+from NoiseMaps import NoiseMaps
 import pymaster as nmt
-from ..flatmaps import read_flat_map
+from flatmaps import read_flat_map
 
 import logging
 logging.basicConfig(level=logging.INFO)

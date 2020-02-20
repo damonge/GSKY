@@ -10,7 +10,6 @@ simparams:
     ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
     path2fsk:  '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/masked_fraction.fits'
     pixwindow: 0
-    path2tempmap: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/sims/temp/map_gamma_HSC.fits'
     nell_theor: 5000
 
 # Parameters defining noise maps

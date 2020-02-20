@@ -4,8 +4,10 @@ import numpy as np
 #import healpy as hp
 import copy
 from astropy.io import fits
-from ..map_utils import createSpin2Map
-from ..flatmaps import read_flat_map
+import sys
+sys.path.append('../../gsky')
+from map_utils import createSpin2Map
+from flatmaps import read_flat_map
 
 import logging
 logging.basicConfig(level=logging.INFO)

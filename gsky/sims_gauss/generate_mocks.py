@@ -5,8 +5,11 @@ import logging
 import numpy as np
 import yaml
 import os
-from ..flatmaps import read_flat_map
-from .MockSurvey import MockSurvey
+import sys
+sys.path.append('../../gsky')
+sys.path.append('../sims_gauss')
+from flatmaps import read_flat_map
+from MockSurvey import MockSurvey
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
