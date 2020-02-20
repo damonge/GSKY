@@ -18,6 +18,90 @@ class ShearCatMapper(CatMapper) :
                     'pz_bins':[0.15,0.50,0.75,1.00,1.50], 'nz_bin_num':200,
                     'nz_bin_max':3.0, 'shearrot': 'flipu'}
     
+    '''
+    def _responsivity(self, cat):
+        """
+        Compute shear responsivity.
+        For HSC (see Mandelbaum et al., 2018, arXiv:1705.06745):
+        R = 1 - < e_rms^2 >w (Eq. (A1) in Mandelbaum et al., 2018)
+        :param cat:
+        :return:
+        """
+
+        R = 1. - np.average(cat['ishape_hsm_regauss_derived_rms_e']**2, weights=cat['ishape_hsm_regauss_derived_shape_weight'])
+
+        return R
+
+    def _mhat(self, cat):
+        """
+        Compute multiplicative bias.
+        For HSC (see Mandelbaum et al., 2018, arXiv:1705.06745):
+        mhat = < m >w (Eq. (A2) in Mandelbaum et al., 2018)
+        :param cat:
+        :return:
+        """
+
+        mhat = np.average(cat['ishape_hsm_regauss_derived_shear_bias_m'], weights=cat['ishape_hsm_regauss_derived_shape_weight'])
+
+        return mhat
+
+    def calibrated_catalog(self, cat, R=None, mhat=None):
+        """
+        Calibrate shear catalog and add calibrated shear columns to existing catalog.
+        For HSC (see Mandelbaum et al., 2018, arXiv:1705.06745):
+        gi = 1/(1 + mhat)[ei/(2R) - ci] (Eq. (A6) in Mandelbaum et al., 2018)
+        R = 1 - < e_rms^2 >w (Eq. (A1) in Mandelbaum et al., 2018)
+        mhat = < m >w (Eq. (A2) in Mandelbaum et al., 2018)
+        :param cat:
+        :param R:
+        :param mhat:
+        :return:
+        """
+
+        logger.info('Computing calibrated shear catalog.')
+
+        cat_calib = copy.deepcopy(cat)
+
+        if R is None and mhat is None:
+            logger.info('Computing R and mhat.')
+            R = self._responsivity(cat_calib)
+            mhat = self._mhat(cat_calib)
+
+        else:
+            logger.info('R and mhat provided.')
+
+        logger.info('R = {}, mhat = {}.'.format(R, mhat))
+
+        e1_corr = 1./(1. + mhat)*(cat_calib['ishape_hsm_regauss_e1']/(2.*R) - cat_calib['ishape_hsm_regauss_derived_shear_bias_c1'])
+        e2_corr = 1./(1. + mhat)*(cat_calib['ishape_hsm_regauss_e2']/(2.*R) - cat_calib['ishape_hsm_regauss_derived_shear_bias_c2'])
+
+        # Add these two columns to catalog
+        cat_calib = Table(cat_calib)
+        cat_calib['ishape_hsm_regauss_e1_calib'] = e1_corr
+        cat_calib['ishape_hsm_regauss_e2_calib'] = e2_corr
+
+        logger.info('Columns ishape_hsm_regauss_e1_calib, ishape_hsm_regauss_e2_calib added to shear catalog.')
+
+        return cat_calib, R, mhat
+
+    def pz_cut(self, cat):
+        """
+        Apply pz cut to catalog.
+        :param cat:
+        :return:
+        """
+
+        logger.info('Applying pz cut to catalog. Using {} with zmin = {}, zmax = {}.'.\
+                    format(self.config['photoz_method'], self.config['photoz_min'], self.config['photoz_max']))
+
+        photozmask = (cat[self.config['photoz_method']]>=self.config['photoz_min'])\
+                     &(cat[self.config['photoz_method']]<self.config['photoz_max'])
+
+        cat = copy.deepcopy(cat)
+        cat = cat[photozmask]
+
+        return cat
+    '''
     def get_gamma_maps(self, cat):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
