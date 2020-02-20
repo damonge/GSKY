@@ -1,10 +1,5 @@
 from ceci import PipelineStage
-from .reduce_cat import ReduceCat
-from .reduce_shear_cat import ReduceShearCat
-from .syst_mapper import SystMapper
-from .pdf_match import PDFMatch
-from .cosmos_weight import COSMOSWeight
-from .cat_mapper import CatMapper
-from .shear_cat_mapper import ShearCatMapper
-from .map_diagnoser import MapDiagnoser
-from .power_specter import PowerSpecter
+from .MockSurvey import MockSurvey
+from .NoiseMaps import NoiseMaps
+from .SimulatedMaps import SimulatedMaps
+
