@@ -444,7 +444,7 @@ class MockSurvey(object):
                     if j != jj:
                         self.wsps[jj][j] = wsp
 
-        return wsps
+        return self.wsps
 
     def init_maps(self):
         """
