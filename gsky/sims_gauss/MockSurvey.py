@@ -53,6 +53,12 @@ class MockSurvey(object):
         else:
             logger.info('Not generating noise realizations.')
             self.params['noise'] = False
+
+        if not hasattr(self, 'wsps'):
+            logger.info('Applying workspace caching.')
+            logger.info('Setting up workspace attribute.')
+            wsps = self.compute_wsps()
+            
         self.print_params()
 
     def print_params(self):
@@ -82,11 +88,6 @@ class MockSurvey(object):
             self.params['nell'] = int(self.params['l0_bins'].shape[0])
         self.params['nspin2'] = np.sum(self.params['spins'] == 2).astype('int')
         self.params['nautocls'] = self.params['nprobes']+self.params['nspin2']
-
-        if not hasattr(self, 'wsps'):
-            logger.info('Applying workspace caching.')
-            logger.info('Setting up workspace attribute.')
-            wsps = self.compute_wsps()
 
     def enrich_noise_params(self, noiseparams):
         """
@@ -146,7 +147,7 @@ class MockSurvey(object):
             logger.info('Removing noise bias.')
             cls = self.remove_noise(cls, noisecls)
 
-        return cls, noisecls, tempells, wsps
+        return cls, noisecls, tempells, self.wsps
 
     def remove_noise(self, cls, noisecls):
         """
