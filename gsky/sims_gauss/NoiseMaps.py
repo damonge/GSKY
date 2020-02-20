@@ -142,7 +142,7 @@ class NoiseMaps(object):
         randomized_cat = self.randomize_shear_cat(data['shearcat'])
 
         gammamaps, gammamasks = createSpin2Map(randomized_cat['ra'], randomized_cat['dec'], randomized_cat['ishape_hsm_regauss_e1_calib'], \
-                                               randomized_cat['ishape_hsm_regauss_e2_calib'], self.fsk, \
+                                               randomized_cat['ishape_hsm_regauss_e2_calib'], data['fsk'], \
                                                weights=randomized_cat['ishape_hsm_regauss_derived_shape_weight'], \
                                                shearrot=self.config['shearrot'])
 

@@ -4,7 +4,7 @@
 simparams:
     probes: ['gamma']
     spins: [2]
-    nrealiz: 1000
+    nrealiz: 100
     #path2cls: ['../HSC/data/cls_deltagxdeltag_dist=HSC-binned-phot-z.txt', '../HSC/data/cls_gammaxdeltag_dist=HSC-binned-phot-z.txt', '../HSC/data/cls_gammaxgamma_dist=HSC-binned-phot-z.txt']
     path2cls: NONE
     ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
@@ -27,5 +27,5 @@ noiseparams:
 path2masks: ['/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/gamma_maps.fits']
 
 # Parameters defining this specific run
-nrealiz: 1000
+nrealiz: 100
 path2outputdir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/WIDE_WIDE12H_sirius_i24p5_out/sims/out'
