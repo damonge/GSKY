@@ -3,6 +3,7 @@
 import numpy as np
 from operator import add
 import multiprocessing
+import sharedmem
 import copy
 # from .SimulatedMaps import SimulatedMaps
 import sys
@@ -121,13 +122,16 @@ class MockSurvey(object):
         ncpus = 4
         # ncpus = 1
         logger.info('Number of available CPUs {}.'.format(ncpus))
-        pool = multiprocessing.Pool(processes = ncpus)
+        # pool = multiprocessing.Pool(processes = ncpus)
+        #
+        # # Pool map preserves the call order!
+        # reslist = pool.map(self, realisations)
+        #
+        # pool.close() # no more tasks
+        # pool.join()  # wrap up current tasks
 
-        # Pool map preserves the call order!
-        reslist = pool.map(self, realisations)
-
-        pool.close() # no more tasks
-        pool.join()  # wrap up current tasks
+        with sharedmem.MapReduce(np=ncpus) as pool:
+            reslist = pool.map(self, realisations)
 
         # cls, noisecls, tempells = self(realisations)
 
