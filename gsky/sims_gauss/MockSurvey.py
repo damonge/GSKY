@@ -54,11 +54,13 @@ class MockSurvey(object):
             logger.info('Not generating noise realizations.')
             self.params['noise'] = False
 
+        self.maskmat = self.init_maps()
+
         if not hasattr(self, 'wsps'):
             logger.info('Applying workspace caching.')
             logger.info('Setting up workspace attribute.')
             wsps = self.compute_wsps()
-            
+
         self.print_params()
 
     def print_params(self):
@@ -113,8 +115,6 @@ class MockSurvey(object):
         and the 3. axis gives the cls belonging to this configuration
         :return tempells: array of ell values which is equal for all the probes
         """
-
-        self.maskmat = self.init_maps()
 
         realisations = np.arange(self.params['nrealiz'])
         ncpus = multiprocessing.cpu_count()
