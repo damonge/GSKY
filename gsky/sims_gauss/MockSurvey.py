@@ -111,7 +111,7 @@ class MockSurvey(object):
 
         self.maskmat = self.init_maps()
 
-        realisations = np.arange(self.params['nrealis'])
+        realisations = np.arange(self.params['nrealiz'])
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
         # ncpus = 1
