@@ -71,7 +71,7 @@ class NoiseMocks(PipelineStage) :
         noiseparams = {key: self.config[key] for key in noiseparams_keys}
         noiseparams['path2shearcat'] = self.get_input('calib_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
-        simparams_keys = ['probes', 'spins', 'path2cls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
+        simparams_keys = ['probes', 'spins', 'path2theorycls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
         simparams = {key: self.config[key] for key in simparams_keys}
         simparams['path2fsk'] = self.get_input('masked_fraction')
 
