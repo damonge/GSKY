@@ -19,10 +19,10 @@ stages:
       nprocess: 1
       partition: debug
       walltime: 30
-#    - name: CatMapper
-#      nprocess: 1
-#      partition: debug
-#      walltime: 10
+    - name: CatMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
 #    - name: MapDiagnoser
 #      nprocess: 1
 #      partition: debug

@@ -11,13 +11,13 @@ global:
   mask_thr: 0.5
   shearrot: flipqu
   sys_collapse_type: average
+  pz_code: ephor_ab
+  pz_mark: best
+  pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
 
 ReduceCat:
   min_snr: 10.
   depth_method: fluxerr
-  pz_code: ephor_ab
-  pz_mark: best
-  pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
 
 SystMapper:
   ccd_drop: [9]
