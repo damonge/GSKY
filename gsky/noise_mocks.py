@@ -67,7 +67,7 @@ class NoiseMocks(PipelineStage) :
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
 
-        noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat']
+        noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat', 'shearrot']
         noiseparams = {key: self.config[key] for key in noiseparams_keys}
         noiseparams['path2shearcat'] = self.get_input('calib_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
