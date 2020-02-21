@@ -215,7 +215,7 @@ class ReduceCat(PipelineStage) :
             e2 = (cat[mask_bin]['ishape_hsm_regauss_e2']/(2.*resp) -
                   cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c2']) / mhat
             e1cal[mask_bin] = e1
-            e1cal[mask_bin] = e2
+            e2cal[mask_bin] = e2
         return e1cal, e2cal, mhats, resp
         
     def pz_binning(self, cat):

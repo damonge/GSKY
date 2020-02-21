@@ -25,7 +25,11 @@ SystMapper:
 COSMOSWeight:
   n_neighbors: 20
 
-CatMapper:
+GalMapper:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+
+ShearMapper:
   nz_bin_num: 100
   nz_bin_max: 4.0
 

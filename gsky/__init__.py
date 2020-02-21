@@ -4,6 +4,6 @@ from .syst_mapper import SystMapper
 from .pdf_match import PDFMatch
 from .cosmos_weight import COSMOSWeight
 from .gal_mapper import GalMapper
-from .shear_cat_mapper import ShearCatMapper
+from .shear_mapper import ShearMapper
 from .map_diagnoser import MapDiagnoser
 from .power_specter import PowerSpecter
