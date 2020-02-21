@@ -73,6 +73,7 @@ class NoiseMocks(PipelineStage) :
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
         simparams_keys = ['probes', 'spins', 'path2cls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
         simparams = {key: self.config[key] for key in simparams_keys}
+        simparams['path2fsk'] = self.get_input('masked_fraction')
 
         mocksurvey = MockSurvey(masks, simparams, noiseparams)
 
