@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NoiseMocks(PipelineStage) :
-    name="ShearCatMapper"
+    name="NoiseMocks"
     inputs=[('calib_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
     outputs=[('cls_noise_realiz', NpyFile), ('l_eff_noise', NpyFile)]
     config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
@@ -57,7 +57,7 @@ class NoiseMocks(PipelineStage) :
 
         logger.info('Running {} realizations of noise power spectra.'.format(self.config['nrealiz']))
 
-        logger.info("Reading masked fraction from {}.".format(self.config['masked_fraction']))
+        logger.info("Reading masked fraction from {}.".format(self.get_input('masked_fraction')))
         fsk, mask = read_flat_map(self.get_input('gamma_maps'), i_map=3)
         mask = mask.reshape([fsk.ny, fsk.nx])
 
