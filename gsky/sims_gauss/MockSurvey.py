@@ -34,12 +34,12 @@ class MockSurvey(object):
         logger.info("Reading masked fraction from {}.".format(simparams['path2fsk']))
         self.fsk, _ = read_flat_map(simparams['path2fsk'])
 
-        if simparams['path2cls'] != 'NONE':
-            logger.info('path2cls provided. Generating signal realizations.')
+        if simparams['path2theorycls'] != 'NONE':
+            logger.info('path2theorycls provided. Generating signal realizations.')
             self.params['signal'] = True
             self.simmaps = SimulatedMaps(simparams)
         else:
-            logger.info('path2cls is NONE. Not generating signal realizations.')
+            logger.info('path2theorycls is NONE. Not generating signal realizations.')
             self.params['signal'] = False
         if noiseparams != {}:
             logger.info('Generating noise realizations.')
