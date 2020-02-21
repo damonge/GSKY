@@ -7,10 +7,6 @@ stages:
       nprocess: 1
       partition: debug
       walltime: 10
-    - name: ReduceShearCat
-      nprocess: 1
-      partition: debug
-      walltime: 10
     - name: SystMapper
       nprocess: 1
       partition: regular
