@@ -19,7 +19,7 @@ stages:
       nprocess: 1
       partition: debug
       walltime: 30
-    - name: CatMapper
+    - name: GalMapper
       nprocess: 1
       partition: debug
       walltime: 10

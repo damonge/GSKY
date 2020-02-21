@@ -3,7 +3,7 @@ from .reduce_cat import ReduceCat
 from .syst_mapper import SystMapper
 from .pdf_match import PDFMatch
 from .cosmos_weight import COSMOSWeight
-from .cat_mapper import CatMapper
+from .gal_mapper import GalMapper
 from .shear_cat_mapper import ShearCatMapper
 from .map_diagnoser import MapDiagnoser
 from .power_specter import PowerSpecter

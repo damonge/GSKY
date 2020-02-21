@@ -3,14 +3,14 @@ from .types import FitsFile,ASCIIFile
 import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createSpin2Map
-from .cat_mapper import CatMapper
+from .gal_mapper import GalMapper
 from astropy.io import fits
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class ShearCatMapper(CatMapper) :
+class ShearCatMapper(GalMapper) :
     name="ShearCatMapper"
     inputs=[('calib_catalog', FitsFile), ('masked_fraction', FitsFile)]
     outputs=[('gamma_maps', FitsFile)]
