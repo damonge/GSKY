@@ -228,8 +228,19 @@ class NoiseMaps(object):
                     data[probe] = {}
 
                     hdulist = fits.open(self.params['path2shearcat'])
-                    data[probe]['shearcat'] = hdulist[1].data
+                    cat = hdulist[1].data
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
+                    if 'shear_cat' in cat.keys():
+                        logger.info('Applying shear cuts to catalog')
+                        logger.info('Initial size = {}.'.format(cat['ra'].shape))
+                        cat = cat[cat['shear_cat']]
+                        logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+                    if 'tomo_bins' in self.params.keys():
+                        logger.info('Selecting galaxies falling in tomographic bin {}.'.format(self.params['tomo_bins'][i]))
+                        logger.info('Initial size = {}.'.format(cat['ra'].shape))
+                        cat = cat[cat['tomo_bin']==self.params['tomo_bins'][i]]
+                        logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+                    data[probe]['shearcat'] = cat
                     logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
                     fsk, _ = read_flat_map(self.params['path2fsk'])
                     data[probe]['fsk'] = fsk
