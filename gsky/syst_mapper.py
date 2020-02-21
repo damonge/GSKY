@@ -3,8 +3,6 @@ from .types import FitsFile
 import numpy as np
 from .flatmaps import FlatMapInfo, read_flat_map
 from .obscond import ObsCond
-#from .map_utils import createCountsMap, createMeanStdMaps, createMask, removeDisconnected
-#from .estDepth import get_depth
 from astropy.io import fits
 from shapely.geometry.polygon import Polygon
 from shapely.prepared import prep

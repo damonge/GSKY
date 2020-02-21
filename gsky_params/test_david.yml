@@ -15,10 +15,10 @@ stages:
       nprocess: 1
       partition: regular
       walltime: 60
-#    - name: COSMOSWeight
-#      nprocess: 1
-#      partition: debug
-#      walltime: 30
+    - name: COSMOSWeight
+      nprocess: 1
+      partition: debug
+      walltime: 30
 #    - name: CatMapper
 #      nprocess: 1
 #      partition: debug
