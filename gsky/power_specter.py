@@ -59,7 +59,7 @@ class PowerSpecter(PipelineStage) :
 
         return temp
 
-    def get_windows(self,wsp) :
+    def get_windows(self, tracers, wsp):
         """
         Get window functions for each bandpower so they can be stored into the final SACC files.
         """
@@ -75,84 +75,72 @@ class PowerSpecter(PipelineStage) :
 
         zero_arr = np.zeros(self.lmax + 1)
 
-        if self.get_input('ngal_maps') != 'NONE':
-            logger.info('Number density maps provided.')
-            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz'):
-                logger.info("Computing window functions for counts.")
-                windows_counts = np.zeros([nbands, self.lmax + 1])
-                t_hat = np.zeros(self.lmax + 1)
-                for il, l in enumerate(l_arr):
-                    t_hat[il] = 1.
-                    windows_counts[:, il] = wsp[0][0].decouple_cell(wsp[0][0].couple_cell(l_arr, [t_hat]))
-                    t_hat[il] = 0.
-                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz', windows=windows_counts)
-            else:
-                logger.info("Reading window functions for counts.")
-                windows_counts = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(0, 0) + '.npz')['windows']
+        tracer_type_arr = [tr.type for tr in tracers]
 
-            if self.get_input('shear_maps') != 'NONE':
-                logger.info('Number density and shear maps provided.')
-                for i in range(self.ntracers):
-                    for ii in range(i, self.ntracers):
-                        if i < self.ncounts_maps and ii < self.ncounts_maps:
-                            windows_list[i][ii] = windows_counts
-                        elif i == 0 and ii >= self.ncounts_maps:
-                            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
-                                logger.info("Computing window functions for counts x shear.")
-                                logger.info("Only using E-mode window function.")
-                                windows = np.zeros([nbands, self.lmax + 1])
+        for i in range(self.ntracers):
+            for ii in range(i, self.ntracers):
+
+                # File does not exist
+                if not os.path.isfile(self.get_output_fname('windows_l') + '_{}{}'.format(i, ii) + '.npz'):
+                    tr_types_cur = [tracers[i].type, tracers[ii].type]
+                    # All galaxy maps
+                    if set(tr_types_cur) == {'ngal_maps'}:
+                        if not hasattr(self, 'windows_counts'):
+                            counts_indx = tracer_type_arr.index('ngal_maps')
+                            if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz'):
+                                logger.info("Computing window functions for counts.")
+                                self.windows_counts = np.zeros([nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
-                                    windows[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
+                                    self.windows_counts[:, il] = wsp[counts_indx][counts_indx].decouple_cell(wsp[counts_indx][counts_indx].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
-                                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
+                                np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz', windows=self.windows_counts)
                             else:
-                                logger.info("Reading window functions for counts x shear.")
-                                windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
+                                logger.info("Reading window functions for counts.")
+                                self.windows_counts = np.load(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz')['windows']
+                        windows_curr = self.windows_counts
 
-                            windows_list[i][ii] = windows
-                        elif i != 0 and i < self.ncounts_maps and ii >= self.ncounts_maps:
-                            windows_list[i][ii] = windows_list[0][ii]
-                        elif i >= self.ncounts_maps and ii >= self.ncounts_maps:
-                            if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
-                                logger.info("Computing window functions for shear.")
-                                logger.info("Only using E-mode window function.")
-                                windows = np.zeros([nbands, self.lmax + 1])
-                                t_hat = np.zeros(self.lmax + 1)
-                                for il, l in enumerate(l_arr):
-                                    t_hat[il] = 1.
-                                    windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
-                                    t_hat[il] = 0.
-                                np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
-                            else:
-                                logger.info("Reading window functions for shear.")
-                                windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
-
-                            windows_list[i][ii] = windows
+                    # One galaxy map
+                    elif 'ngal_maps' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('ngal_maps')
+                        i_curr = i
+                        ii_curr = ii
+                        if tracers[i].type == 'ngal_maps':
+                            i_curr = counts_indx
+                        if tracers[ii].type == 'ngal_maps':
+                            ii_curr = counts_indx
+                        if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'):
+                            logger.info("Computing window functions for counts xcorr.")
+                            logger.info("Only using E-mode window function.")
+                            windows_curr = np.zeros([nbands, self.lmax + 1])
+                            t_hat = np.zeros(self.lmax + 1)
+                            for il, l in enumerate(l_arr):
+                                t_hat[il] = 1.
+                                windows_curr[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
+                                t_hat[il] = 0.
+                            np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz', windows=windows_curr)
                         else:
-                            raise RuntimeError("Messed-up indexing in window function computation.")
+                            logger.info("Reading window functions for counts xcorr.")
+                            windows_curr = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
 
-        # Only shear maps case
-        else:
-            logger.info('Shear maps provided.')
-            for i in range(self.ntracers):
-                for ii in range(i, self.ntracers):
-                    if not os.path.isfile(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz'):
-                        logger.info("Computing window functions for shear.")
-                        logger.info("Only using E-mode window function.")
-                        windows = np.zeros([nbands, self.lmax + 1])
+                    # No galaxy maps
+                    else:
+                        logger.info("Computing window functions for {}.".format(self.get_output_fname('windows_l')+'_{}{}'.format(i, ii)+'.npz'))
+                        windows_curr = np.zeros([nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
                         for il, l in enumerate(l_arr):
                             t_hat[il] = 1.
-                            windows[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
+                            windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
                             t_hat[il] = 0.
-                        np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows)
-                    else:
-                        logger.info("Reading window functions for shear.")
-                        windows = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
+                        np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows_curr)
 
-                    windows_list[i][ii] = windows
+                # File exists
+                else:
+                    logger.info("Reading window functions for {}.".format(self.get_output_fname('windows_l')+'_{}{}'.format(i, ii)+'.npz'))
+                    windows_curr = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
+
+                windows_list[i][ii] = windows_curr
 
         return windows_list
 
@@ -286,7 +274,7 @@ class PowerSpecter(PipelineStage) :
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
             s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
-            cl_deproj_bias = s.mean.vector.reshape((self.nmaps, self.nmaps, self.nbands))
+            cl_deproj_bias = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Remove deprojection bias
@@ -550,62 +538,63 @@ class PowerSpecter(PipelineStage) :
         logger.info("Computing MCM.")
         wsps = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
-        if self.get_input('ngal_maps') != 'NONE':
-            logger.info('Number density maps provided.')
-            # Compute wsp for counts (is always the same as mask is the same)
-            wsp_counts = nmt.NmtWorkspaceFlat()
-            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat'):
-                logger.info("Computing MCM for counts.")
-                wsp_counts.compute_coupling_matrix(tracers[0].field,tracers[0].field,bpws)
-                wsp_counts.write_to(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat')
-            else:
-                logger.info("Reading MCM for counts.")
-                wsp_counts.read_from(self.get_output_fname('mcm')+'_{}{}'.format(0, 0)+'.dat')
+        tracer_type_arr = [tr.type for tr in tracers]
 
-            if self.get_input('shear_maps') != 'NONE':
-                logger.info('Number density and shear maps provided.')
-                for i in range(self.ntracers):
-                    for ii in range(i, self.ntracers):
-                        if i < self.ntracers_counts and ii < self.ntracers_counts:
-                            wsps[i][ii] = wsp_counts
-                        elif i == 0 and ii >= self.ncounts_maps:
-                            wsp = nmt.NmtWorkspaceFlat()
-                            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
-                                logger.info("Computing MCM for counts x shear.")
-                                wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                                wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
+        for i in range(self.ntracers):
+            for ii in range(i, self.ntracers):
+
+                # File does not exist
+                if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'):
+                    tr_types_cur = [tracers[i].type, tracers[ii].type]
+                    # All galaxy maps
+                    if set(tr_types_cur) == {'ngal_maps'}:
+                        if not hasattr(self, 'wsp_counts'):
+                            counts_indx = tracer_type_arr.index('ngal_maps')
+                            wsp_curr = nmt.NmtWorkspaceFlat()
+                            if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'):
+                                logger.info("Computing MCM for counts.")
+                                wsp_curr.compute_coupling_matrix(tracers[counts_indx].field, tracers[counts_indx].field, bpws)
+                                wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
                             else:
-                                logger.info("Reading MCM for counts x shear.")
-                                wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                            wsps[i][ii] = wsp
-                        elif i != 0 and i < self.ntracers_counts and ii >= self.ntracers_counts:
-                            wsps[i][ii] = wsps[0][ii]
-                        elif i >= self.ntracers_counts and ii >= self.ntracers_counts:
-                            wsp = nmt.NmtWorkspaceFlat()
-                            if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
-                                logger.info("Computing MCM for shear.")
-                                wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                                wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                            else:
-                                logger.info("Reading MCM for shear.")
-                                wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                            wsps[i][ii] = wsp
+                                logger.info("Reading MCM for counts.")
+                                wsp_curr.read_from(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
+                            self.wsp_counts = wsp_curr
+                        wsp_curr = self.wsp_counts
+
+                    # One galaxy map
+                    elif 'ngal_maps' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('ngal_maps')
+                        i_curr = i
+                        ii_curr = ii
+                        if tracers[i].type == 'ngal_maps':
+                            i_curr = counts_indx
+                        if tracers[ii].type == 'ngal_maps':
+                            ii_curr = counts_indx
+                        wsp_curr = nmt.NmtWorkspaceFlat()
+                        if not os.path.isfile(
+                                self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat'):
+                            logger.info("Computing MCM for counts xcorr.")
+                            wsp_curr.compute_coupling_matrix(tracers[i_curr].field, tracers[ii_curr].field, bpws)
+                            wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat')
                         else:
-                            raise RuntimeError("Messed-up indexing in wsp computation.")
-        # Only shear maps case
-        else:
-            logger.info('Shear maps provided.')
-            for i in range(self.ntracers):
-                for ii in range(i, self.ntracers):
-                    wsp = nmt.NmtWorkspaceFlat()
-                    if not os.path.isfile(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat'):
-                        logger.info("Computing MCM for shear.")
-                        wsp.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
-                        wsp.write_to(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
+                            logger.info("Reading MCM for counts xcorr.")
+                            wsp_curr.read_from(
+                                self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat')
+
+                    # No galaxy maps
                     else:
-                        logger.info("Reading MCM for shear.")
-                        wsp.read_from(self.get_output_fname('mcm')+'_{}{}'.format(i, ii)+'.dat')
-                    wsps[i][ii] = wsp
+                        logger.info( "Computing MCM for {}.".format(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'))
+                        wsp_curr = nmt.NmtWorkspaceFlat()
+                        wsp_curr.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
+                        wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat')
+
+                # File exists
+                else:
+                    logger.info("Reading MCM for {}.".format(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'))
+                    wsp_curr = nmt.NmtWorkspaceFlat()
+                    wsp_curr.read_from(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat')
+
+                wsps[i][ii] = wsp_curr
 
         return wsps
 
@@ -624,79 +613,77 @@ class PowerSpecter(PipelineStage) :
             for j1 in range(i1, self.ntracers):
                 tracer_combs.append((i1, j1))
 
-        if self.get_input('ngal_maps') != 'NONE':
-            logger.info('Number density maps provided.')
-            if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat'):
-                # Compute wsp for counts (is always the same as mask is the same)
-                cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
-                logger.info("Computing covariance MCM for counts.")
-                cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
-                cwsp_counts.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')
-            else:
-                logger.info("Reading covariance MCM for counts.")
-                cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
-                cwsp_counts.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(0, 0, 0, 0)+'.dat')
+        tracer_type_arr = [tr.type for tr in tracers]
 
-            if self.get_input('shear_maps') != 'NONE':
-                logger.info('Number density and shear maps provided.')
-                for k1, tup1 in enumerate(tracer_combs):
-                    tr_i1, tr_j1 = tup1
-                    for tr_i2, tr_j2 in tracer_combs[k1:]:
-                        if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat'):
-                            logger.info("Computing covariance MCM for shear.")
-                            tr_indxs = np.array([tr_i1, tr_j1, tr_i2, tr_j2])
-                            if np.all(tr_indxs < self.ntracers_counts):
-                                cwsp_curr = cwsp_counts
-                            elif np.any(tr_indxs < self.ntracers_counts) and np.all(tr_indxs != 0):
-                                i1_curr = tr_i1
-                                j1_curr = tr_j1
-                                i2_curr = tr_i2
-                                j2_curr = tr_j2
-                                if tr_i1 < self.ntracers_counts:
-                                    i1_curr = 0
-                                if tr_j1 < self.ntracers_counts:
-                                    j1_curr = 0
-                                if tr_i2 < self.ntracers_counts:
-                                    i2_curr = 0
-                                if tr_j2 < self.ntracers_counts:
-                                    j2_curr = 0
-                                cwsp_curr = cwsp[i1_curr][j1_curr][i2_curr][j2_curr]
+        for k1, tup1 in enumerate(tracer_combs):
+            tr_i1, tr_j1 = tup1
+            for tr_i2, tr_j2 in tracer_combs[k1:]:
+
+                # File does not exist
+                if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat'):
+                    tr_types_cur = np.array([tracers[tr_i1].type, tracers[tr_j1].type, tracers[tr_i2].type, tracers[tr_j2].type])
+
+                    # All galaxy maps
+                    if set(tr_types_cur) == {'ngal_maps'}:
+                        if not hasattr(self, 'cwsp_counts'):
+                            counts_indx = tracer_type_arr.index('ngal_maps')
+                            if not os.path.isfile(
+                                    self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx, counts_indx, counts_indx) + '.dat'):
+                                # Compute wsp for counts (is always the same as mask is the same)
+                                self.cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
+                                logger.info("Computing covariance MCM for counts.")
+                                self.cwsp_counts.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
+                                self.cwsp_counts.write_to(
+                                    self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx, counts_indx, counts_indx) + '.dat')
                             else:
-                                cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                                cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
-                                                                        tracers[tr_i2].field, tracers[tr_j2].field, bpws)
-                            cwsp_curr.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
+                                logger.info("Reading covariance MCM for counts.")
+                                self.cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
+                                self.cwsp_counts.read_from(
+                                    self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx, counts_indx, counts_indx) + '.dat')
 
-                        else :
-                            logger.info("Reading covariance MCM for shear.")
-                            cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                            cwsp_curr.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
-                        cwsp[tr_i1][tr_j1][tr_i2][tr_j2] = cwsp_curr
+                        cwsp_curr = self.cwsp_counts
 
-        # Only shear maps case
-        else:
-            logger.info('Shear maps provided.')
-            for k1, tup1 in enumerate(tracer_combs):
-                tr_i1, tr_j1 = tup1
-                for tr_i2, tr_j2 in tracer_combs[k1:]:
-                    if not os.path.isfile(self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat'):
-                        logger.info("Computing covariance MCM for shear.")
+                    # At least one galaxy map
+                    elif 'ngal_maps' in tr_types_cur and not set(tr_types_cur) == {'ngal_maps'}:
+                        counts_indx = tracer_type_arr.index('ngal_maps')
+                        i1_curr = tr_i1
+                        j1_curr = tr_j1
+                        i2_curr = tr_i2
+                        j2_curr = tr_j2
+                        if tracers[tr_i1].type == 'ngal_maps':
+                            i1_curr = counts_indx
+                        if tracers[tr_j1].type == 'ngal_maps':
+                            j1_curr = counts_indx
+                        if tracers[tr_i2].type == 'ngal_maps':
+                            i2_curr = counts_indx
+                        if tracers[tr_j2].type == 'ngal_maps':
+                            j2_curr = counts_indx
                         cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                        cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field,
-                                                                bpws,
-                                                                tracers[tr_i2].field, tracers[tr_j2].field,
-                                                                bpws)
-                        cwsp_curr.write_to(
-                            self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
+                        if not os.path.isfile(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr, j2_curr)+'.dat'):
+                            # Compute wsp for counts (is always the same as mask is the same)
+                            logger.info("Computing covariance MCM for counts xcorr.")
+                            cwsp_curr.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
+                            cwsp_curr.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr, j2_curr)+'.dat')
+                        else:
+                            logger.info("Reading covariance MCM for counts xcorr.")
+                            cwsp_curr.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr, j2_curr)+'.dat')
 
+                    # No galaxy maps
                     else:
-                        logger.info("Reading covariance MCM for shear.")
                         cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
-                        cwsp_curr.read_from(
-                            self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
-                    cwsp[tr_i1][tr_j1][tr_i2][tr_j2] = cwsp_curr
+                        cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
+                                                                tracers[tr_i2].field, tracers[tr_j2].field, bpws)
+                    # Write to file
+                    cwsp_curr.write_to(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
 
-        
+                # File exists
+                else:
+                    logger.info("Reading covariance MCM for {}.".format(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat'))
+                    cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
+                    cwsp_curr.read_from(self.get_output_fname('cov_mcm')+'_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2)+'.dat')
+
+                cwsp[tr_i1][tr_j1][tr_i2][tr_j2] = cwsp_curr
+
         return cwsp
 
     def get_covar_gaussim(self,lth,clth,bpws,wsp,temps,cl_dpj_all) :
@@ -796,10 +783,10 @@ class PowerSpecter(PipelineStage) :
                                                       ca1b1, ca1b2, ca2b1, ca2b2, wsp[tr_i1][tr_j1],
                                                       wsp[tr_i2][tr_j2])
 
-                if set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     covar[ix_1, :, ix_2, :] = cov_here
                     ix_2 += 1
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
                     cov_te_te = cov_here[:, 0, :, 0]
                     cov_te_tb = cov_here[:, 0, :, 1]
@@ -811,7 +798,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+1, :, ix_2, :] = cov_tb_te
                     covar[ix_1+1, :, ix_2+1, :] = cov_tb_tb
                     ix_2+=2
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
                     cov_tt_te = cov_here[:, 0, :, 0]
                     cov_tt_tb = cov_here[:, 0, :, 1]
@@ -819,7 +806,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1, :, ix_2, :] = cov_tt_te
                     covar[ix_1, :, ix_2+1, :] = cov_tt_tb
                     ix_2+=2
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
                     cov_tt_te = cov_here[:, 0, :, 0]
                     cov_tt_tb = cov_here[:, 0, :, 1]
@@ -827,7 +814,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1, :, ix_2, :] = cov_tt_te
                     covar[ix_1+1, :, ix_2, :] = cov_tt_tb
                     ix_2+=1
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
                     cov_tt_ee = cov_here[:, 0, :, 0]
                     cov_tt_eb = cov_here[:, 0, :, 1]
@@ -839,7 +826,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1, :, ix_2+2, :] = cov_tt_be
                     covar[ix_1, :, ix_2+3, :] = cov_tt_bb
                     ix_2+=4
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
                     cov_tt_ee = cov_here[:, 0, :, 0]
                     cov_tt_eb = cov_here[:, 0, :, 1]
@@ -851,7 +838,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+2, :, ix_2, :] = cov_tt_be
                     covar[ix_1+3, :, ix_2, :] = cov_tt_bb
                     ix_2 += 1
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
                     cov_te_ee = cov_here[:, 0, :, 0]
                     cov_te_eb = cov_here[:, 0, :, 1]
@@ -871,7 +858,7 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+1, :, ix_2+2, :] = cov_tb_be
                     covar[ix_1+1, :, ix_2+3, :] = cov_tb_bb
                     ix_2+=4
-                elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
                     cov_te_ee = cov_here[:, 0, :, 0]
                     cov_te_eb = cov_here[:, 0, :, 1]
@@ -927,27 +914,27 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+3, :, ix_2+2, :] = cov_bb_be
                     covar[ix_1+3, :, ix_2+3, :] = cov_bb_bb
                     ix_2+=4
-            if set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+            if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1+=1
 
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1+=1
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1+=2
 
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1+=2
 
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 0)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                 ix_1+=1
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 0)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1+=4
 
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((0, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((2, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                 ix_1+=2
-            elif set((tracers[tr_i1], tracers[tr_j1])) == set((2, 2)) and set((tracers[tr_i2], tracers[tr_j2])) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1 += 4
-                
+
             else:
                 ix_1 += 4
 
@@ -1020,20 +1007,26 @@ class PowerSpecter(PipelineStage) :
             if len(hdul)%2!=0 :
                 raise ValueError("Input file should have two HDUs per map")
             nmaps=len(hdul)//2
-            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None)
+            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)
                             for i in range(nmaps)]
-            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps)
+            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)
                            for i in range(nmaps)]
 
         elif map_type == 'shear_maps':
-            logger.info('Creating shear tracers.')
+            logger.info('Creating cosmic shear tracers.')
             if len(hdul)%6!=0 :
                 raise ValueError("Input file should have six HDUs per map")
             nmaps=len(hdul)//6
-            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
+            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
                             for i in range(nmaps)]
-            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, is_shear=True, weightmask=True)
+            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
                            for i in range(nmaps)]
+
+        elif map_type == 'tSZ_maps':
+            logger.info('Creating tSZ tracers.')
+
+            tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)]
+            tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)]
 
         else:
             raise NotImplementedError()
@@ -1110,7 +1103,7 @@ class PowerSpecter(PipelineStage) :
         sacc_tracers=[]
 
         for i_t,t in enumerate(tracers):
-            if i_t < self.ntracers_counts:
+            if t.type == 'delta_g':
                 # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 # nz = t.nz_data['nz_cosmos']
                 # tracer = sacc.tracers.BaseTracer.make('NZ',
@@ -1125,7 +1118,7 @@ class PowerSpecter(PipelineStage) :
                                                       'gc_{}'.format(i_t),
                                                       'delta_g',
                                                       spin=0)
-            else:
+            elif t.type == 'cosmic_shear':
                 # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 # nz = t.nz_data['nz_cosmos']
                 # tracer = sacc.tracers.BaseTracer.make('NZ',
@@ -1142,6 +1135,15 @@ class PowerSpecter(PipelineStage) :
                                                       spin=2,
                                                       z=np.linspace(0, 1, 100),
                                                       nz=np.ones(100))
+
+            elif t.type == 'Compton_y':
+                tracer = sacc.tracers.BaseTracer.make('Map',
+                                                      'y_{}'.format(i_t - self.ntracers_counts - self.ntracers_shear),
+                                                      'Compton_y',
+                                                      spin=0)
+
+            else:
+                raise NotImplementedError('Only tracer types delta_g, cosmic_shear, Compton_y supported.')
 
             sacc_tracers.append(tracer)
 
@@ -1170,7 +1172,7 @@ class PowerSpecter(PipelineStage) :
             map_j = map_i
             for tr_j in range(tr_i, self.ntracers):
                 wins = sacc.Window(ells_all, windows[tr_i][tr_j].T)
-                if sacc_t[tr_i].spin == 0 and sacc_t[tr_j].spin == 0:
+                if sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'delta_g':
                     saccfile.add_ell_cl('cl_00',
                                  'gc_{}'.format(tr_i),
                                  'gc_{}'.format(tr_j),
@@ -1180,7 +1182,8 @@ class PowerSpecter(PipelineStage) :
                                  window_id=range(self.nbands)
                                  )
                     map_j += 1
-                elif sacc_t[tr_i].spin == 0 and sacc_t[tr_j].spin == 2:
+
+                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_0e',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
@@ -1196,7 +1199,8 @@ class PowerSpecter(PipelineStage) :
                                  window=wins,
                                  window_id=range(self.nbands))
                     map_j += 2
-                elif sacc_t[tr_i].spin == 2 and sacc_t[tr_j].spin == 0:
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'delta_g':
                     saccfile.add_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i),
                                         'gc_{}'.format(tr_j),
@@ -1212,7 +1216,73 @@ class PowerSpecter(PipelineStage) :
                                         window=wins,
                                         window_id=range(self.nbands))
                     map_j += 1
-                else:
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'Compton_y':
+                    saccfile.add_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i),
+                                        'y_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands)
+                                        )
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'Compton_y':
+                    saccfile.add_ell_cl('cl_00',
+                                        'gc_{}'.format(tr_i),
+                                        'y_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'delta_g':
+                    saccfile.add_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i),
+                                        'gc_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                    saccfile.add_ell_cl('cl_0e',
+                                        'y_{}'.format(tr_i),
+                                        'wl_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    saccfile.add_ell_cl('cl_0b',
+                                        'y_{}'.format(tr_i),
+                                        'wl_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j + 1, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 2
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'Compton_y':
+                    saccfile.add_ell_cl('cl_0e',
+                                        'wl_{}'.format(tr_i),
+                                        'y_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    saccfile.add_ell_cl('cl_0b',
+                                        'wl_{}'.format(tr_i),
+                                        'y_{}'.format(tr_j),
+                                        ells,
+                                        cls[map_i + 1, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_ee',
                                  'wl_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j),
@@ -1374,7 +1444,7 @@ class PowerSpecter(PipelineStage) :
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
 
-        if self.get_input('ngal_maps') != 'NONE' or self.get_input('shear_maps') != 'NONE':
+        if self.get_input('ngal_maps') != 'NONE' or self.get_input('shear_maps') != 'NONE' or self.get_input('Compton_y_maps') != 'NONE':
             if self.get_input('ngal_maps') != 'NONE':
                 logger.info("Generating number density tracers.")
                 tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
@@ -1384,6 +1454,20 @@ class PowerSpecter(PipelineStage) :
                 self.ntracers_counts = 0
                 tracers_nc = []
                 tracers_wc = []
+
+            if self.get_input('Compton_y_maps') != 'NONE':
+                logger.info("Generating Compton_y tracers.")
+                tracers_comptony_nc, tracers_comptony_wc = self.get_tracers(temps, map_type='Compton_y_maps')
+                self.ntracers_comptony = len(tracers_comptony_nc)
+
+                logger.info("Appending Compton_y tracers to number density tracers.")
+                tracers_nc.extend(tracers_comptony_nc)
+                tracers_wc.extend(tracers_comptony_wc)
+
+            else:
+                logger.info("No Compton_y maps provided.")
+                self.ntracers_comptony = 0
+
             if self.get_input('shear_maps') != 'NONE':
                 logger.info("Generating shear tracers.")
                 tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
@@ -1393,12 +1477,14 @@ class PowerSpecter(PipelineStage) :
                 tracers_nc.extend(tracers_shear_nc)
                 tracers_wc.extend(tracers_shear_wc)
             else:
+                logger.info("No shear maps provided.")
                 self.ntracers_shear = 0
+
         else:
-            raise RuntimeError('Either ngal_maps or shear_maps need to be provided. Aborting.')
+            raise RuntimeError('ngal_maps, Compton_y_maps or shear_maps need to be provided. Aborting.')
 
         self.ntracers = len(tracers_nc)
-        self.nmaps = self.ntracers_counts + 2*self.ntracers_shear
+        self.nmaps = self.ntracers_counts + self.ntracers_comptony + 2*self.ntracers_shear
 
         logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
@@ -1418,7 +1504,7 @@ class PowerSpecter(PipelineStage) :
         wsp = self.get_mcm(tracers_nc,bpws)
 
         logger.info("Computing window function.")
-        windows = self.get_windows(wsp)
+        windows = self.get_windows(tracers_nc, wsp)
 
         logger.info("Computing power spectra.")
         logger.info(" No deprojections.")
