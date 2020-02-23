@@ -14,16 +14,21 @@ class ACTMapper(PipelineStage) :
     name="ACTMapper"
     inputs=[('masked_fraction',FitsFile)]
     outputs=[('act_maps',FitsFile)]
-    config_options={'act_inputs':[]}
+    config_options={'act_inputs':['name','map_fname','mask_fname']}
 
     def check_fsks(self, fsk1, fsk2):
+        """ Compares two flat-sky pixelizations
+        """
         if((fsk1.nx == fsk2.nx) and (fsk1.ny == fsk2.ny) and
            (fsk1.dx == fsk2.dx) and (fsk1.dy == fsk2.dy)):
             return False
         return True
 
     def check_sanity(self, pix):
-        # Sanity checks
+        """ Given the pixel indices of the corners of the HSC
+        footprint in the ACT wcs, make sure that they make
+        sense.
+        """
         # Only two edges in x
         ix_unique = np.unique(pix[:, 0])
         check_a = len(ix_unique)==2
@@ -35,7 +40,7 @@ class ACTMapper(PipelineStage) :
         # Right separation between edges
         nx = int(np.fabs(np.diff(ix_unique)))
         ny = int(np.fabs(np.diff(iy_unique)))
-        check_c = (nx == self.fsk_hsc.nx) and (ny = self.fsk_hsc.ny)
+        check_c = (nx == self.fsk_hsc.nx) and (ny == self.fsk_hsc.ny)
 
 
         # Integer pixel coordinates
@@ -46,12 +51,14 @@ class ACTMapper(PipelineStage) :
             raise ValueError("Sanity checks don't pass")
 
     def compute_edges(self):
-
+        """
+        Compute edges of the ACT map within HSC footprint
+        """
         self.coords_corner = self.fsk_hsc.wcs.all_pix2world([[0,0],
                                                              [self.fsk_hsc.nx,0],
                                                              [0,self.fsk_hsc.ny],
                                                              [self.fsk_hsc.nx,
-                                                              self.fsk_hsc_ny]],0)
+                                                              self.fsk_hsc.ny]],0)
         pix = self.fsk_act.wcs.all_world2pix(self.coords_corner, 0)
         self.check_sanity(pix)
 
@@ -81,15 +88,20 @@ class ACTMapper(PipelineStage) :
             self.ix0_hsc+=self.ixf_act-self.fsk_act.nx
             self.ixf_act=self.fsk_act.nx
 
-    def process_inputs(self):
+    def read_maps(self):
+        """ Reads sky geometry for HSC and ACT,
+        as well as all the ACT maps and masks.
+        """
+        # HSC
         self.fsk_hsc,_=read_flat_map(self.get_input("masked_fraction"))
-        
+
+        # ACT maps
         self.act_maps_full=[]
         self.fsk_act = None
         for d in self.config['act_inputs']:
             mdir = {}
-            fskb, msk = read_flat_map(d['mask'])
-            fskc, mpp = read_flat_map(d['map'])
+            fskb, msk = read_flat_map(d[2])
+            fskc, mpp = read_flat_map(d[1])
             if self.check_fsks(fskb, fskc):
                 raise ValueError("Footprints are incompatible")
             if self.fsk_act is None:
@@ -97,97 +109,19 @@ class ACTMapper(PipelineStage) :
             else:
                 if self.check_fsks(fskb, self.fsk_act):
                     raise ValueError("ACT footprints are inconsistent")
-            mdir['name'] = d['name']
-            mdir['mask'] = mask
-            mdir['map'] = mpp
+            mdir['name'] = d[0]
+            mdir['mask'] = msk.reshape([self.fsk_act.ny, self.fsk_act.nx])
+            mdir['map'] = mpp.reshape([self.fsk_act.ny, self.fsk_act.nx])
             self.act_maps_full.append(mdir)
 
     def cut_act_map(self, mp):
+        """ Returns an input ACT map cut to the HSC footprint.
+        """
         mp_out = np.zeros([self.fsk_hsc.ny, self.fsk_hsc.nx])
         mp_out[self.iy0_hsc:self.iyf_hsc,
                self.ix0_hsc:self.ixf_hsc] = mp[self.iy0_act:self.iyf_act,
                                                self.ix0_act:self.ixf_act]
         return mp_out
-        
-    def get_nmaps(self,cat) :
-        """
-        Get number counts map from catalog
-        """
-        maps=[]
-
-        for i in range(self.nbins):
-            msk_bin = cat['tomo_bin']==i
-            subcat=cat[msk_bin]
-            nmap=createCountsMap(subcat['ra'],subcat['dec'],self.fsk)
-            maps.append(nmap)
-        return np.array(maps)
-
-    def get_nz_cosmos(self) :
-        """
-        Get N(z) from weighted COSMOS-30band data
-        """
-        zi_arr = self.config['pz_bins'][:-1]
-        zf_arr = self.config['pz_bins'][ 1:]
-
-        if self.config['pz_code']=='ephor_ab' :
-            pz_code='eab'
-        elif self.config['pz_code']=='frankenz' :
-            pz_code='frz'
-        elif self.config['pz_code']=='nnpz' :
-            pz_code='nnz'
-        else :
-            raise KeyError("Photo-z method "+self.config['pz_code']+
-                           " unavailable. Choose ephor_ab, frankenz or nnpz")
-
-        if self.config['pz_mark']  not in ['best','mean','mode','mc'] :
-            raise KeyError("Photo-z mark "+self.config['pz_mark']+
-                           " unavailable. Choose between best, mean, mode and mc")
-
-        self.column_mark = 'pz_'+self.config['pz_mark']+'_'+pz_code
-
-        weights_file=fits.open(self.get_input('cosmos_weights'))[1].data
-
-        pzs=[]
-        for zi,zf in zip(zi_arr,zf_arr) :
-            msk_cosmos=(weights_file[self.column_mark]<=zf) & (weights_file[self.column_mark]>zi)
-            hz,bz=np.histogram(weights_file[msk_cosmos]['PHOTOZ'],
-                               bins=self.config['nz_bin_num'],
-                               range=[0.,self.config['nz_bin_max']],
-                               weights=weights_file[msk_cosmos]['weight'])
-            hnz,bnz=np.histogram(weights_file[msk_cosmos]['PHOTOZ'],
-                                 bins=self.config['nz_bin_num'],
-                                 range=[0.,self.config['nz_bin_max']])
-            ehz=np.zeros(len(hnz)); ehz[hnz>0]=(hz[hnz>0]+0.)/np.sqrt(hnz[hnz>0]+0.)
-            pzs.append([bz[:-1],bz[1:],(hz+0.)/np.sum(hz+0.),ehz])
-        return np.array(pzs)
-
-    def get_nz_stack(self,cat,codename) :
-        """
-        Get N(z) from pdf stacks.
-        :param cat: object catalog
-        :param codename: photoz code name (demp, ephor, ephor_ab, frankenz or nnpz).
-        """
-        from scipy.interpolate import interp1d
-
-        f=fits.open(self.pdf_files[codename])
-        p=f[1].data['pdf'][self.msk]
-        z=f[2].data['bins']
-        sumpdf = np.sum(p,axis=1)
-        pdfgood = sumpdf > 0
-
-        z_all=np.linspace(0.,self.config['nz_bin_max'],self.config['nz_bin_num']+1)
-        z0=z_all[:-1]; z1=z_all[1:]; zm=0.5*(z0+z1)
-        pzs=[]
-        for i in range(self.nbins):
-            msk_good = (cat['tomo_bin']==i) & pdfgood
-            hz_orig=np.sum(p[msk_good],axis=0)
-            hz_orig/=np.sum(hz_orig)
-            hzf=interp1d(z,hz_orig,bounds_error=False,fill_value=0.)
-            hzm=hzf(zm);
-            
-            pzs.append([z0,z1,hzm/np.sum(hzm)])
-        f.close()
-        return np.array(pzs)
 
     def run(self) :
         """
@@ -196,64 +130,46 @@ class ACTMapper(PipelineStage) :
         - Calculates the associated N(z)s for each bin using different methods.
         - Stores the above into a single FITS file
         """
-        logger.info("Reading masked fraction")
-        self.fsk,_=read_flat_map(self.get_input("masked_fraction"))
-        self.nbins = len(self.config['pz_bins'])-1
+        logger.info("Reading maps")
+        self.read_maps()
 
-        logger.info("Reading catalog")
-        cat=fits.open(self.get_input('clean_catalog'))[1].data
-        #Remove masked objects
-        if self.config['mask_type']=='arcturus' :
-            self.msk=cat['mask_Arcturus'].astype(bool)
-        elif self.config['mask_type']=='sirius' :
-            self.msk=np.logical_not(cat['iflags_pixel_bright_object_center'])
-            self.msk*=np.logical_not(cat['iflags_pixel_bright_object_any'])
-        else :
-            raise KeyError("Mask type "+self.config['mask_type']+
-                           " not supported. Choose arcturus or sirius")
-        self.msk *= cat['wl_fulldepth_fullcolor']
-        cat=cat[self.msk]
+        if self.fsk_act is not None:
+            logger.info("Computing cutting edges")
+            self.compute_edges()
 
-        logger.info("Reading pdf filenames")
-        data_syst=np.genfromtxt(self.get_input('pdf_matched'),
-                                dtype=[('pzname','|U8'),('fname','|U256')])
-        self.pdf_files={n:fn for n,fn in zip(np.atleast_1d(data_syst['pzname']),
-                                             np.atleast_1d(data_syst['fname']))}
-        
-        logger.info("Getting COSMOS N(z)s")
-        pzs_cosmos=self.get_nz_cosmos()
-
-        logger.info("Getting pdf stacks")
-        pzs_stack={}
-        for n in self.pdf_files.keys() :
-            pzs_stack[n]=self.get_nz_stack(cat,n)
-
-        logger.info("Getting number count maps")
-        n_maps=self.get_nmaps(cat)
+            logger.info("Cutting maps")
+            self.act_maps_hsc=[]
+            for d in self.act_maps_full:
+                logger.info(" - " + d['name'])
+                mpp = self.cut_act_map(d['map'])
+                msk = self.cut_act_map(d['mask'])
+                mdir = {}
+                mdir['name'] = d['name']
+                mdir['mask'] = msk
+                mdir['map'] = mpp
+                self.act_maps_hsc.append(mdir)
 
         logger.info("Writing output")
-        header=self.fsk.wcs.to_header()
+        header=self.fsk_hsc.wcs.to_header()
         hdus=[]
-        for im,m in enumerate(n_maps) :
-            #Map
-            head=header.copy()
-            head['DESCR']=('Ngal, bin %d'%(im+1),'Description')
-            if im==0 :
-                hdu=fits.PrimaryHDU(data=m.reshape([self.fsk.ny,self.fsk.nx]),header=head)
-            else :
-                hdu=fits.ImageHDU(data=m.reshape([self.fsk.ny,self.fsk.nx]),header=head)
+        if self.fsk_act is None:
+            hdu=fits.PrimaryHDU(header=head)
             hdus.append(hdu)
-            
-            #Nz
-            cols=[fits.Column(name='z_i',array=pzs_cosmos[im,0,:],format='E'),
-                  fits.Column(name='z_f',array=pzs_cosmos[im,1,:],format='E'),
-                  fits.Column(name='nz_cosmos',array=pzs_cosmos[im,2,:],format='E'),
-                  fits.Column(name='enz_cosmos',array=pzs_cosmos[im,3,:],format='E')]
-            for n in self.pdf_files.keys() :
-                cols.append(fits.Column(name='nz_'+n,array=pzs_stack[n][im,2,:],format='E'))
-            hdus.append(fits.BinTableHDU.from_columns(cols))
+        else:
+            for im,d in enumerate(self.act_maps_hsc):
+                head=header.copy()
+                head['DESCR']=d['name']
+                if im==0 :
+                    hdu=fits.PrimaryHDU(data=d['map'],header=head)
+                else :
+                    hdu=fits.ImageHDU(data=d['map'],header=head)
+                hdus.append(hdu)
+                head=header.copy()
+                head['DESCR']=d['name']+' mask'
+                hdu=fits.ImageHDU(data=d['mask'],header=head)
+                hdus.append(hdu)
         hdulist=fits.HDUList(hdus)
-        hdulist.writeto(self.get_output('ngal_maps'),overwrite=True)
+        hdulist.writeto(self.get_output('act_maps'),overwrite=True)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

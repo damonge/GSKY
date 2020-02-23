@@ -190,17 +190,14 @@ class ShearMapper(PipelineStage) :
         hdus = []
         for im, m_list in enumerate(gammamaps) :
             # Maps
+            head = header.copy()
+            head['DESCR'] = ('gamma1, bin %d'%(im+1), 'Description')
             if im == 0 :
-                head = header.copy()
-                head['DESCR'] = ('gamma1, bin %d'%(im+1), 'Description')
                 head['RESPONS'] = response
                 hdu = fits.PrimaryHDU(data=m_list[0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
-                hdus.append(hdu)
             else:
-                head = header.copy()
-                head['DESCR'] = ('gamma1, bin %d'%(im+1), 'Description')
                 hdu = fits.ImageHDU(data=m_list[0][0].reshape([self.fsk.ny,self.fsk.nx]), header=head)
-                hdus.append(hdu)
+            hdus.append(hdu)
             head = header.copy()
             head['DESCR'] = ('gamma2, bin %d'%(im+1), 'Description')
             hdu = fits.ImageHDU(data=m_list[0][1].reshape([self.fsk.ny,self.fsk.nx]), header=head)
