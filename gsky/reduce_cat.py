@@ -111,9 +111,10 @@ class ReduceCat(PipelineStage) :
         else :
             arr1=cat['%scmodel_mag'%band]
             arr2=snrs
-        depth,_=get_depth(method,cat[self.config['ra']],cat[self.config['dec']],band,
+        depth,_=get_depth(method,cat[self.config['ra']],cat[self.config['dec']],
                           arr1=arr1,arr2=arr2,
-                          flatSkyGrid=fsk,SNRthreshold=self.config['min_snr'])
+                          fsk=fsk,snrthreshold=self.config['min_snr'],
+                          interpolate=True,count_threshold=4)
         desc='%d-s depth, '%(self.config['min_snr'])+band+' '+method+' mean'
 
         return depth,desc
@@ -388,7 +389,7 @@ class ReduceCat(PipelineStage) :
                            descript='Masked fraction')
 
         # 7- Compute depth map
-        depth,desc=self.make_depth_map(cat,fsk)
+        depth,desc=self.make_depth_map(cat[sel_stars],fsk)
         fsk.write_flat_map(self.get_output('depth_map'),depth,descript=desc)
 
         ####
