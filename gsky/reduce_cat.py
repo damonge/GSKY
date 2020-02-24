@@ -54,7 +54,7 @@ class ReduceCat(PipelineStage) :
         descstar='Stars, '+self.config['band']+'<%.2lf'%(self.config['depth_cut'])
         return mstar,descstar
 
-    def make_bo_mask(self,cat,fsk) :
+    def make_bo_mask(self, cat, fsk, mask_fulldepth=False):
         """
         Produces a bright object mask
         :param cat: input catalog
@@ -68,11 +68,13 @@ class ReduceCat(PipelineStage) :
                         cat['iflags_pixel_bright_object_any']]
         else :
             raise ValueError('Mask type '+self.config['mask_type']+' not supported')
+        if mask_fulldepth:
+            flags_mask.append(~cat['wl_fulldepth_fullcolor'].astype(bool))
         mask_bo,fsg=createMask(cat[self.config['ra']],cat[self.config['dec']],flags_mask,fsk,
                                self.mpp['res_bo'])
         return mask_bo,fsg
 
-    def make_masked_fraction(self,cat,fsk) :
+    def make_masked_fraction(self, cat, fsk, mask_fulldepth=False):
         """
         Produces a masked fraction map
         :param cat: input catalog
@@ -80,6 +82,8 @@ class ReduceCat(PipelineStage) :
         """
         logger.info("Generating masked fraction map")
         masked=np.ones(len(cat))
+        if mask_fulldepth:
+            masked*= cat['wl_fulldepth_fullcolor']
         if self.config['mask_type']=='arcturus' :
             masked*=cat['mask_Arcturus']
         elif self.config['mask_type']=='sirius' :
@@ -373,11 +377,13 @@ class ReduceCat(PipelineStage) :
                                      'counts map (PSF star sample)'])
 
         # 5- Binary BO mask
-        mask_bo,fsg=self.make_bo_mask(cat[sel_area],fsk)
+        mask_bo,fsg=self.make_bo_mask(cat[sel_area],fsk,
+                                      mask_fulldepth=True)
         fsg.write_flat_map(self.get_output('bo_mask'),mask_bo,descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont=self.make_masked_fraction(cat[sel_area],fsk)
+        masked_fraction_cont=self.make_masked_fraction(cat,fsk,
+                                                       mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),masked_fraction_cont,
                            descript='Masked fraction')
 
