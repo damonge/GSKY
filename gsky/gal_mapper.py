@@ -5,8 +5,13 @@ from .flatmaps import read_flat_map
 from .map_utils import createCountsMap
 from astropy.io import fits
 
-class CatMapper(PipelineStage) :
-    name="CatMapper"
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class GalMapper(PipelineStage) :
+    name="GalMapper"
     inputs=[('clean_catalog',FitsFile),('masked_fraction',FitsFile),
             ('cosmos_weights',FitsFile),('pdf_matched',ASCIIFile)]
     outputs=[('ngal_maps',FitsFile)]
@@ -20,8 +25,8 @@ class CatMapper(PipelineStage) :
         """
         maps=[]
 
-        for zi,zf in zip(self.zi_arr,self.zf_arr) :
-            msk_bin=(cat[self.column_mark]<=zf) & (cat[self.column_mark]>zi)
+        for i in range(self.nbins):
+            msk_bin = cat['tomo_bin']==i
             subcat=cat[msk_bin]
             nmap=createCountsMap(subcat['ra'],subcat['dec'],self.fsk)
             maps.append(nmap)
@@ -31,10 +36,29 @@ class CatMapper(PipelineStage) :
         """
         Get N(z) from weighted COSMOS-30band data
         """
+        zi_arr = self.config['pz_bins'][:-1]
+        zf_arr = self.config['pz_bins'][ 1:]
+
+        if self.config['pz_code']=='ephor_ab' :
+            pz_code='eab'
+        elif self.config['pz_code']=='frankenz' :
+            pz_code='frz'
+        elif self.config['pz_code']=='nnpz' :
+            pz_code='nnz'
+        else :
+            raise KeyError("Photo-z method "+self.config['pz_code']+
+                           " unavailable. Choose ephor_ab, frankenz or nnpz")
+
+        if self.config['pz_mark']  not in ['best','mean','mode','mc'] :
+            raise KeyError("Photo-z mark "+self.config['pz_mark']+
+                           " unavailable. Choose between best, mean, mode and mc")
+
+        self.column_mark = 'pz_'+self.config['pz_mark']+'_'+pz_code
+
         weights_file=fits.open(self.get_input('cosmos_weights'))[1].data
 
         pzs=[]
-        for zi,zf in zip(self.zi_arr,self.zf_arr) :
+        for zi,zf in zip(zi_arr,zf_arr) :
             msk_cosmos=(weights_file[self.column_mark]<=zf) & (weights_file[self.column_mark]>zi)
             hz,bz=np.histogram(weights_file[msk_cosmos]['PHOTOZ'],
                                bins=self.config['nz_bin_num'],
@@ -58,39 +82,22 @@ class CatMapper(PipelineStage) :
         f=fits.open(self.pdf_files[codename])
         p=f[1].data['pdf'][self.msk]
         z=f[2].data['bins']
+        sumpdf = np.sum(p,axis=1)
+        pdfgood = sumpdf > 0
 
         z_all=np.linspace(0.,self.config['nz_bin_max'],self.config['nz_bin_num']+1)
         z0=z_all[:-1]; z1=z_all[1:]; zm=0.5*(z0+z1)
         pzs=[]
-        for zi,zf in zip(self.zi_arr,self.zf_arr) :
-            msk_bin=(cat[self.column_mark]<=zf) & (cat[self.column_mark]>zi)
-            hz_orig=np.sum(p[msk_bin],axis=0)
+        for i in range(self.nbins):
+            msk_good = (cat['tomo_bin']==i) & pdfgood
+            hz_orig=np.sum(p[msk_good],axis=0)
             hz_orig/=np.sum(hz_orig)
             hzf=interp1d(z,hz_orig,bounds_error=False,fill_value=0.)
             hzm=hzf(zm);
             
             pzs.append([z0,z1,hzm/np.sum(hzm)])
+        f.close()
         return np.array(pzs)
-            
-    def parse_input(self) :
-        """
-        Check config parameters for consistency
-        """
-        #Parse input params
-        if self.config['pz_code']=='ephor_ab' :
-            self.pz_code='eab'
-        elif self.config['pz_code']=='frankenz' :
-            self.pz_code='frz'
-        elif self.config['pz_code']=='nnpz' :
-            self.pz_code='nnz'
-        else :
-            raise KeyError("Photo-z method "+self.config['pz_code']+
-                           " unavailable. Choose ephor_ab, frankenz or nnpz")
-
-        if self.config['pz_mark']  not in ['best','mean','mode','mc'] :
-            raise KeyError("Photo-z mark "+self.config['pz_mark']+
-                           " unavailable. Choose between best, mean, mode and mc")
-        self.column_mark='pz_'+self.config['pz_mark']+'_'+self.pz_code
 
     def run(self) :
         """
@@ -99,12 +106,11 @@ class CatMapper(PipelineStage) :
         - Calculates the associated N(z)s for each bin using different methods.
         - Stores the above into a single FITS file
         """
-        self.parse_input()
-        
-        print("Reading masked fraction")
+        logger.info("Reading masked fraction")
         self.fsk,_=read_flat_map(self.get_input("masked_fraction"))
+        self.nbins = len(self.config['pz_bins'])-1
 
-        print("Reading catalog")
+        logger.info("Reading catalog")
         cat=fits.open(self.get_input('clean_catalog'))[1].data
         #Remove masked objects
         if self.config['mask_type']=='arcturus' :
@@ -115,30 +121,27 @@ class CatMapper(PipelineStage) :
         else :
             raise KeyError("Mask type "+self.config['mask_type']+
                            " not supported. Choose arcturus or sirius")
+        self.msk *= cat['wl_fulldepth_fullcolor']
         cat=cat[self.msk]
 
-        print("Reading pdf filenames")
+        logger.info("Reading pdf filenames")
         data_syst=np.genfromtxt(self.get_input('pdf_matched'),
                                 dtype=[('pzname','|U8'),('fname','|U256')])
-        self.pdf_files={n:fn for n,fn in zip(data_syst['pzname'],data_syst['fname'])}
+        self.pdf_files={n:fn for n,fn in zip(np.atleast_1d(data_syst['pzname']),
+                                             np.atleast_1d(data_syst['fname']))}
         
-        print("Parsing photo-z bins")
-        self.zi_arr=self.config['pz_bins'][:-1]
-        self.zf_arr=self.config['pz_bins'][ 1:]
-        self.nbins=len(self.zi_arr)
-
-        print("Getting COSMOS N(z)s")
+        logger.info("Getting COSMOS N(z)s")
         pzs_cosmos=self.get_nz_cosmos()
 
-        print("Getting pdf stacks")
+        logger.info("Getting pdf stacks")
         pzs_stack={}
         for n in self.pdf_files.keys() :
             pzs_stack[n]=self.get_nz_stack(cat,n)
 
-        print("Getting number count maps")
+        logger.info("Getting number count maps")
         n_maps=self.get_nmaps(cat)
 
-        print("Writing output")
+        logger.info("Writing output")
         header=self.fsk.wcs.to_header()
         hdus=[]
         for im,m in enumerate(n_maps) :

@@ -10,12 +10,15 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KDTree
 import scipy.spatial as spatial
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class COSMOSWeight(PipelineStage) :
     name="COSMOSWeight"
     inputs=[('cosmos_data',FitsFile),('cosmos_hsc',FitsFile)]
     outputs=[('cosmos_weights',FitsFile)]
     config_options={'depth_cut':24.5,'band':'i','mask_type':'sirius','n_neighbors':10}
-    bands=['g','r','i','z','y']
 
     def run(self) :
         """
@@ -27,7 +30,7 @@ class COSMOSWeight(PipelineStage) :
         band=self.config['band']
 
         #Read HSC COSMOS catalog
-        print("Reading HSC COSMOS")
+        logger.info("Reading HSC COSMOS")
         cat=Table.read(self.get_input('cosmos_hsc'))
         # Clean nulls and nans
         sel=np.ones(len(cat),dtype=bool)
@@ -86,7 +89,7 @@ class COSMOSWeight(PipelineStage) :
         ####
         # Read COSMOS-30band
         #cat30=Table.read(self.get_input('cosmos_data'))
-        print("Reading COSMOS 30band")
+        logger.info("Reading COSMOS 30band")
         cat30=fits.open(self.get_input('cosmos_data'))[1].data
         lim_indices=np.where((0.01<cat30['PHOTOZ']) & (9>cat30['PHOTOZ']) & (cat30['TYPE']==0) &
                              (cat30['ZP_2']<0) & (cat30['MASS_BEST']>7.5) & 
@@ -96,7 +99,7 @@ class COSMOSWeight(PipelineStage) :
 
         ####
         # Match coordinates
-        print("Matching coordinates")
+        logger.info("Matching coordinates")
         cosmos_skycoord = SkyCoord(ra = np.array(cat30['ALPHA_J2000'])*u.deg, dec = np.array(cat30['DELTA_J2000'])*u.deg)
         hsc_skycoord = SkyCoord(ra = np.array(cat['ra'])*u.deg, dec = np.array(cat['dec'])*u.deg)
         # Nearest neighbors
@@ -110,16 +113,14 @@ class COSMOSWeight(PipelineStage) :
         t1=Table.from_pandas(pd.DataFrame(cat30_good))
         keys_t2=['gcmodel_mag','rcmodel_mag','icmodel_mag','zcmodel_mag',
                  'ycmodel_mag','pz_mean_eab','pz_mode_eab','pz_best_eab',
-                 'pz_mc_eab','pz_mean_frz','pz_mode_frz','pz_best_frz',
-                 'pz_mc_frz','pz_mean_nnz','pz_mode_nnz','pz_best_nnz',
-                 'pz_mc_nnz']
+                 'pz_mc_eab']
         t2=Table.from_pandas(pd.DataFrame(np.transpose([np.array(cat_good[k]) for k in keys_t2]),
                                           index=range(len(cat_good)),columns=keys_t2))
         cat_matched= hstack([t1, t2])
 
         ####
         # Get color-space weights
-        print("Computing color-space weights")
+        logger.info("Computing color-space weights")
         train_sample=np.transpose(np.array([np.array(cat_matched['%scmodel_mag'%m]) for m in ['g','r','i','z','y']]))
         train_z=np.array(cat_matched['PHOTOZ'])
         photoz_sample=np.transpose(np.array([np.array(cat['%scmodel_mag'%m]) for m in ['g','r','i','z','y']]))
@@ -138,12 +139,12 @@ class COSMOSWeight(PipelineStage) :
         #(normalized by the number of photo-z objects)
         weights = np.true_divide(num_photoz*len(train_sample),self.config['n_neighbors']*len(photoz_sample))
         weights_tot=np.sum(weights)
-        print(np.sum(weights))
+        logger.info(np.sum(weights))
 
         ####
         # Write output
         keys_t1=['ALPHA_J2000','DELTA_J2000','gcmodel_mag','rcmodel_mag','icmodel_mag','zcmodel_mag','ycmodel_mag',
-              'pz_best_eab','pz_best_frz','pz_best_nnz','PHOTOZ', \
+              'pz_best_eab', 'PHOTOZ', \
               'MNUV', 'MU', 'MB', 'MV', 'MR', 'MI', 'MZ', 'MY', 'MJ', 'MH', 'MK']
         t1=Table.from_pandas(pd.DataFrame(np.transpose([cat_matched[k] for k in keys_t1]),columns=keys_t1))
         t2=Table.from_pandas(pd.DataFrame(np.transpose(weights), columns= ['weight']))

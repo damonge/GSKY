@@ -1,7 +1,7 @@
 global:
   depth_cut: 24.5
   mapping:
-    wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_y_boss.fits
+    wcs: ../data/k_mask_boss.fits
     res: 0.00833333333333
     pad: 0.2
     res_bo: 0.003
@@ -11,6 +11,9 @@ global:
   mask_thr: 0.5
   shearrot: flipqu
   sys_collapse_type: average
+  pz_code: ephor_ab
+  pz_mark: best
+  pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
 
 ReduceCat:
   min_snr: 10.
@@ -22,12 +25,18 @@ SystMapper:
 COSMOSWeight:
   n_neighbors: 20
 
-CatMapper:
-  pz_code: ephor_ab
-  pz_mark: best
-  pz_bins: [0.15,0.50,0.75,1.00,1.50]
+GalMapper:
   nz_bin_num: 100
   nz_bin_max: 4.0
+
+ShearMapper:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+
+ACTMapper:
+  act_inputs:
+    - ['y_tSZ', '../data/y_mask_boss.fits', '../data/y_mask_boss.fits']
+    - ['kappa CMB', '../data/k_mask_boss.fits', '../data/k_mask_boss.fits']
 
 PowerSpecter:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
