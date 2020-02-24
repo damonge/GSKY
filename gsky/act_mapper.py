@@ -1,8 +1,7 @@
 from ceci import PipelineStage
-from .types import FitsFile,ASCIIFile
+from .types import FitsFile
 import numpy as np
 from .flatmaps import read_flat_map
-from .map_utils import createCountsMap
 from astropy.io import fits
 
 import logging
@@ -10,11 +9,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ACTMapper(PipelineStage) :
-    name="ACTMapper"
-    inputs=[('masked_fraction',FitsFile)]
-    outputs=[('act_maps',FitsFile)]
-    config_options={'act_inputs':['name','map_fname','mask_fname']}
+class ACTMapper(PipelineStage):
+    name = "ACTMapper"
+    inputs = [('masked_fraction', FitsFile)]
+    outputs = [('act_maps', FitsFile)]
+    config_options = {'act_inputs': ['name', 'map_fname', 'mask_fname']}
 
     def check_fsks(self, fsk1, fsk2):
         """ Compares two flat-sky pixelizations
@@ -31,21 +30,20 @@ class ACTMapper(PipelineStage) :
         """
         # Only two edges in x
         ix_unique = np.unique(pix[:, 0])
-        check_a = len(ix_unique)==2
+        check_a = len(ix_unique) == 2
 
         # Only two edges in y
         iy_unique = np.unique(pix[:, 1])
-        check_b = len(iy_unique)==2
+        check_b = len(iy_unique) == 2
 
         # Right separation between edges
         nx = int(np.fabs(np.diff(ix_unique)))
         ny = int(np.fabs(np.diff(iy_unique)))
         check_c = (nx == self.fsk_hsc.nx) and (ny == self.fsk_hsc.ny)
 
-
         # Integer pixel coordinates
-        check_d = np.all(np.fabs(iy_unique - np.rint(iy_unique))<1E-5)
-        check_e = np.all(np.fabs(ix_unique - np.rint(ix_unique))<1E-5)
+        check_d = np.all(np.fabs(iy_unique - np.rint(iy_unique)) < 1E-5)
+        check_e = np.all(np.fabs(ix_unique - np.rint(ix_unique)) < 1E-5)
 
         if not (check_a * check_b * check_c * check_d * check_e):
             raise ValueError("Sanity checks don't pass")
@@ -54,49 +52,50 @@ class ACTMapper(PipelineStage) :
         """
         Compute edges of the ACT map within HSC footprint
         """
-        self.coords_corner = self.fsk_hsc.wcs.all_pix2world([[0,0],
-                                                             [self.fsk_hsc.nx,0],
-                                                             [0,self.fsk_hsc.ny],
-                                                             [self.fsk_hsc.nx,
-                                                              self.fsk_hsc.ny]],0)
+        fsk = self.fsk_hsc
+        self.coords_corner = fsk.wcs.all_pix2world([[0, 0],
+                                                    [fsk.nx, 0],
+                                                    [0, fsk.ny],
+                                                    [fsk.nx, fsk.ny]],
+                                                   0)
         pix = self.fsk_act.wcs.all_world2pix(self.coords_corner, 0)
         self.check_sanity(pix)
 
-        self.ix0_act = int(np.amin(np.unique(pix[:,0])))
-        self.ixf_act = int(np.amax(np.unique(pix[:,0])))
-        self.iy0_act = int(np.amin(np.unique(pix[:,1])))
-        self.iyf_act = int(np.amax(np.unique(pix[:,1])))
+        self.ix0_act = int(np.amin(np.unique(pix[:, 0])))
+        self.ixf_act = int(np.amax(np.unique(pix[:, 0])))
+        self.iy0_act = int(np.amin(np.unique(pix[:, 1])))
+        self.iyf_act = int(np.amax(np.unique(pix[:, 1])))
 
         # Translate in case HSC lies partially outside of ACT
         self.iyf_hsc = self.fsk_hsc.ny
-        if self.iy0_act<0:
-            self.iyf_hsc+=self.iy0_act
-            self.iy0_act=0
+        if self.iy0_act < 0:
+            self.iyf_hsc += self.iy0_act
+            self.iy0_act = 0
 
         self.iy0_hsc = 0
-        if self.iyf_act>self.fsk_act.ny:
-            self.iy0_hsc+=self.iyf_act-self.fsk_act.ny
-            self.iyf_act=self.fsk_act.ny
+        if self.iyf_act > self.fsk_act.ny:
+            self.iy0_hsc += self.iyf_act - self.fsk_act.ny
+            self.iyf_act = self.fsk_act.ny
 
         self.ixf_hsc = self.fsk_hsc.nx
-        if self.ix0_act<0:
-            self.ixf_hsc+=self.ix0_act
-            self.ix0_act=0
+        if self.ix0_act < 0:
+            self.ixf_hsc += self.ix0_act
+            self.ix0_act = 0
 
         self.ix0_hsc = 0
-        if self.ixf_act>self.fsk_act.nx:
-            self.ix0_hsc+=self.ixf_act-self.fsk_act.nx
-            self.ixf_act=self.fsk_act.nx
+        if self.ixf_act > self.fsk_act.nx:
+            self.ix0_hsc += self.ixf_act - self.fsk_act.nx
+            self.ixf_act = self.fsk_act.nx
 
     def read_maps(self):
         """ Reads sky geometry for HSC and ACT,
         as well as all the ACT maps and masks.
         """
         # HSC
-        self.fsk_hsc,_=read_flat_map(self.get_input("masked_fraction"))
+        self.fsk_hsc, _ = read_flat_map(self.get_input("masked_fraction"))
 
         # ACT maps
-        self.act_maps_full=[]
+        self.act_maps_full = []
         self.fsk_act = None
         for d in self.config['act_inputs']:
             mdir = {}
@@ -123,11 +122,13 @@ class ACTMapper(PipelineStage) :
                                                self.ix0_act:self.ixf_act]
         return mp_out
 
-    def run(self) :
+    def run(self):
         """
         Main routine. This stage:
-        - Creates number density maps from the reduced catalog for a set of redshift bins.
-        - Calculates the associated N(z)s for each bin using different methods.
+        - Creates number density maps from the reduced catalog
+          for a set of redshift bins.
+        - Calculates the associated N(z)s for each bin using different
+          methods.
         - Stores the above into a single FITS file
         """
         logger.info("Reading maps")
@@ -138,7 +139,7 @@ class ACTMapper(PipelineStage) :
             self.compute_edges()
 
             logger.info("Cutting maps")
-            self.act_maps_hsc=[]
+            self.act_maps_hsc = []
             for d in self.act_maps_full:
                 logger.info(" - " + d['name'])
                 mpp = self.cut_act_map(d['map'])
@@ -150,26 +151,28 @@ class ACTMapper(PipelineStage) :
                 self.act_maps_hsc.append(mdir)
 
         logger.info("Writing output")
-        header=self.fsk_hsc.wcs.to_header()
-        hdus=[]
+        header = self.fsk_hsc.wcs.to_header()
+        hdus = []
         if self.fsk_act is None:
-            hdu=fits.PrimaryHDU(header=head)
+            head = header.copy()
+            hdu = fits.PrimaryHDU(header=head)
             hdus.append(hdu)
         else:
-            for im,d in enumerate(self.act_maps_hsc):
-                head=header.copy()
-                head['DESCR']=d['name']
-                if im==0 :
-                    hdu=fits.PrimaryHDU(data=d['map'],header=head)
-                else :
-                    hdu=fits.ImageHDU(data=d['map'],header=head)
+            for im, d in enumerate(self.act_maps_hsc):
+                head = header.copy()
+                head['DESCR'] = d['name']
+                if im == 0:
+                    hdu = fits.PrimaryHDU(data=d['map'], header=head)
+                else:
+                    hdu = fits.ImageHDU(data=d['map'], header=head)
                 hdus.append(hdu)
-                head=header.copy()
-                head['DESCR']=d['name']+' mask'
-                hdu=fits.ImageHDU(data=d['mask'],header=head)
+                head = header.copy()
+                head['DESCR'] = d['name'] + ' mask'
+                hdu = fits.ImageHDU(data=d['mask'], header=head)
                 hdus.append(hdu)
-        hdulist=fits.HDUList(hdus)
-        hdulist.writeto(self.get_output('act_maps'),overwrite=True)
+        hdulist = fits.HDUList(hdus)
+        hdulist.writeto(self.get_output('act_maps'), overwrite=True)
+
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
