@@ -19,10 +19,6 @@ def plot_map(config, fsk, mp, name, title=None, fmt='png'):
 def plot_histo(config, name, arrs, names, bins=None, range=None,
                density=False, weights=None, logy=False,
                logx=False, fmt='png'):
-    if np.ndim(arrs) == 1:
-        arrs = [arrs]
-        names = [names]
-
     x_title = r'$x$'
     if logx:
         x_title = r'$\log_{10}x$'

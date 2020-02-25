@@ -2,6 +2,7 @@ from ceci import PipelineStage
 from .types import FitsFile
 from astropy.table import Table, hstack
 import numpy as np
+from .plot_utils import plot_histo
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.io import fits
@@ -182,15 +183,15 @@ class COSMOSWeight(PipelineStage):
         # Plot magnitude distribution
         for b in ['g', 'r', 'i', 'z', 'y']:
             plot_histo(self.config, '%s_mag_COSMOS' % b,
-                       np.array([cat_weights['%scmodel_mag' % b],
-                                 cat['%scmodel_mag' % b]]),
+                       [cat_weights['%scmodel_mag' % b],
+                        cat['%scmodel_mag' % b]],
                        ['COSMOS', 'HSC'],
                        weights=[cat_weights['weight'],
                                 np.ones(len(cat))],
                        density=True, logy=True, bins=50)
         # Plot weights distribution
         plot_histo(self.config, 'COSMOS_weights',
-                   cat_weights['weight'], 'weights',
+                   [cat_weights['weight']], ['weights'],
                    density=True, logy=True, bins=50)
 
 
