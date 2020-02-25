@@ -3,6 +3,7 @@ from .types import FitsFile
 import numpy as np
 from .flatmaps import read_flat_map
 from astropy.io import fits
+from .plot_utils import plot_map
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -172,6 +173,13 @@ class ACTMapper(PipelineStage):
                 hdus.append(hdu)
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('act_maps'), overwrite=True)
+
+        # Plotting
+        for im, d in enumerate(self.act_maps_hsc):
+            plot_map(self.config, self.fsk_hsc, d['map'].flatten(),
+                     'act_' + d['name'])
+            plot_map(self.config, self.fsk_hsc, d['mask'].flatten(),
+                     'act_mask_' + d['name'])
 
 
 if __name__ == '__main__':

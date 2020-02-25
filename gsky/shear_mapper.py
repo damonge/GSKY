@@ -4,6 +4,7 @@ import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createSpin2Map
 from astropy.io import fits
+from .plot_utils import plot_map, plot_curves
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -272,11 +273,11 @@ class ShearMapper(PipelineStage):
 
         # Plotting
         for im, m_list in enumerate(gammamaps):
-            plot_map(self.config, fsk, m_list[0][0], 'gamma1_%d' % im)
-            plot_map(self.config, fsk, m_list[0][1], 'gamma2_%d' % im)
-            plot_map(self.config, fsk, m_list[1][0], 'gamma_w_%d' % im)
-            plot_map(self.config, fsk, m_list[1][1], 'gamma_b_%d' % im)
-            plot_map(self.config, fsk, m_list[1][2], 'gamma_c_%d' % im)
+            plot_map(self.config, self.fsk, m_list[0][0], 'gamma1_%d' % im)
+            plot_map(self.config, self.fsk, m_list[0][1], 'gamma2_%d' % im)
+            plot_map(self.config, self.fsk, m_list[1][0], 'gamma_w_%d' % im)
+            plot_map(self.config, self.fsk, m_list[1][1], 'gamma_b_%d' % im)
+            plot_map(self.config, self.fsk, m_list[1][2], 'gamma_c_%d' % im)
             z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
             nzs = [pzs_cosmos[im, 2, :]]
             names = ['COSMOS']
