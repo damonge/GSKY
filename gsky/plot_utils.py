@@ -36,7 +36,7 @@ def plot_histo(config, name, arrs, names, bins=None, range=None,
             y_title = r'$\log_{10}p$'
 
     plt.figure()
-    for n, a in zip(arrs, names):
+    for a, n in zip(arrs, names):
         if logx:
             x = np.log10(a)
         else:

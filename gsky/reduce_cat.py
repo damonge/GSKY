@@ -383,8 +383,6 @@ class ReduceCat(PipelineStage):
         dustmaps, dustdesc = self.make_dust_map(cat, fsk)
         fsk.write_flat_map(self.get_output('dust_map'), np.array(dustmaps),
                            descript=dustdesc)
-        for i_d, d in enumerate(dustmaps):
-            plot_map(self.config, fsk, d, 'dust_%d' % i_d)
 
         # 2- Nstar
         #    This needs to be done for stars passing the same cuts as the
@@ -398,7 +396,6 @@ class ReduceCat(PipelineStage):
                                              sel_blended)
         fsk.write_flat_map(self.get_output('star_map'), mstar,
                            descript=descstar)
-        plot_map(self.config, fsk, mstar, 'Nstar')
 
         # 3- e_PSF
         # TODO: do these stars need to have the same cuts as our sample?
@@ -416,11 +413,6 @@ class ReduceCat(PipelineStage):
                            descript=['e_PSF1', 'e_PSF2',
                                      'e_PSF weight mask', 'e_PSF binary mask',
                                      'counts map (PSF star sample)'])
-        plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
-        plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
-        plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
-        plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
-        plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
 
         # 4- delta_e_PSF
         logger.info('Creating e_PSF residual map.')
@@ -438,18 +430,12 @@ class ReduceCat(PipelineStage):
                                      'e_PSFres weight mask',
                                      'e_PSFres binary mask',
                                      'counts map (PSF star sample)'])
-        plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
-        plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
-        plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
-        plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
-        plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
 
         # 5- Binary BO mask
         mask_bo, fsg = self.make_bo_mask(cat[sel_area], fsk,
                                          mask_fulldepth=True)
         fsg.write_flat_map(self.get_output('bo_mask'), mask_bo,
                            descript='Bright-object mask')
-        plot_map(self.config, fsg, mask_bo, 'bo_mask')
 
         # 6- Masked fraction
         masked_fraction_cont = self.make_masked_fraction(cat, fsk,
@@ -457,13 +443,11 @@ class ReduceCat(PipelineStage):
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
                            descript='Masked fraction')
-        plot_map(self.config, fsk, masked_fraction_cont, 'masked_fraction')
 
         # 7- Compute depth map
         depth, desc = self.make_depth_map(cat[sel_stars], fsk)
         fsk.write_flat_map(self.get_output('depth_map'),
                            depth, descript=desc)
-        plot_map(self.config, fsk, depth, 'depth_map')
 
         ####
         # Implement final cuts
@@ -508,9 +492,29 @@ class ReduceCat(PipelineStage):
         hdul.writeto(self.get_output('clean_catalog'), overwrite=True)
         ####
 
+        ####
+        # Plotting
+        for i_d, d in enumerate(dustmaps):
+            plot_map(self.config, fsk, d, 'dust_%d' % i_d)
+        plot_map(self.config, fsk, mstar, 'Nstar')
+        plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
+        plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
+        plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
+        plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
+        plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
+        plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
+        plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
+        plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
+        plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
+        plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
+        plot_map(self.config, fsg, mask_bo, 'bo_mask')
+        plot_map(self.config, fsk, masked_fraction_cont, 'masked_fraction')
+        plot_map(self.config, fsk, depth, 'depth_map')
         plot_histo(self.config, 'cmodel_mags',
                    [cat['%scmodel_mag' % b] for b in self.bands],
                    ['m_%s' % b for b in self.bands], bins=100, logy=True)
+        ####
+
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
