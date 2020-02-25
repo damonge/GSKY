@@ -6,6 +6,7 @@ from .obscond import ObsCond
 from astropy.io import fits
 from shapely.geometry.polygon import Polygon
 from shapely.prepared import prep
+from .plot_utils import plot_map
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,7 @@ class SystMapper(PipelineStage) :
     outputs=[('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),('exptime_maps',FitsFile),
              ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),
              ('ellipt_maps',FitsFile),('nvisit_maps',FitsFile)]
-    config_options={'ccd_drop':[9]}
+    config_options={'ccd_drop':[9], 'plots_dir': None}
 
     def run(self) :
         quants=['ccdtemp','airmass','exptime','skylevel','sigma_sky','seeing','ellipt']
@@ -126,6 +127,13 @@ class SystMapper(PipelineStage) :
                                ['std '+q+'-'+b for b in bands] +
                                ['median '+q+'-'+b for b in bands])
             fsk.write_flat_map(self.get_output(q+'_maps'),maps_save,descripts)
+
+        # Plots
+        for b in bands:
+            plot_map(self.config, fsk, nvisits[b], 'nvisit_%s' % b)
+            for q in quants:
+                mp = oc_maps[q][b].collapse_map_mean()
+                plot_map(self.config, fsk, mp, '%s_%s' % (q, b))
 
 
 if __name__ == '__main__':
