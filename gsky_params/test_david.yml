@@ -23,10 +23,18 @@ stages:
       nprocess: 1
       partition: debug
       walltime: 10
-#    - name: MapDiagnoser
-#      nprocess: 1
-#      partition: debug
-#      walltime: 10
+    - name: ShearMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: ACTMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: MapDiagnoser
+      nprocess: 1
+      partition: debug
+      walltime: 10
 #    - name: PowerSpecter
 #      nprocess: 1
 #      partition: regular
