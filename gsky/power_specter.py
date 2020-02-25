@@ -289,7 +289,7 @@ class PowerSpecter(PipelineStage) :
                         map_j += 1
                     elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
-                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                                                           cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i, map_j+1]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                         cl_deproj_tempe = cl_deproj_temp[0]
                         cl_deproj_tempb = cl_deproj_temp[1]
@@ -298,7 +298,7 @@ class PowerSpecter(PipelineStage) :
                         map_j += 2
                     elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
-                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                                                           cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i+1, map_j]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                         cl_deproj_tempe = cl_deproj_temp[0]
                         cl_deproj_tempb = cl_deproj_temp[1]
@@ -308,7 +308,8 @@ class PowerSpecter(PipelineStage) :
                     else:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1],
                                                             cl_coupled[map_i + 1, map_j], cl_coupled[map_i + 1, map_j + 1]],
-                                                           cl_bias=cl_deproj_bias[map_i, map_j])
+                                                           cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i, map_j+1],
+                                                                    cl_deproj_bias[map_i+1, map_j], cl_deproj_bias[map_i+1, map_j+1]])
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
                         cl_deproj_tempe = cl_deproj_temp[0]
                         cl_deproj_tempeb = cl_deproj_temp[1]
@@ -1421,6 +1422,8 @@ class PowerSpecter(PipelineStage) :
             else:
                 map_i += 1
 
+            return cl_arr
+
     def get_sacc_binning(self,ell_eff,lini,lend,windows=None) :
         """
         Generate a SACC binning object.
@@ -1615,14 +1618,14 @@ class PowerSpecter(PipelineStage) :
         lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
 
         logger.info("Computing deprojection bias.")
-        cls_wdpj,cls_deproj=self.get_dpj_bias(tracers_wc,lth,clth,cls_wdpj_coupled,wsp,bpws)
+        cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc,lth,clth,cls_wdpj_coupled,wsp,bpws)
 
         logger.info("Computing covariance.")
         cov_wodpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,None,None)
         if self.config['gaus_covar_type']=='analytic' :
             cov_wdpj=cov_wodpj.copy()
         else :
-            cov_wdpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,temps,cls_deproj)
+            cov_wdpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,temps, cl_deproj_bias)
 
         logger.info("Computing noise bias.")
         nls=self.get_noise(tracers_nc,wsp,bpws)
@@ -1632,7 +1635,7 @@ class PowerSpecter(PipelineStage) :
                                   nls, ell_eff, windows)
         logger.info('Written noise bias.')
         self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
-                                  cls_deproj, ell_eff, windows)
+                                  cl_deproj_bias, ell_eff, windows)
         logger.info('Written deprojection bias.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'), tracers_sacc,
                                   cls_wodpj, ell_eff, windows,covar=cov_wodpj)
