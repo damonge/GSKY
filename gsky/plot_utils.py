@@ -16,13 +16,28 @@ def plot_map(config, fsk, mp, name, title=None, fmt='png'):
     fsk.view_map(mp, title=title, fnameOut=fname)
 
 
+def plot_curves(config, name, x, arrs, names, logx=False,
+                logy=False, xt=None, yt=None):
+    plt.figure()
+    for i_a, (a, n) in enumerate(zip(arrs, names)):
+        plt.plot(x, a, label=n)
+    if logx:
+        plt.xscale('log')
+    if logy:
+        plt.yscale('log')
+    if xt is not None:
+        plt.xlabel(xt, fontsize=14)
+    if yt is not None:
+        plt.ylabel(yt, fontsize=14)
+    plt.legend(fontsize=12)
+    fname = config['plots_dir'] + '/' + name + '.' + fmt
+    plt.savefig(fname, bbox_inches='tight')
+    plt.clf()
+
+
 def plot_histo(config, name, arrs, names, bins=None, range=None,
                density=False, weights=None, logy=False,
                logx=False, fmt='png'):
-    if np.ndim(arrs) == 1:
-        arrs = [arrs]
-        names = [names]
-
     x_title = r'$x$'
     if logx:
         x_title = r'$\log_{10}x$'

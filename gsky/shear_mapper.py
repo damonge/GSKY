@@ -270,5 +270,25 @@ class ShearMapper(PipelineStage):
         hdulist.writeto(self.get_output('gamma_maps'), overwrite=True)
 
 
+        # Plotting
+        for im, m_list in enumerate(gammamaps):
+            plot_map(self.config, fsk, m_list[0][0], 'gamma1_%d' % im)
+            plot_map(self.config, fsk, m_list[0][1], 'gamma2_%d' % im)
+            plot_map(self.config, fsk, m_list[1][0], 'gamma_w_%d' % im)
+            plot_map(self.config, fsk, m_list[1][1], 'gamma_b_%d' % im)
+            plot_map(self.config, fsk, m_list[1][2], 'gamma_c_%d' % im)
+            z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
+            nzs = [pzs_cosmos[im, 2, :]]
+            names = ['COSMOS']
+            for n in self.pdf_files.keys():
+                nzs.append(pzs_stacks[n][im, 2, :])
+                names.append(n)
+            plot_curves(self.config, 'nz_%d' % im,
+                        z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
+        x = np.arange(self.nbins)
+        plot_curves(self.config, 'mhat', np.arange(self.nbins),
+                    mhats, 'm_hat', xt='bin', yt=r'$\hat{m}$')
+
+
 if __name__ == '__main__':
     cls = PipelineStage.main()
