@@ -17,7 +17,7 @@ def plot_map(config, fsk, mp, name, title=None, fmt='png'):
 
 
 def plot_curves(config, name, x, arrs, names, logx=False,
-                logy=False, xt=None, yt=None):
+                logy=False, xt=None, yt=None, fmt='png'):
     plt.figure()
     for i_a, (a, n) in enumerate(zip(arrs, names)):
         plt.plot(x, a, label=n)

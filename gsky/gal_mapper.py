@@ -4,6 +4,7 @@ import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createCountsMap
 from astropy.io import fits
+from .plot_utils import plot_map, plot_curves
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -193,12 +194,12 @@ class GalMapper(PipelineStage):
 
         # Plotting
         for im, m in enumerate(n_maps):
-            plot_map(self.config, fsk, m, 'ngal_%d' % im)
+            plot_map(self.config, self.fsk, m, 'ngal_%d' % im)
             z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
             nzs = [pzs_cosmos[im, 2, :]]
             names = ['COSMOS']
             for n in self.pdf_files.keys():
-                nzs.append(pzs_stacks[n][im, 2, :])
+                nzs.append(pzs_stack[n][im, 2, :])
                 names.append(n)
             plot_curves(self.config, 'nz_%d' % im,
                         z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
