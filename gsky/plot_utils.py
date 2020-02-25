@@ -17,7 +17,7 @@ def plot_map(config, fsk, mp, name, title=None, fmt='png'):
 
 
 def plot_histo(config, name, arrs, names, bins=None, range=None,
-               density=None, weights=None, logy=False,
+               density=False, weights=None, logy=False,
                logx=False, fmt='png'):
     if np.ndim(arrs) == 1:
         arrs = [arrs]
@@ -32,18 +32,22 @@ def plot_histo(config, name, arrs, names, bins=None, range=None,
         if logy:
             y_title = r'$\log_{10}p$'
     else:
-        y_title = r'$p$'
+        y_title = r'$N$'
         if logy:
-            y_title = r'$\log_{10}p$'
+            y_title = r'$\log_{10}N$'
 
     plt.figure()
-    for a, n in zip(arrs, names):
+    for i_a, (a, n) in enumerate(zip(arrs, names)):
         if logx:
             x = np.log10(a)
         else:
             x = a
+        if weights is not None:
+            w = weights[i_a]
+        else:
+            w = None
         plt.hist(x, bins=bins, range=range,
-                 density=density, weights=weights,
+                 density=density, weights=w,
                  log=logy, label=n, histtype='step')
     plt.legend(fontsize=12)
     plt.xlabel(x_title, fontsize=14)
