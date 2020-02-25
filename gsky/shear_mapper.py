@@ -210,7 +210,7 @@ class ShearMapper(PipelineStage):
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat)
 
-        print("Writing output to {}.".format(self.get_output('gamma_maps')))
+        logger.info("Writing output to {}.".format(self.get_output('gamma_maps')))
         header = self.fsk.wcs.to_header()
         hdus = []
         shp_mp = [self.fsk.ny, self.fsk.nx]
