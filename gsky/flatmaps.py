@@ -172,7 +172,7 @@ class FlatMapInfo(object):
         return np.zeros(self.npix, dtype=float)
 
     def view_map(self, map_in, ax=None, xlabel='RA', ylabel='Dec',
-                 title=None, addColorbar=True, posColorbar=False,
+                 title=None, addColorbar=True,
                  cmap=cm.viridis, colorMax=None, colorMin=None,
                  fnameOut=None):
         """
