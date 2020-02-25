@@ -44,7 +44,7 @@ def plot_histo(config, name, arrs, names, bins=None, range=None,
             x = a
         plt.hist(x, bins=bins, range=range,
                  density=density, weights=weights,
-                 log=logy, label=n)
+                 log=logy, label=n, histtype='step')
     plt.legend(fontsize=12)
     plt.xlabel(x_title, fontsize=14)
     plt.ylabel(y_title, fontsize=14)
