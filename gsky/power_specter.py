@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 class PowerSpecter(PipelineStage) :
     name="PowerSpecter"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('dust_map',FitsFile),('star_map',FitsFile),('depth_map',FitsFile),
-            ('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),('exptime_maps',FitsFile),
-            ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),
-            ('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),
-            ('syst_masking_file',ASCIIFile)]
+            ('Compton_y_maps', FitsFile), ('dust_map',FitsFile),('star_map',FitsFile),
+            ('depth_map',FitsFile),('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),
+            ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
+            ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
+            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
     outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
@@ -274,7 +274,7 @@ class PowerSpecter(PipelineStage) :
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
             s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
-            cl_deproj_bias = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
+            cl_deproj_bias = s.mean.reshape((self.nmaps, self.nmaps, self.nbands))
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Remove deprojection bias
@@ -1022,8 +1022,8 @@ class PowerSpecter(PipelineStage) :
             tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
                            for i in range(nmaps)]
 
-        elif map_type == 'tSZ_maps':
-            logger.info('Creating tSZ tracers.')
+        elif map_type == 'Compton_y_maps':
+            logger.info('Creating Compton_y tracers.')
 
             tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)]
             tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)]

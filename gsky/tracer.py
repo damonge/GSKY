@@ -64,7 +64,7 @@ class Tracer(object) :
                                         [self.delta.reshape([self.fsk.ny,self.fsk.nx])],
                                         templates=conts)
 
-        elif type == 'gamma_maps':
+        elif type == 'shear_maps':
             logger.info('Creating tracer object for shear.')
             self.type = 'cosmic_shear'
             self.spin = 2
