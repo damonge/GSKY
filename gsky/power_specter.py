@@ -274,7 +274,8 @@ class PowerSpecter(PipelineStage) :
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
             s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
-            cl_deproj_bias = s.mean.reshape((self.nmaps, self.nmaps, self.nbands))
+            cl_deproj_bias_mean = s.mean
+            cl_deproj_bias = self.convert_sacc_to_clarr(cl_deproj_bias_mean, trc)
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Remove deprojection bias
@@ -766,7 +767,7 @@ class PowerSpecter(PipelineStage) :
         ix_1 = 0
         for k1, tup1 in enumerate(tracer_combs):
             tr_i1, tr_j1 = tup1
-            ix_2 = 0
+            ix_2 = ix_1
             for tr_i2, tr_j2 in tracer_combs[k1:]:
                 ps_inds1 = self.tracers2maps[tr_i1][tr_i2]
                 ps_inds2 = self.tracers2maps[tr_i1][tr_j2]
@@ -785,6 +786,8 @@ class PowerSpecter(PipelineStage) :
 
                 if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     covar[ix_1, :, ix_2, :] = cov_here
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_here
                     ix_2 += 1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
@@ -797,6 +800,11 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1, :, ix_2+1, :] = cov_te_tb
                     covar[ix_1+1, :, ix_2, :] = cov_tb_te
                     covar[ix_1+1, :, ix_2+1, :] = cov_tb_tb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_te_te
+                        covar[ix_2+1, :, ix_1, :] = cov_te_tb
+                        covar[ix_2, :, ix_1+1, :] = cov_tb_te
+                        covar[ix_2+1, :, ix_1+1, :] = cov_tb_tb
                     ix_2+=2
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
@@ -805,6 +813,9 @@ class PowerSpecter(PipelineStage) :
 
                     covar[ix_1, :, ix_2, :] = cov_tt_te
                     covar[ix_1, :, ix_2+1, :] = cov_tt_tb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_tt_te
+                        covar[ix_2+1, :, ix_1, :] = cov_tt_tb
                     ix_2+=2
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
@@ -813,6 +824,9 @@ class PowerSpecter(PipelineStage) :
 
                     covar[ix_1, :, ix_2, :] = cov_tt_te
                     covar[ix_1+1, :, ix_2, :] = cov_tt_tb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_tt_te
+                        covar[ix_2, :, ix_1+1, :] = cov_tt_tb
                     ix_2+=1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
@@ -825,6 +839,11 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1, :, ix_2+1, :] = cov_tt_eb
                     covar[ix_1, :, ix_2+2, :] = cov_tt_be
                     covar[ix_1, :, ix_2+3, :] = cov_tt_bb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_tt_ee
+                        covar[ix_2+1, :, ix_1, :] = cov_tt_eb
+                        covar[ix_2+2, :, ix_1, :] = cov_tt_be
+                        covar[ix_2+3, :, ix_1, :] = cov_tt_bb
                     ix_2+=4
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
@@ -837,6 +856,11 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+2, :, ix_2, :] = cov_tt_eb
                     covar[ix_1+2, :, ix_2, :] = cov_tt_be
                     covar[ix_1+3, :, ix_2, :] = cov_tt_bb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_tt_ee
+                        covar[ix_2, :, ix_1+2, :] = cov_tt_eb
+                        covar[ix_2, :, ix_1+2, :] = cov_tt_be
+                        covar[ix_2, :, ix_1+3, :] = cov_tt_bb
                     ix_2 += 1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
@@ -857,6 +881,15 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+1, :, ix_2+1, :] = cov_tb_eb
                     covar[ix_1+1, :, ix_2+2, :] = cov_tb_be
                     covar[ix_1+1, :, ix_2+3, :] = cov_tb_bb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_te_ee
+                        covar[ix_2+1, :, ix_1, :] = cov_te_eb
+                        covar[ix_2+2, :, ix_1, :] = cov_te_be
+                        covar[ix_2+3, :, ix_1, :] = cov_te_bb
+                        covar[ix_2, :, ix_1+1, :] = cov_tb_ee
+                        covar[ix_2+1, :, ix_1+1, :] = cov_tb_eb
+                        covar[ix_2+2, :, ix_1+1, :] = cov_tb_be
+                        covar[ix_2+3, :, ix_1+1, :] = cov_tb_bb
                     ix_2+=4
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
@@ -877,6 +910,15 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+1, :, ix_2+1, :] = cov_tb_eb
                     covar[ix_1+2, :, ix_2+1, :] = cov_tb_be
                     covar[ix_1+3, :, ix_2+1, :] = cov_tb_bb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_te_ee
+                        covar[ix_2, :, ix_1+1, :] = cov_te_eb
+                        covar[ix_2, :, ix_1+2, :] = cov_te_be
+                        covar[ix_2, :, ix_1+3, :] = cov_te_bb
+                        covar[ix_2+1, :, ix_1, :] = cov_tb_ee
+                        covar[ix_2+1, :, ix_1+1, :] = cov_tb_eb
+                        covar[ix_2+1, :, ix_1+2, :] = cov_tb_be
+                        covar[ix_2+1, :, ix_1+3, :] = cov_tb_bb
                     ix_2 += 2
                 else:
                     cov_here = cov_here.reshape([self.nbands, 4, self.nbands, 4])
@@ -913,6 +955,23 @@ class PowerSpecter(PipelineStage) :
                     covar[ix_1+3, :, ix_2+1, :] = cov_bb_eb
                     covar[ix_1+3, :, ix_2+2, :] = cov_bb_be
                     covar[ix_1+3, :, ix_2+3, :] = cov_bb_bb
+                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                        covar[ix_2, :, ix_1, :] = cov_ee_ee
+                        covar[ix_2+1, :, ix_1, :] = cov_ee_eb
+                        covar[ix_2+2, :, ix_1, :] = cov_ee_be
+                        covar[ix_2+3, :, ix_1, :] = cov_ee_bb
+                        covar[ix_2, :, ix_1+1, :] = cov_eb_ee
+                        covar[ix_2+1, :, ix_1+1, :] = cov_eb_eb
+                        covar[ix_2+2, :, ix_1+1, :] = cov_eb_be
+                        covar[ix_2+3, :, ix_1+1, :] = cov_eb_bb
+                        covar[ix_2, :, ix_1+2, :] = cov_be_ee
+                        covar[ix_2+1, :, ix_1+2, :] = cov_be_eb
+                        covar[ix_2+2, :, ix_1+1, :] = cov_be_be
+                        covar[ix_2 + 3, :, ix_1+1, :] = cov_be_bb
+                        covar[ix_2, :, ix_1+3, :] = cov_bb_ee
+                        covar[ix_2+1, :, ix_1+3, :] = cov_bb_eb
+                        covar[ix_2+2, :, ix_1+3, :] = cov_bb_be
+                        covar[ix_2+3, :, ix_1+3, :] = cov_bb_bb
                     ix_2+=4
             if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set((tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1+=1
@@ -1322,6 +1381,45 @@ class PowerSpecter(PipelineStage) :
             saccfile.add_covariance(covar)
 
         saccfile.save_fits(fname_out, overwrite=True)
+
+    def convert_sacc_to_clarr(self, saccmean, trc):
+
+        cl_arr = np.zeros((self.nmaps, self.nmaps, self.nbands))
+
+        map_i = 0
+        ind_sacc = 0
+        for tr_i in range(self.ntracers):
+            map_j = map_i
+            for tr_j in range(tr_i, self.ntracers):
+                if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
+                    cl_arr[map_i, map_j, :] = saccmean[ind_sacc*self.nbands:(ind_sacc+1)*self.nbands]
+                    map_j += 1
+                    ind_sacc += 1
+                elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
+                    tempmeans = saccmean[ind_sacc*self.nbands:(ind_sacc+2)*self.nbands].reshape((2, -1))
+                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
+                    cl_arr[map_i, map_j+1, :] = tempmeans[1, :]
+                    map_j += 2
+                    ind_sacc += 2
+                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
+                    tempmeans = saccmean[ind_sacc * self.nbands:(ind_sacc+2) * self.nbands].reshape((2, -1))
+                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
+                    cl_arr[map_i+1, map_j, :] = tempmeans[1, :]
+                    map_j += 1
+                    ind_sacc += 2
+                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 2:
+                    tempmeans = saccmean[ind_sacc * self.nbands:(ind_sacc+4) * self.nbands].reshape((4, -1))
+                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
+                    cl_arr[map_i+1, map_j, :] = tempmeans[1, :]
+                    cl_arr[map_i, map_j+1, :] = tempmeans[2, :]
+                    cl_arr[map_i+1, map_j+1, :] = tempmeans[3, :]
+                    map_j += 2
+                    ind_sacc += 4
+
+            if trc[tr_i].spin == 2:
+                map_i += 2
+            else:
+                map_i += 1
 
     def get_sacc_binning(self,ell_eff,lini,lend,windows=None) :
         """
