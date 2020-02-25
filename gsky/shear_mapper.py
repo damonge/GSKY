@@ -282,13 +282,13 @@ class ShearMapper(PipelineStage):
             nzs = [pzs_cosmos[im, 2, :]]
             names = ['COSMOS']
             for n in self.pdf_files.keys():
-                nzs.append(pzs_stacks[n][im, 2, :])
+                nzs.append(pzs_stack[n][im, 2, :])
                 names.append(n)
             plot_curves(self.config, 'nz_%d' % im,
                         z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
         x = np.arange(self.nbins)
         plot_curves(self.config, 'mhat', np.arange(self.nbins),
-                    mhats, 'm_hat', xt='bin', yt=r'$\hat{m}$')
+                    [mhats], ['m_hat'], xt='bin', yt=r'$\hat{m}$')
 
 
 if __name__ == '__main__':
