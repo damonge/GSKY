@@ -14,7 +14,7 @@ class ACTMapper(PipelineStage):
     name = "ACTMapper"
     inputs = [('masked_fraction', FitsFile)]
     outputs = [('act_maps', FitsFile)]
-    config_options = {'act_inputs': ['name', 'map_fname', 'mask_fname']}
+    config_options = {'act_inputs': []}
 
     def check_fsks(self, fsk1, fsk2):
         """ Compares two flat-sky pixelizations

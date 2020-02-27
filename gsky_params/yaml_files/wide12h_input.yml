@@ -49,7 +49,7 @@ inputs:
     cosmos_hsc: /global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_DEEP_COSMOS.fits
     syst_masking_file: ./gsky_params/systematic_cuts/WIDE_WIDE12H_syst_cuts.txt
 
-config: ./gsky_params/wide12h_config.yml
+config: ./gsky_params/yaml_files/wide12h_config.yml
 
 resume: True
 

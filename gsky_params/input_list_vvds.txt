@@ -1,0 +1,2 @@
+/global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_WIDE_VVDS_part1.fits
+/global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_WIDE_VVDS_part2.fits
