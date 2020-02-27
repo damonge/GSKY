@@ -230,7 +230,7 @@ class NoiseMaps(object):
                     hdulist = fits.open(self.params['path2shearcat'])
                     cat = hdulist[1].data
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
-                    if 'shear_cat' in cat.keys():
+                    if 'shear_cat' in cat.dtype.names:
                         logger.info('Applying shear cuts to catalog')
                         logger.info('Initial size = {}.'.format(cat['ra'].shape))
                         cat = cat[cat['shear_cat']]
