@@ -9,3 +9,4 @@ from .shear_cat_mapper import ShearCatMapper
 from .map_diagnoser import MapDiagnoser
 from .power_specter import PowerSpecter
 from .noise_mocks import NoiseMocks
+from .cov_gauss import CovGauss
