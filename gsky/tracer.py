@@ -147,5 +147,34 @@ class Tracer(object) :
                                         [tszmap.reshape([self.fsk.ny,self.fsk.nx])],
                                         templates=conts)
 
+        elif type == 'kappa_maps':
+            logger.info('Creating tracer object for kappa.')
+            self.type = 'kappa'
+            self.spin = 0
+            # Read kappa map
+            self.fsk, kappamap = read_flat_map(None, hdu=hdu_list[i_bin])
+            compare_infos(fsk, self.fsk)
+
+            _, mask = read_flat_map(None, hdu=hdu_list[i_bin+1])
+
+            # Make sure other maps are compatible
+            if not self.fsk.is_map_compatible(mask) :
+                raise ValueError("Mask size is incompatible.")
+            if contaminants is not None :
+                for ic,c in enumerate(contaminants) :
+                    if not self.fsk.is_map_compatible(c) :
+                        raise ValueError("%d-th contaminant template is incompatible."%ic)
+
+            # Reshape contaminants
+            conts = None
+            if contaminants is not None:
+                conts = [[c.reshape([self.fsk.ny, self.fsk.nx])] for c in contaminants]
+
+            # Form NaMaster field
+            self.field=nmt.NmtFieldFlat(np.radians(self.fsk.lx),np.radians(self.fsk.ly),
+                                        mask.reshape([self.fsk.ny,self.fsk.nx]),
+                                        [kappamap.reshape([self.fsk.ny,self.fsk.nx])],
+                                        templates=conts)
+
         else:
-            raise NotImplementedError('Only map types = ngal_maps, gamma_maps, Compton_y_maps currently supported.')
+            raise NotImplementedError('Only map types = ngal_maps, gamma_maps, Compton_y maps, kappa_maps currently supported.')
