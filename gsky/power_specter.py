@@ -676,6 +676,60 @@ class PowerSpecter(PipelineStage) :
 
         return tracers_nocont,tracers_wcont
 
+    def get_all_tracers(self, temps):
+
+        if self.get_input('ngal_maps') != 'NONE' or self.get_input('shear_maps') != 'NONE' or self.get_input('Compton_y_maps') != 'NONE':
+            if self.get_input('ngal_maps') != 'NONE':
+                logger.info("Generating number density tracers.")
+                tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
+                self.ntracers_counts = len(tracers_nc)
+            else:
+                logger.info("No number density maps provided.")
+                self.ntracers_counts = 0
+                tracers_nc = []
+                tracers_wc = []
+
+            if self.get_input('act_maps') != 'NONE':
+                logger.info("Generating Compton_y tracers.")
+                tracers_comptony_nc, tracers_comptony_wc = self.get_tracers(temps, map_type='Compton_y_maps')
+                self.ntracers_comptony = len(tracers_comptony_nc)
+
+                logger.info("Appending Compton_y tracers to number density tracers.")
+                tracers_nc.extend(tracers_comptony_nc)
+                tracers_wc.extend(tracers_comptony_wc)
+
+                logger.info("Generating kappa tracers.")
+                tracers_kappa_nc, tracers_kappa_wc = self.get_tracers(temps, map_type='kappa_maps')
+                self.ntracers_kappa = len(tracers_kappa_nc)
+
+                logger.info("Appending kappa tracers to number density tracers.")
+                tracers_nc.extend(tracers_kappa_nc)
+                tracers_wc.extend(tracers_kappa_wc)
+
+            else:
+                logger.info("No Compton_y maps provided.")
+                self.ntracers_comptony = 0
+
+                logger.info("No kappa maps provided.")
+                self.ntracers_kappa = 0
+
+            if self.get_input('shear_maps') != 'NONE':
+                logger.info("Generating shear tracers.")
+                tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
+                self.ntracers_shear = len(tracers_shear_nc)
+
+                logger.info("Appending shear tracers to number density tracers.")
+                tracers_nc.extend(tracers_shear_nc)
+                tracers_wc.extend(tracers_shear_wc)
+            else:
+                logger.info("No shear maps provided.")
+                self.ntracers_shear = 0
+
+        else:
+            raise RuntimeError('ngal_maps, Compton_y_maps or shear_maps need to be provided. Aborting.')
+
+        return tracers_nc, tracers_wc
+
     def get_contaminants(self) :
         """
         Read all contaminant maps.
@@ -1151,7 +1205,6 @@ class PowerSpecter(PipelineStage) :
         This stage:
         - Produces measurements of the power spectrum with and without contaminant deprojections.
         - Estimates the noise bias
-        - Estimates the covariance matrix
         - Estimates the deprojection bias
         """
         self.parse_input()
@@ -1173,55 +1226,7 @@ class PowerSpecter(PipelineStage) :
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
 
-        if self.get_input('ngal_maps') != 'NONE' or self.get_input('shear_maps') != 'NONE' or self.get_input('Compton_y_maps') != 'NONE':
-            if self.get_input('ngal_maps') != 'NONE':
-                logger.info("Generating number density tracers.")
-                tracers_nc,tracers_wc=self.get_tracers(temps, map_type='ngal_maps')
-                self.ntracers_counts = len(tracers_nc)
-            else:
-                logger.info("No number density maps provided.")
-                self.ntracers_counts = 0
-                tracers_nc = []
-                tracers_wc = []
-
-            if self.get_input('act_maps') != 'NONE':
-                logger.info("Generating Compton_y tracers.")
-                tracers_comptony_nc, tracers_comptony_wc = self.get_tracers(temps, map_type='Compton_y_maps')
-                self.ntracers_comptony = len(tracers_comptony_nc)
-
-                logger.info("Appending Compton_y tracers to number density tracers.")
-                tracers_nc.extend(tracers_comptony_nc)
-                tracers_wc.extend(tracers_comptony_wc)
-
-                logger.info("Generating kappa tracers.")
-                tracers_kappa_nc, tracers_kappa_wc = self.get_tracers(temps, map_type='kappa_maps')
-                self.ntracers_kappa = len(tracers_kappa_nc)
-
-                logger.info("Appending kappa tracers to number density tracers.")
-                tracers_nc.extend(tracers_kappa_nc)
-                tracers_wc.extend(tracers_kappa_wc)
-
-            else:
-                logger.info("No Compton_y maps provided.")
-                self.ntracers_comptony = 0
-
-                logger.info("No kappa maps provided.")
-                self.ntracers_kappa = 0
-
-            if self.get_input('shear_maps') != 'NONE':
-                logger.info("Generating shear tracers.")
-                tracers_shear_nc, tracers_shear_wc = self.get_tracers(temps, map_type='shear_maps')
-                self.ntracers_shear = len(tracers_shear_nc)
-
-                logger.info("Appending shear tracers to number density tracers.")
-                tracers_nc.extend(tracers_shear_nc)
-                tracers_wc.extend(tracers_shear_wc)
-            else:
-                logger.info("No shear maps provided.")
-                self.ntracers_shear = 0
-
-        else:
-            raise RuntimeError('ngal_maps, Compton_y_maps or shear_maps need to be provided. Aborting.')
+        tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
         self.ntracers = len(tracers_nc)
         self.nmaps = self.ntracers_counts + self.ntracers_comptony + 2*self.ntracers_shear
@@ -1229,16 +1234,8 @@ class PowerSpecter(PipelineStage) :
         logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
 
-        # Set up ordering and mapping
+        # Set up mapping
         self.mapping(tracers_nc)
-        self.ordering = np.zeros([self.nmaps,self.nmaps],dtype=int)
-        ix=0
-        for i in range(self.nmaps) :
-            for j in range(i,self.nmaps) :
-                self.ordering[i,j]=ix
-                if j!=i :
-                    self.ordering[j,i]=ix
-                ix+=1
 
         logger.info("Getting MCM.")
         wsp = self.get_mcm(tracers_nc,bpws)
@@ -1259,13 +1256,6 @@ class PowerSpecter(PipelineStage) :
         logger.info("Computing deprojection bias.")
         cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc,lth,clth,cls_wdpj_coupled,wsp,bpws)
 
-        logger.info("Computing covariance.")
-        cov_wodpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,None,None)
-        if self.config['gaus_covar_type']=='analytic' :
-            cov_wdpj=cov_wodpj.copy()
-        else :
-            cov_wdpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,temps, cl_deproj_bias)
-
         logger.info("Computing noise bias.")
         nls=self.get_noise(tracers_nc,wsp,bpws)
 
@@ -1277,10 +1267,10 @@ class PowerSpecter(PipelineStage) :
                                   cl_deproj_bias, ell_eff, windows)
         logger.info('Written deprojection bias.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'), tracers_sacc,
-                                  cls_wodpj, ell_eff, windows,covar=cov_wodpj)
+                                  cls_wodpj, ell_eff, windows)
         logger.info('Written power spectra without deprojection.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wdpj',ext='sacc'), tracers_sacc,
-                                  cls_wdpj, ell_eff, windows,covar=cov_wdpj)
+                                  cls_wdpj, ell_eff, windows)
         logger.info('Written deprojected power spectra.')
 
 if __name__ == '__main__':
