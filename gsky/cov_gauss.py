@@ -592,6 +592,8 @@ class CovGauss(PowerSpecter) :
         lend=np.array(self.config['ell_bpws'])[ 1:]
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
+        self.nbands = ell_eff.shape[0]
+        logger.info('Number of ell bands = {}.'.format(self.nbands))
 
         tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
