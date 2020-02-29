@@ -615,7 +615,8 @@ class CovGauss(PowerSpecter) :
             else:
                 logger.info("Reading deprojected power spectra.")
                 s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj', ext='sacc'))
-                cls_wdpj = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
+                cls_wdpj_mean = s.mean
+                cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
 
             logger.info("Getting guess power spectra.")
             lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
@@ -633,17 +634,20 @@ class CovGauss(PowerSpecter) :
             else:
                 logger.info("Reading deprojected power spectra.")
                 s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj', ext='sacc'))
-                cls_wdpj = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
+                cls_wdpj_mean = s.mean
+                cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
                 logger.info("Reading deprojected coupled power spectra.")
                 s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj_coupled', ext='sacc'))
-                cls_wdpj_coupled = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
+                cls_wdpj_coupled_mean = s.mean
+                cls_wdpj_coupled = self.convert_sacc_to_clarr(cls_wdpj_coupled_mean, tracers_wc)
 
             logger.info("Getting guess power spectra.")
             lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
 
             if os.path.isfile(self.get_output_fname('dpj_bias', ext='sacc')):
                 s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias', ext='sacc'))
-                cl_deproj_bias = s.mean().reshape((self.nmaps, self.nmaps, self.nbands))
+                cl_deproj_bias_mean = s.mean
+                cl_deproj_bias = self.convert_sacc_to_clarr(cl_deproj_bias_mean, tracers_wc)
             else:
                 logger.info("Computing deprojection bias.")
                 _, cl_deproj_bias = self.get_dpj_bias(tracers_wc, lth, clth, cls_wdpj_coupled, wsp, bpws)
