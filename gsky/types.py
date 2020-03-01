@@ -84,6 +84,20 @@ class NpzFile(DataFile):
         return open(path, mode)
 
 
+
+class NpyFile(DataFile):
+    """
+    A .npy data file
+    """
+    suffix = 'npy'
+
+    @classmethod
+    def open(cls, path, mode, **kwargs):
+        import numpy as np
+        # Fitsio doesn't have pure 'w' modes, just 'rw'.
+        # Maybe we should check if the file already exists here?
+        return np.load(path)
+
 class SACCFile(DataFile):
     """
     A SACC file
