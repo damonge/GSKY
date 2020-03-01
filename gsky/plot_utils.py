@@ -14,6 +14,7 @@ def plot_map(config, fsk, mp, name, title=None, fmt='png'):
     create_plots_dir(config)
     fname = config['plots_dir'] + '/' + name + '.' + fmt
     fsk.view_map(mp, title=title, fnameOut=fname)
+    plt.clf()
 
 
 def plot_curves(config, name, x, arrs, names, logx=False,

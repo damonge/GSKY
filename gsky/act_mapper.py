@@ -14,7 +14,7 @@ class ACTMapper(PipelineStage):
     name = "ACTMapper"
     inputs = [('masked_fraction', FitsFile)]
     outputs = [('act_maps', FitsFile)]
-    config_options = {'act_inputs': []}
+    config_options = {'act_inputs': ['none']}
 
     def check_fsks(self, fsk1, fsk2):
         """ Compares two flat-sky pixelizations
@@ -98,6 +98,10 @@ class ACTMapper(PipelineStage):
         # ACT maps
         self.act_maps_full = []
         self.fsk_act = None
+        if ((len(self.config['act_inputs']) == 1) and
+            (self.config['act_inputs'][0] == 'none')):
+            return
+
         for d in self.config['act_inputs']:
             mdir = {}
             fskb, msk = read_flat_map(d[2])
@@ -175,11 +179,12 @@ class ACTMapper(PipelineStage):
         hdulist.writeto(self.get_output('act_maps'), overwrite=True)
 
         # Plotting
-        for im, d in enumerate(self.act_maps_hsc):
-            plot_map(self.config, self.fsk_hsc, d['map'].flatten(),
-                     'act_' + d['name'])
-            plot_map(self.config, self.fsk_hsc, d['mask'].flatten(),
-                     'act_mask_' + d['name'])
+        if self.fsk_act is not None:
+            for im, d in enumerate(self.act_maps_hsc):
+                plot_map(self.config, self.fsk_hsc, d['map'].flatten(),
+                         'act_' + d['name'])
+                plot_map(self.config, self.fsk_hsc, d['mask'].flatten(),
+                         'act_mask_' + d['name'])
 
 
 if __name__ == '__main__':

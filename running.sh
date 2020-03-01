@@ -1,6 +1,7 @@
 #!/bin/bash
 
-for f in AEGIS
+#for f in AEGIS
+for f in WIDE12H
 do
     fh=$f
     fl="${f,,}"
@@ -17,5 +18,5 @@ do
 
     python -m gsky ShearMapper   --clean_catalog=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//clean_catalog.fits   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --cosmos_weights=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//cosmos_weights.fits   --pdf_matched=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//pdf_matched.txt   --gamma_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//gamma_maps.fits   --config=./gsky_params/yaml_files/${fl}_config.yml 
 
-    python -m gsky ACTMapper   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --act_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//act_maps.fits   --config=./gsky_params/yaml_files/${fl}_config.yml 
+    #python -m gsky ACTMapper   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --act_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//act_maps.fits   --config=./gsky_params/yaml_files/${fl}_config.yml 
 done
