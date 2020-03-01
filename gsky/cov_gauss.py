@@ -610,14 +610,14 @@ class CovGauss(PowerSpecter) :
         self.ncross = self.nmaps * (self.nmaps + 1) // 2 + self.ntracers_shear
         if self.config['gaus_covar_type'] == 'analytic':
             logger.info("Computing analytic covariance.")
-            if not os.path.isfile(self.get_input('power_spectra_wdpj', ext='sacc')):
+            if not os.path.isfile(self.get_input('power_spectra_wdpj')):
                 logger.info("Computing deprojected power spectra.")
                 logger.info(" W. deprojections.")
                 cls_wdpj, _ = self.get_power_spectra(tracers_wc, wsp, bpws)
 
             else:
                 logger.info("Reading deprojected power spectra.")
-                s = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj', ext='sacc'))
+                s = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj'))
                 cls_wdpj_mean = s.mean
                 cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
 
