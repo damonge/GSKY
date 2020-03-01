@@ -677,7 +677,7 @@ class CovGauss(PowerSpecter) :
         if self.get_input('power_spectra_wdpj') != 'NONE':
             logger.info('{} provided.'.format(self.get_input('power_spectra_wdpj')))
             logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_input('power_spectra_wdpj')))
-            s_wdpj = sacc.Sacc.load_fits(self.get_output('power_spectra_wdpj'))
+            s_wdpj = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj'))
             s_wdpj.add_covariance(cov_wdpj)
             s_wdpj.save_fits(self.get_input('power_spectra_wdpj'), overwrite=True)
             logger.info('Written deprojected covariance matrix.')
