@@ -157,3 +157,12 @@ def get_pdfs(fld):
 for f in ['aegis','gama09h','gama15h','hectomap','vvds',
           'wide12h','xmm']:
     get_pdfs(f)
+
+for c in ['demp', 'ephor', 'ephor_ab', 'frankenz', 'mizuki', 'mlz', 'nnpz']:
+    url = 'https://hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/pz_pdf_bins_'+c+'.fits'
+    os.system('wget --user=damonge --password=$HSC_SSP_CAS_PASSWORD '+url)
+    for f in ['aegis','gama09h','gama15h','hectomap','vvds',
+              'wide12h','xmm']:
+        fname = prd.predir_saving+'pzs/'+f.upper()+'/'+c+'/pz_pdf_bins.fits'
+        os.system('cp pz_pdf_bins_'+c+'.fits '+fname)
+    os.system('rm pz_pdf_bins_'+c+'.fits')

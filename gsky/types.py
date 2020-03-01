@@ -16,11 +16,14 @@ class DataFile:
         else:
             return tag
 
+
 class DummyFile(DataFile):
-    suffix=''
+    suffix = ''
+
 
 class DirFile(DataFile):
-    suffix=None
+    suffix = None
+
 
 class FitsFile(DataFile):
     """
@@ -28,7 +31,7 @@ class FitsFile(DataFile):
     Using these files requires the fitsio package.
     """
     suffix = 'fits'
-    
+
     @classmethod
     def open(cls, path, mode, **kwargs):
         import fitsio
@@ -38,44 +41,48 @@ class FitsFile(DataFile):
             mode = 'rw'
         return fitsio.FITS(path, mode=mode, **kwargs)
 
+
 class ASCIIFile(DataFile):
     """
     A data file in human-readable ASCII.
     """
     suffix = 'txt'
-    
+
     @classmethod
     def open(cls, path, mode, **kwargs):
         import fitsio
         # Fitsio doesn't have pure 'w' modes, just 'rw'.
         # Maybe we should check if the file already exists here?
-        return open(path,mode)
+        return open(path, mode)
+
 
 class BinaryFile(DataFile):
     """
     A binary data file
     """
     suffix = 'dat'
-    
+
     @classmethod
     def open(cls, path, mode, **kwargs):
         import fitsio
         # Fitsio doesn't have pure 'w' modes, just 'rw'.
         # Maybe we should check if the file already exists here?
-        return open(path,mode)
+        return open(path, mode)
+
 
 class NpzFile(DataFile):
     """
     A binary data file
     """
     suffix = 'npz'
-    
+
     @classmethod
     def open(cls, path, mode, **kwargs):
         import fitsio
         # Fitsio doesn't have pure 'w' modes, just 'rw'.
         # Maybe we should check if the file already exists here?
-        return open(path,mode)
+        return open(path, mode)
+
 
 
 class NpyFile(DataFile):
@@ -96,10 +103,10 @@ class SACCFile(DataFile):
     A SACC file
     """
     suffix = 'sacc'
-    
+
     @classmethod
     def open(cls, path, mode, **kwargs):
         import fitsio
         # Fitsio doesn't have pure 'w' modes, just 'rw'.
         # Maybe we should check if the file already exists here?
-        return open(path,mode)
+        return open(path, mode)

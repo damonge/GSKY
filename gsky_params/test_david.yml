@@ -7,26 +7,34 @@ stages:
       nprocess: 1
       partition: debug
       walltime: 10
-#    - name: SystMapper
-#      nprocess: 1
-#      partition: regular
-#      walltime: 60
-#    - name: PDFMatch
-#      nprocess: 1
-#      partition: regular
-#      walltime: 60
-#    - name: COSMOSWeight
-#      nprocess: 1
-#      partition: debug
-#      walltime: 30
-#    - name: CatMapper
-#      nprocess: 1
-#      partition: debug
-#      walltime: 10
-#    - name: MapDiagnoser
-#      nprocess: 1
-#      partition: debug
-#      walltime: 10
+    - name: SystMapper
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: PDFMatch
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: COSMOSWeight
+      nprocess: 1
+      partition: debug
+      walltime: 30
+    - name: GalMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: ShearMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: ACTMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: MapDiagnoser
+      nprocess: 1
+      partition: debug
+      walltime: 10
 #    - name: PowerSpecter
 #      nprocess: 1
 #      partition: regular
@@ -34,19 +42,19 @@ stages:
 
 
 inputs:
-    raw_data: ./gsky_params/input_list_test_david.txt
-    frames_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
-    pdf_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
-    cosmos_data: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
-    cosmos_hsc: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
-    syst_masking_file: /home/alonso/Science/PossibleProjects/2020_GSKY/data/dum
+    raw_data: ./gsky_params/input_list_wide12h.txt
+    frames_data: /global/cscratch1/sd/damonge/GSKY/HSC_data/S16A_WIDE_frames.fits
+    pdf_dir: /global/cscratch1/sd/damonge/GSKY/HSC_data/pzs/WIDE12H/
+    cosmos_data: /global/cscratch1/sd/damonge/GSKY/HSC_data/COSMOS2015_Laigle+_v1.1.fits
+    cosmos_hsc: /global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_DEEP_COSMOS.fits
+    syst_masking_file: ./gsky_params/systematic_cuts/WIDE_WIDE12H_syst_cuts.txt
 
 config: ./gsky_params/test_david_config.yml
 
 resume: True
 
-output_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david
+output_dir: /global/cscratch1/sd/damonge/GSKY/outputs/test_WIDE12H/
 
-log_dir: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
+log_dir: /global/cscratch1/sd/damonge/GSKY/outputs/test_WIDE12H/log.txt
 
-pipeline_log: /home/alonso/Science/PossibleProjects/2020_GSKY/outputs/test_david/log.txt
+pipeline_log: /global/cscratch1/sd/damonge/GSKY/outputs/test_WIDE12H/log.txt

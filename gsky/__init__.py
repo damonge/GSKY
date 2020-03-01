@@ -1,13 +1,13 @@
-from ceci import PipelineStage
-from .reduce_cat import ReduceCat
-from .reduce_shear_cat import ReduceShearCat
-from .syst_mapper import SystMapper
-from .pdf_match import PDFMatch
-from .cosmos_weight import COSMOSWeight
-from .cat_mapper import CatMapper
-from .shear_cat_mapper import ShearCatMapper
-from .map_diagnoser import MapDiagnoser
-from .power_specter import PowerSpecter
+from ceci import PipelineStage  # noqa
+from .reduce_cat import ReduceCat  # noqa
+from .syst_mapper import SystMapper  # noqa
+from .pdf_match import PDFMatch  # noqa
+from .cosmos_weight import COSMOSWeight  # noqa
+from .gal_mapper import GalMapper  # noqa
+from .shear_mapper import ShearMapper  # noqa
+from .act_mapper import ACTMapper  # noqa
+from .map_diagnoser import MapDiagnoser  # noqa
+from .power_specter import PowerSpecter  # noqa
 from .noise_mocks import NoiseMocks
 from .cov_gauss import CovGauss
 from .cwsp_calculator import CwspCalc

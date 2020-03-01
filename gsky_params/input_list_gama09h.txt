@@ -1,1 +1,0 @@
-/global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_WIDE_GAMA09H.fits
