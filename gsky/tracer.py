@@ -75,7 +75,7 @@ class Tracer(object) :
             _, masks = read_flat_map(None, hdu=[hdu_list[6*i_bin+2], hdu_list[6*i_bin+3], hdu_list[6*i_bin+4]])
 
             #Read N(z)
-            self.nz_data=hdu_list[2*i_bin+1].data.copy()
+            self.nz_data=hdu_list[6*i_bin+5].data.copy()
 
             # Make sure other maps are compatible
             if not self.fsk.is_map_compatible(masks[0]) :
@@ -100,7 +100,7 @@ class Tracer(object) :
             self.ndens_perad = ndens / (np.radians(self.fsk.dx) * np.radians(self.fsk.dy))
             self.e1_2rms_pix = np.average(gammamaps[0]**2, weights=self.weight)
             self.e2_2rms_pix = np.average(gammamaps[1] ** 2, weights=self.weight)
-            e1_2rms_cat, e2_2rms_cat = hdu_list[6*i_bin+5].data.copy()
+            e1_2rms_cat, e2_2rms_cat = hdu_list[-1].data.copy()
             self.e1_2rms_cat = e1_2rms_cat[0]
             self.e2_2rms_cat = e2_2rms_cat[0]
 
