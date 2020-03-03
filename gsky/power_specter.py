@@ -1243,7 +1243,7 @@ class PowerSpecter(PipelineStage) :
         tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
         self.ntracers = len(tracers_nc)
-        self.nmaps = self.ntracers_counts + self.ntracers_comptony + 2*self.ntracers_shear
+        self.nmaps = self.ntracers_counts + self.ntracers_comptony + self.ntracers_kappa + 2*self.ntracers_shear
 
         logger.info("Translating into SACC tracers.")
         tracers_sacc=self.get_sacc_tracers(tracers_nc)
