@@ -833,13 +833,17 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'y_{}'.format(i_t - self.ntracers_counts),
                                                       'Compton_y',
-                                                      spin=0)
+                                                      spin=0,
+                                                      ell=None,
+                                                      beam_ell=None)
 
             elif t.type == 'kappa':
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'kappa_{}'.format(i_t - self.ntracers_counts - self.ntracers_comptony),
                                                       'kappa',
-                                                      spin=0)
+                                                      spin=0,
+                                                      ell=None,
+                                                      beam_ell=None)
 
             elif t.type == 'cosmic_shear':
                 z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
