@@ -807,8 +807,9 @@ class PowerSpecter(PipelineStage) :
                                                       spin=0,
                                                       z=z,
                                                       nz=nz,
-                                                      extra_columns={'nz_'+c: t.nz_data['nz_'+c]
-                                                        for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
+                                                      extra_columns={key: t.nz_data[key]
+                                                                     for key in t.nz_data.dtype.names if
+                                                                     'nz_' in key and key != 'nz_cosmos'})
 
             elif t.type == 'Compton_y':
                 tracer = sacc.tracers.BaseTracer.make('Map',
@@ -831,8 +832,9 @@ class PowerSpecter(PipelineStage) :
                                                       spin=2,
                                                       z=z,
                                                       nz=nz,
-                                                      extra_columns={'nz_'+c: t.nz_data['nz_'+c]
-                                                        for c in ['demp','ephor','ephor_ab','frankenz','nnpz']})
+                                                      extra_columns={key: t.nz_data[key]
+                                                                     for key in t.nz_data.dtype.names if
+                                                                     'nz_' in key and key != 'nz_cosmos'})
 
             else:
                 raise NotImplementedError('Only tracer types delta_g, cosmic_shear, Compton_y supported.')
