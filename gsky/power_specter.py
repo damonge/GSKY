@@ -650,7 +650,10 @@ class PowerSpecter(PipelineStage) :
         Produce a Tracer for each redshift bin. Do so with and without contaminant deprojection.
         :param temps: list of contaminant tracers
         """
-        hdul=fits.open(self.get_input(map_type))
+        if map_type != 'Compton_y_maps' and map_type != 'kappa_maps':
+            hdul=fits.open(self.get_input(map_type))
+        else:
+            hdul = fits.open(self.get_input('act_maps'))
 
         if map_type == 'ngal_maps':
             logger.info('Creating number counts tracers.')
