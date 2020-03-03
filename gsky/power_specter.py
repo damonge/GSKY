@@ -534,9 +534,12 @@ class PowerSpecter(PipelineStage) :
                                 logger.info("Computing MCM for counts.")
                                 wsp_curr.compute_coupling_matrix(tracers[counts_indx].field, tracers[counts_indx].field, bpws)
                                 wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
+                                logger.info("MCM written to {}.".format(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'))
                             else:
                                 logger.info("Reading MCM for counts.")
                                 wsp_curr.read_from(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
+                                logger.info("MCM read from {}.".format(
+                                    self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'))
                             self.wsp_counts = wsp_curr
                         wsp_curr = self.wsp_counts
 
@@ -555,14 +558,18 @@ class PowerSpecter(PipelineStage) :
                             logger.info("Computing MCM for counts xcorr.")
                             wsp_curr.compute_coupling_matrix(tracers[i_curr].field, tracers[ii_curr].field, bpws)
                             wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat')
+                            logger.info("MCM written to {}.".format(
+                                self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat'))
                         else:
                             logger.info("Reading MCM for counts xcorr.")
                             wsp_curr.read_from(
                                 self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat')
+                            logger.info("MCM read from {}.".format(
+                                self.get_output_fname('mcm') + '_{}{}'.format(i_curr, ii_curr) + '.dat'))
 
                     # No galaxy maps
                     else:
-                        logger.info( "Computing MCM for {}.".format(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'))
+                        logger.info("Computing MCM for {}.".format(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'))
                         wsp_curr = nmt.NmtWorkspaceFlat()
                         wsp_curr.compute_coupling_matrix(tracers[i].field, tracers[ii].field, bpws)
                         wsp_curr.write_to(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat')
