@@ -117,13 +117,19 @@ class PowerSpecter(PipelineStage) :
                             ii_curr = counts_indx
                         if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'):
                             logger.info("Computing window functions for counts xcorr.")
-                            logger.info("Only using E-mode window function.")
                             windows_curr = np.zeros([nbands, self.lmax + 1])
                             t_hat = np.zeros(self.lmax + 1)
-                            for il, l in enumerate(l_arr):
-                                t_hat[il] = 1.
-                                windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
-                                t_hat[il] = 0.
+                            if 'cosmic_shear' in tr_types_cur:
+                                logger.info("Only using E-mode window function.")
+                                for il, l in enumerate(l_arr):
+                                    t_hat[il] = 1.
+                                    windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
+                                    t_hat[il] = 0.
+                            else:
+                                for il, l in enumerate(l_arr):
+                                    t_hat[il] = 1.
+                                    windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat]))
+                                    t_hat[il] = 0.
                             np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz', windows=windows_curr)
                             logger.info('Written window function to {}.'.format(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'))
                         else:
@@ -137,10 +143,23 @@ class PowerSpecter(PipelineStage) :
                         logger.info("Computing window functions for {}.".format(self.get_output_fname('windows_l')+'_{}{}'.format(i, ii)+'.npz'))
                         windows_curr = np.zeros([nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
-                        for il, l in enumerate(l_arr):
-                            t_hat[il] = 1.
-                            windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
-                            t_hat[il] = 0.
+                        if set(tr_types_cur) == {'cosmic_shear', 'cosmic_shear'}:
+                            logger.info("Only using E-mode window function.")
+                            for il, l in enumerate(l_arr):
+                                t_hat[il] = 1.
+                                windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
+                                t_hat[il] = 0.
+                        elif 'cosmic_shear' in tr_types_cur:
+                            logger.info("Only using E-mode window function.")
+                            for il, l in enumerate(l_arr):
+                                t_hat[il] = 1.
+                                windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
+                                t_hat[il] = 0.
+                        else:
+                            for il, l in enumerate(l_arr):
+                                t_hat[il] = 1.
+                                windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
+                                t_hat[il] = 0.
                         np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows_curr)
 
                 # File exists
