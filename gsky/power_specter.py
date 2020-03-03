@@ -66,9 +66,6 @@ class PowerSpecter(PipelineStage) :
 
         # Compute window functions
         logger.info("Computing window functions.")
-        nbands = wsp[0][0].wsp.bin.n_bands
-        self.nbands = nbands
-        logger.info('nbands = {}.'.format(self.nbands))
         l_arr = np.arange(self.lmax + 1)
 
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
@@ -858,16 +855,16 @@ class PowerSpecter(PipelineStage) :
                                                       'y_{}'.format(i_t - self.ntracers_counts),
                                                       'Compton_y',
                                                       spin=0,
-                                                      ell=None,
-                                                      beam_ell=None)
+                                                      ell=-1*np.ones(self.nbands),
+                                                      beam_ell=-1*np.ones(self.nbands))
 
             elif t.type == 'kappa':
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'kappa_{}'.format(i_t - self.ntracers_counts - self.ntracers_comptony),
                                                       'kappa',
                                                       spin=0,
-                                                      ell=None,
-                                                      beam_ell=None)
+                                                      ell=-1*np.ones(self.nbands),
+                                                      beam_ell=-1*np.ones(self.nbands))
 
             elif t.type == 'cosmic_shear':
                 z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
@@ -1263,6 +1260,9 @@ class PowerSpecter(PipelineStage) :
         lend=np.array(self.config['ell_bpws'])[ 1:]
         bpws=nmt.NmtBinFlat(lini,lend)
         ell_eff=bpws.get_effective_ells()
+        nbands = ell_eff.shape[0]
+        self.nbands = nbands
+        logger.info('nbands = {}.'.format(self.nbands))
 
         tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
