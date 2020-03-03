@@ -842,7 +842,7 @@ class PowerSpecter(PipelineStage) :
                 z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 nz = t.nz_data['nz_cosmos']
                 tracer = sacc.tracers.BaseTracer.make('NZ',
-                                                      'wl_{}'.format(i_t-self.ntracers_counts),
+                                                      'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                                       'cosmic_shear',
                                                       spin=2,
                                                       z=z,
@@ -895,14 +895,14 @@ class PowerSpecter(PipelineStage) :
                 elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_0e',
                                  'gc_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=wins,
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
                                  'gc_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j+1, :],
                                  window=wins,
@@ -911,14 +911,14 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'delta_g':
                     saccfile.add_ell_cl('cl_0e',
-                                        'wl_{}'.format(tr_i),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
-                                        'wl_{}'.format(tr_i),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i+1, map_j, :],
@@ -928,8 +928,8 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'Compton_y':
                     saccfile.add_ell_cl('cl_00',
-                                        'y_{}'.format(tr_i),
-                                        'y_{}'.format(tr_j),
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
@@ -940,7 +940,7 @@ class PowerSpecter(PipelineStage) :
                 elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'Compton_y':
                     saccfile.add_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
-                                        'y_{}'.format(tr_j),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
@@ -949,7 +949,7 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'delta_g':
                     saccfile.add_ell_cl('cl_00',
-                                        'y_{}'.format(tr_i),
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
@@ -959,15 +959,15 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_0e',
-                                        'y_{}'.format(tr_i),
-                                        'wl_{}'.format(tr_j),
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
-                                        'y_{}'.format(tr_i),
-                                        'wl_{}'.format(tr_j),
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j + 1, :],
                                         window=wins,
@@ -976,15 +976,15 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'Compton_y':
                     saccfile.add_ell_cl('cl_0e',
-                                        'wl_{}'.format(tr_i),
-                                        'y_{}'.format(tr_j),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
-                                        'wl_{}'.format(tr_i),
-                                        'y_{}'.format(tr_j),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i + 1, map_j, :],
                                         window=wins,
@@ -993,8 +993,8 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'kappa':
                     saccfile.add_ell_cl('cl_00',
-                                        'kappa_{}'.format(tr_i),
-                                        'kappa_{}'.format(tr_j),
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
@@ -1005,7 +1005,7 @@ class PowerSpecter(PipelineStage) :
                 elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'kappa':
                     saccfile.add_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
-                                        'kappa_{}'.format(tr_j),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
@@ -1014,7 +1014,7 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'delta_g':
                     saccfile.add_ell_cl('cl_00',
-                                        'kappa_{}'.format(tr_i),
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
@@ -1024,15 +1024,15 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_0e',
-                                        'kappa_{}'.format(tr_i),
-                                        'wl_{}'.format(tr_j),
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
-                                        'kappa_{}'.format(tr_i),
-                                        'wl_{}'.format(tr_j),
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j + 1, :],
                                         window=wins,
@@ -1041,15 +1041,15 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'kappa':
                     saccfile.add_ell_cl('cl_0e',
-                                        'wl_{}'.format(tr_i),
-                                        'kappa_{}'.format(tr_j),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
                                         window=wins,
                                         window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_0b',
-                                        'wl_{}'.format(tr_i),
-                                        'kappa_{}'.format(tr_j),
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i + 1, map_j, :],
                                         window=wins,
@@ -1058,29 +1058,29 @@ class PowerSpecter(PipelineStage) :
 
                 elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_ee',
-                                 'wl_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=wins,
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_eb',
-                                 'wl_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i+1, map_j, :],
                                  window=wins,
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_be',
-                                 'wl_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j+1, :],
                                  window=wins,
                                  window_id=range(self.nbands))
                     saccfile.add_ell_cl('cl_bb',
-                                 'wl_{}'.format(tr_i),
-                                 'wl_{}'.format(tr_j),
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i+1, map_j+1, :],
                                  window=wins,
