@@ -84,9 +84,9 @@ class PowerSpecter(PipelineStage) :
                 if not os.path.isfile(self.get_output_fname('windows_l') + '_{}{}'.format(i, ii) + '.npz'):
                     tr_types_cur = [tracers[i].type, tracers[ii].type]
                     # All galaxy maps
-                    if set(tr_types_cur) == {'ngal_maps'}:
+                    if set(tr_types_cur) == {'delta_g', 'delta_g'}:
                         if not hasattr(self, 'windows_counts'):
-                            counts_indx = tracer_type_arr.index('ngal_maps')
+                            counts_indx = tracer_type_arr.index('delta_g')
                             if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz'):
                                 logger.info("Computing window functions for counts.")
                                 self.windows_counts = np.zeros([nbands, self.lmax + 1])
@@ -102,13 +102,13 @@ class PowerSpecter(PipelineStage) :
                         windows_curr = self.windows_counts
 
                     # One galaxy map
-                    elif 'ngal_maps' in tr_types_cur:
-                        counts_indx = tracer_type_arr.index('ngal_maps')
+                    elif 'delta_g' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('delta_g')
                         i_curr = i
                         ii_curr = ii
-                        if tracers[i].type == 'ngal_maps':
+                        if tracers[i].type == 'delta_g':
                             i_curr = counts_indx
-                        if tracers[ii].type == 'ngal_maps':
+                        if tracers[ii].type == 'delta_g':
                             ii_curr = counts_indx
                         if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'):
                             logger.info("Computing window functions for counts xcorr.")
@@ -526,9 +526,9 @@ class PowerSpecter(PipelineStage) :
                 if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'):
                     tr_types_cur = [tracers[i].type, tracers[ii].type]
                     # All galaxy maps
-                    if set(tr_types_cur) == {'ngal_maps'}:
+                    if set(tr_types_cur) == {'delta_g', 'delta_g'}:
                         if not hasattr(self, 'wsp_counts'):
-                            counts_indx = tracer_type_arr.index('ngal_maps')
+                            counts_indx = tracer_type_arr.index('delta_g')
                             wsp_curr = nmt.NmtWorkspaceFlat()
                             if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'):
                                 logger.info("Computing MCM for counts.")
@@ -541,13 +541,13 @@ class PowerSpecter(PipelineStage) :
                         wsp_curr = self.wsp_counts
 
                     # One galaxy map
-                    elif 'ngal_maps' in tr_types_cur:
-                        counts_indx = tracer_type_arr.index('ngal_maps')
+                    elif 'delta_g' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('delta_g')
                         i_curr = i
                         ii_curr = ii
-                        if tracers[i].type == 'ngal_maps':
+                        if tracers[i].type == 'delta_g':
                             i_curr = counts_indx
-                        if tracers[ii].type == 'ngal_maps':
+                        if tracers[ii].type == 'delta_g':
                             ii_curr = counts_indx
                         wsp_curr = nmt.NmtWorkspaceFlat()
                         if not os.path.isfile(
