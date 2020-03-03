@@ -201,14 +201,16 @@ class PowerSpecter(PipelineStage) :
             for tr_j in range(tr_i, self.ntracers):
                 if tr_i == tr_j:
                     t = tracers[tr_j]
-                    if t.spin == 0:
+                    type_cur = t.type
+                    logger.info('Computing analytic noise for tracer_type = {}.'.format(type_cur))
+                    if type_cur == 'delta_g':
 
                         corrfac = np.sum(t.weight) / (t.fsk.nx * t.fsk.ny)
                         nl = np.ones(self.nbands) * corrfac / t.ndens_perad
 
                         nls[map_i, map_j] = wsp[tr_i][tr_j].decouple_cell([nl])[0]
                         map_j += 1
-                    elif t.spin == 2:
+                    elif type_cur == 'cosmic_shear':
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
 
                         corrfac = np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
@@ -220,8 +222,11 @@ class PowerSpecter(PipelineStage) :
                         nls[map_i, map_j] = nls_tempe
                         nls[map_i+1, map_j+1] = nls_tempb
                         map_j += 2
+                    elif type_cur == 'Compton_y' or type_cur == 'kappa':
+                        logger.info('Setting analytic noise to zero.')
+                        nls[map_i, map_j] = np.zeros(self.nbands)
 
-            if t.spin == 2:
+            if type_cur == 'cosmic_shear' == 2:
                 map_i += 2
             else:
                 map_i += 1
