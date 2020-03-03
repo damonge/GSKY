@@ -38,17 +38,17 @@ class GSKY_Theory:
     def set_params(self,params):
         for k in params.keys():
             if k not in self.paramnames:
-                print ("Warning, parameter %s not recognized.")
+                print ("Warning, parameter %s not recognized."%k)
+                stop()
         self.params.update(params)
         self.have_spectra=False
-        self.setup_HOD()
-        self.setup_tracers()
+        self._setup_HOD()
         
     def set_cosmology(self,C):
         self.C = C
         self.have_spectra=False
         self._setup_Cosmo()
-        self.setup_HOD()
+        self._setup_HOD()
         
     def _setup_Cosmo(self):
         # Now we can put together HMCalculator
