@@ -96,9 +96,14 @@ class PowerSpecter(PipelineStage) :
                                     self.windows_counts[:, il] = wsp[counts_indx][counts_indx].decouple_cell(wsp[counts_indx][counts_indx].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
                                 np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz', windows=self.windows_counts)
+                                logger.info('Written window function to {}.'.format(
+                                    self.get_output_fname('windows_l') + '_{}{}'.format(counts_indx, counts_indx) + '.npz'))
                             else:
                                 logger.info("Reading window functions for counts.")
                                 self.windows_counts = np.load(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz')['windows']
+                                logger.info('Read window function from {}.'.format(
+                                    self.get_output_fname('windows_l') + '_{}{}'.format(counts_indx,
+                                                                                        counts_indx) + '.npz'))
                         windows_curr = self.windows_counts
 
                     # One galaxy map
@@ -117,12 +122,15 @@ class PowerSpecter(PipelineStage) :
                             t_hat = np.zeros(self.lmax + 1)
                             for il, l in enumerate(l_arr):
                                 t_hat[il] = 1.
-                                windows_curr[:, il] = wsp[i, ii].decouple_cell(wsp[i, ii].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
+                                windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat, zero_arr]))[0, :]
                                 t_hat[il] = 0.
                             np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz', windows=windows_curr)
+                            logger.info('Written window function to {}.'.format(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'))
                         else:
                             logger.info("Reading window functions for counts xcorr.")
-                            windows_curr = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz')['windows']
+                            windows_curr = np.load(self.get_output_fname('windows_l')+ '_{}{}'.format(i_curr, ii_curr) + '.npz')['windows']
+                            logger.info('Read window function from {}.'.format(
+                                self.get_output_fname('windows_l') + '_{}{}'.format(i_curr, ii_curr) + '.npz'))
 
                     # No galaxy maps
                     else:
