@@ -86,7 +86,7 @@ class PowerSpecter(PipelineStage) :
                             counts_indx = tracer_type_arr.index('delta_g')
                             if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz'):
                                 logger.info("Computing window functions for counts.")
-                                self.windows_counts = np.zeros([nbands, self.lmax + 1])
+                                self.windows_counts = np.zeros([self.nbands, self.lmax + 1])
                                 t_hat = np.zeros(self.lmax + 1)
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
@@ -114,7 +114,7 @@ class PowerSpecter(PipelineStage) :
                             ii_curr = counts_indx
                         if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'):
                             logger.info("Computing window functions for counts xcorr.")
-                            windows_curr = np.zeros([nbands, self.lmax + 1])
+                            windows_curr = np.zeros([self.nbands, self.lmax + 1])
                             t_hat = np.zeros(self.lmax + 1)
                             if 'cosmic_shear' in tr_types_cur:
                                 logger.info("Only using E-mode window function.")
@@ -138,7 +138,7 @@ class PowerSpecter(PipelineStage) :
                     # No galaxy maps
                     else:
                         logger.info("Computing window functions for {}.".format(self.get_output_fname('windows_l')+'_{}{}'.format(i, ii)+'.npz'))
-                        windows_curr = np.zeros([nbands, self.lmax + 1])
+                        windows_curr = np.zeros([self.nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
                         if set(tr_types_cur) == {'cosmic_shear', 'cosmic_shear'}:
                             logger.info("Only using E-mode window function.")
