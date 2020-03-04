@@ -313,7 +313,7 @@ class PowerSpecter(PipelineStage) :
                 map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
                     if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
-                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias[map_i, map_j])
+                        cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=[cl_deproj_bias[map_i, map_j]])
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
                     elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
