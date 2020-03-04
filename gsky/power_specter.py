@@ -1050,6 +1050,26 @@ class PowerSpecter(PipelineStage) :
                                         window_id=range(self.nbands))
                     map_j += 1
 
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'kappa':
+                    saccfile.add_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'Compton_y':
+                    saccfile.add_ell_cl('cl_00',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                        ells,
+                                        cls[map_i, map_j, :],
+                                        window=wins,
+                                        window_id=range(self.nbands))
+                    map_j += 1
+
                 elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'cosmic_shear':
                     saccfile.add_ell_cl('cl_0e',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
