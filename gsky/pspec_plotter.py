@@ -120,12 +120,10 @@ class PSpecPlotter(PipelineStage) :
             if not any('y_' in s for s in self.config['tracers']) and not any('kappa_' in s for s in self.config['tracers']):
                 if any('y_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
-                        if t != 'y_0':
-                            saccfile.remove_selection(tracers=('y_0', t))
+                        saccfile.remove_selection(tracers=('y_0', t))
                 if any('kappa_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
-                        if t != 'kappa_0':
-                            saccfile.remove_selection(tracers=('kappa_0', t))
+                        saccfile.remove_selection(tracers=('kappa_0', t))
             if i == 0:
                 coadd_mean = saccfile.mean
             else:
