@@ -140,7 +140,6 @@ class PSpecPlotter(PipelineStage) :
 
         saccfiles = []
         for saccdir in self.config['saccdirs']:
-            path2sacc = os.path.join(self.output_dir, saccdir)
             if self.config['output_run_dir'] != 'NONE':
                 path2sacc = os.path.join(path2sacc, self.config['output_run_dir']+'/'+'power_spectra_wodpj')
             saccfiles.append(sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc')))
