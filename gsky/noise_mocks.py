@@ -21,7 +21,7 @@ class NoiseMocks(PipelineStage) :
                                      4600.0,6200.0,7800.0,
                                      9400.0,12600.0,15800.0],
     'pixwindow': 0, 'nell_theor': 5000, 'noisemodel': 'data',
-    'posfromshearcat': 1, 'shearrot': 'flipqu'}
+    'posfromshearcat': 1, 'shearrot': 'flipu'}
 
     def get_output_fname(self, name, ext=None):
         fname = self.output_dir+name
@@ -57,12 +57,13 @@ class NoiseMocks(PipelineStage) :
 
         logger.info('Running {} realizations of noise power spectra.'.format(self.config['nrealiz']))
 
-        logger.info("Reading masked fraction from {}.".format(self.get_input('masked_fraction')))
-        fsk, mask = read_flat_map(self.get_input('gamma_maps'), i_map=3)
-        mask = mask.reshape([fsk.ny, fsk.nx])
-
+        logger.info("Reading masks from {}.".format(self.get_input('gamma_maps')))
         # Here assuming for simplicity that masks are the same
-        masks = [mask]
+        masks = []
+        for i in self.config['ntomo_bins']:
+            fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
+            mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
+            masks.append(mask_temp)
 
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])

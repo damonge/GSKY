@@ -43,8 +43,8 @@ PowerSpecter:
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClFit_Dpj0_DpjBands1# Parameters defining signal maps
 
 NoiseMocks:
-    probes: ['gamma']
-    spins: [2]
+    probes: ['gamma', 'gamma', 'gamma', 'gamma']
+    spins: [2, 2, 2, 2]
     nrealiz: 1000
     #path2cls: ['../HSC/data/cls_deltagxdeltag_dist=HSC-binned-phot-z.txt', '../HSC/data/cls_gammaxdeltag_dist=HSC-binned-phot-z.txt', '../HSC/data/cls_gammaxgamma_dist=HSC-binned-phot-z.txt']
     path2theorycls: NONE
@@ -53,8 +53,9 @@ NoiseMocks:
     nell_theor: 5000
     noisemodel: data
     posfromshearcat: 1
-    shearrot: 'flipqu'
-    output_run_dir: NONE
+    shearrot: 'flipu'
+    tomo_bins: [0, 1, 2, 3]
+    output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
     # path2deltagmask: '../HSC/data/map_gamma_HSC.fits'
     # Ngal: 2057541 # Number of galaxies in WL catalog
 
