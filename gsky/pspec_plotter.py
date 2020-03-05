@@ -38,7 +38,7 @@ class PSpecPlotter(PipelineStage) :
         if self.config['output_run_dir'] != 'NONE':
             output_dir = os.path.join(output_dir, self.config['output_run_dir'])
         if not os.path.isdir(output_dir):
-            os.mkdir(output_dir)
+            os.makedirs(output_dir)
 
         return
 
