@@ -56,6 +56,8 @@ class NoiseMocks(PipelineStage) :
         self.parse_input()
 
         logger.info('Running {} realizations of noise power spectra.'.format(self.config['nrealiz']))
+        nprobes = len(self.config['probes'])
+        logger.info('Number of probes = {}.'.format(nprobes))
 
         logger.info("Reading masks from {}.".format(self.get_input('gamma_maps')))
         # Here assuming for simplicity that masks are the same
@@ -64,6 +66,7 @@ class NoiseMocks(PipelineStage) :
             fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
             mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
             masks.append(mask_temp)
+        masks += [mask_temp]*nprobes*(nprobes-1)//2
 
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
