@@ -34,11 +34,11 @@ class PSpecPlotter(PipelineStage) :
         # It should be easy to get this from ceci, but I don't know how to.
         self.output_dir = self.config['output_dir']+'/'
         if self.config['output_plot_dir'] != 'NONE':
-            output_dir = os.path.join(self.config['output_dir'], self.config['output_plot_dir'])
+            self.output_plot_dir = os.path.join(self.config['output_dir'], self.config['output_plot_dir'])
         if self.config['output_run_dir'] != 'NONE':
-            output_dir = os.path.join(output_dir, self.config['output_run_dir'])
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
+            self.output_plot_dir = os.path.join(self.output_plot_dir, self.config['output_run_dir'])
+        if not os.path.isdir(self.output_plot_dir):
+            os.makedirs(self.output_plot_dir)
 
         return
 
@@ -109,8 +109,8 @@ class PSpecPlotter(PipelineStage) :
             if self.config['logscale_y']:
                 ax.set_yscale('log')
 
-        if self.config['path2fig'] != 'NONE':
-            plt.savefig(self.config['path2fig'], bbox_inches="tight")
+        if self.config['figname'] != 'NONE':
+            plt.savefig(os.path.join(self.output_plot_dir, self.config['figname']), bbox_inches="tight")
 
             return
 
