@@ -117,7 +117,7 @@ class PSpecPlotter(PipelineStage) :
     def coadd_saccs(self, saccfiles):
 
         for i, saccfile in enumerate(saccfiles):
-            if not any('y_' in s for s in saccfiles) and not any('kappa_' in s for s in saccfiles):
+            if not any('y_' in s for s in self.config['tracers']) and not any('kappa_' in s for s in self.config['tracers']):
                 if any('y_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
                         if t != 'y_0':
