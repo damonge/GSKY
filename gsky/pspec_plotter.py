@@ -72,10 +72,10 @@ class PSpecPlotter(PipelineStage) :
             if self.config['plot_errors']:
                 ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=errs[tbin] * np.power(ell, weightpow),
                             color=colors[3], linestyle='None', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
-                            label=r'$C_{\ell}^{%i%i}$' % (tr_i + 1, tr_j + 1))
+                            label=r'$C_{\ell}^{{{}{}}}$'.format(tr_i, tr_j))
             else:
                 ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='None', marker='o', markeredgecolor=colors[3],
-                        color=colors[3], label=r'$C_{\ell}^{%i%i}$' % (tr_i, tr_j))
+                        color=colors[3], label=r'$C_{\ell}^{{{}{}}}$'.format(tr_i, tr_j))
             if self.config['plot_theory']:
                 if tr_i == 0 and tr_j == 0:
                     ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \
@@ -134,7 +134,7 @@ class PSpecPlotter(PipelineStage) :
         # Copy sacc
         saccfile_coadd = saccfiles[0].copy()
         # Set mean of new saccfile to coadded mean
-        saccfile_coadd.mean(coadd_mean)
+        saccfile_coadd.mean = coadd_mean
 
         return saccfile_coadd
 
