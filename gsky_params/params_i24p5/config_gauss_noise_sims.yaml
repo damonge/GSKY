@@ -54,7 +54,7 @@ NoiseMocks:
     noisemodel: data
     posfromshearcat: 1
     shearrot: 'flipu'
-    tomo_bins: [0, 1, 2, 3]
+    ntomo_bins: [0, 1, 2, 3]
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj/noise_mocks
     # path2deltagmask: '../HSC/data/map_gamma_HSC.fits'
     # Ngal: 2057541 # Number of galaxies in WL catalog
