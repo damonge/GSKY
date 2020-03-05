@@ -1,0 +1,15 @@
+PSpecPlotter:
+    output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
+    output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj'
+    saccdirs: ['GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
+    noisesaccs: NONE
+    output_plot_dir: 'plots'
+    fig_name: 'cls_gamma_all.pdf'
+    tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
+    plot_comb: 'all'
+    cl_type: 'cl_ee'
+    plot_errors: False
+    plot_theory: False
+    weightpow: 2
+    logscale_x: False
+    logscale_y: False
