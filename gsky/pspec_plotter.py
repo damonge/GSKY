@@ -32,7 +32,7 @@ class PSpecPlotter(PipelineStage) :
         """
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
-        self.output_dir = self.config['output_dir']
+        self.output_dir = self.config['output_dir']+'/'
         if self.config['output_plot_dir'] != 'NONE':
             output_dir = os.path.join(self.config['output_dir'], self.config['output_plot_dir'])
         if self.config['output_run_dir'] != 'NONE':
