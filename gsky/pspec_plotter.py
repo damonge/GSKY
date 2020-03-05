@@ -16,8 +16,8 @@ class PSpecPlotter(PipelineStage) :
     name="PSpecPlotter"
     inputs=[]
     outputs=[]
-    config_options={'path2saccs': list, 'output_run_dir': 'NONE', 'output_plot_dir': 'NONE',
-                    'fig_name': str, 'tracers': list, 'plot_comb': 'all', 'cl_type': 'cl_ee', 'plot_errors': False,
+    config_options={'path2saccs': [str], 'output_run_dir': 'NONE', 'output_plot_dir': 'NONE',
+                    'fig_name': str, 'tracers': [str], 'plot_comb': 'all', 'cl_type': 'cl_ee', 'plot_errors': False,
                     'plot_theory': False, 'weightpow': 2, 'logscale_x': False, 'logscale_y': False}
 
     def get_output_fname(self,name,ext=None):
