@@ -66,7 +66,7 @@ class NoiseMocks(PipelineStage) :
             fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
             mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
             masks.append(mask_temp)
-        masks += [mask_temp]*nprobes*(nprobes-1)//2
+        masks += [mask_temp]*(nprobes*(nprobes-1)//2)
 
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
