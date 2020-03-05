@@ -37,9 +37,9 @@ class NoiseMocks(PipelineStage) :
         # It should be easy to get this from ceci, but I don't know how to.
         self.output_dir = os.path.dirname(self.get_output('cls_noise_realiz'))
         if self.config['output_run_dir'] != 'NONE':
-            self.output_dir += self.config['output_run_dir']+'/'
+            self.output_dir = os.path.join(self.output_dir, self.config['output_run_dir'])
         if not os.path.isdir(self.output_dir):
-            os.mkdir(self.output_dir)
+            os.makedirs(self.output_dir)
 
         if self.config['path2theorycls'] != 'NONE':
             assert self.get_output('cls_signal_realiz') != 'NONE', 'Signal cls requested but path2theorycls not provided. Aborting.'
