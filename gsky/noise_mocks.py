@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class NoiseMocks(PipelineStage) :
     name="NoiseMocks"
-    inputs=[('calib_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
+    inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
     outputs=[('cls_noise_realiz', NpyFile), ('l_eff_noise', NpyFile)]
     config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
     'path2cls': 'NONE', 'ell_bpws': [100.0,200.0,300.0,
@@ -73,7 +73,7 @@ class NoiseMocks(PipelineStage) :
 
         noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat', 'shearrot']
         noiseparams = {key: self.config[key] for key in noiseparams_keys}
-        noiseparams['path2shearcat'] = self.get_input('calib_catalog')
+        noiseparams['path2shearcat'] = self.get_input('clean_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
         simparams_keys = ['probes', 'spins', 'path2theorycls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
         simparams = {key: self.config[key] for key in simparams_keys}
