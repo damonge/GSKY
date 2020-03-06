@@ -79,14 +79,14 @@ class PSpecPlotter(PipelineStage) :
                 if fieldsaccs is not None:
                     for i, fieldsacc in enumerate(fieldsaccs):
                         ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
-                        if tr_i == 0 and tr_j == 0:
+                        if indices[i][0] == 0 and indices[i][1] == 0:
                             ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
                                 markeredgecolor=colors[i], color=colors[i], label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][i][:-5]))
                         else:
                             ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
                                 markeredgecolor=colors[i], color=colors[i])
             if self.config['plot_theory']:
-                if tr_i == 0 and tr_j == 0:
+                if indices[i][0] == 0 and indices[i][1] == 0:
                     ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \
                             label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
 
@@ -103,13 +103,13 @@ class PSpecPlotter(PipelineStage) :
             ax.set_ylabel(elltext + r'$C_{\ell}$')
 
             if tr_i == 0 and tr_j == 0:
-                # handles, labels = ax.get_legend_handles_labels()
-                #
-                # handles = [handles[1], handles[0]]
-                # labels = [labels[1], labels[0]]
+                handles, labels = ax.get_legend_handles_labels()
 
-                # ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
-                ax.legend(loc='best', prop={'size': 16}, ncol=2, frameon=False)
+                handles = [handles[1], handles[0]]
+                labels = [labels[1], labels[0]]
+
+                ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
+                # ax.legend(loc='best', prop={'size': 16}, ncol=2, frameon=False)
             else:
                 ax.legend(loc='best', prop={'size': 16}, frameon=False)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
