@@ -63,10 +63,11 @@ class PSpecPlotter(PipelineStage) :
                     ind = (i, ii)
                     indices.append(ind)
 
-        fig = plt.figure(figsize=(44, 32))
         if np.atleast_1d(ntracers).shape[0] == 2:
+            fig = plt.figure(figsize=(ntracers[0]*11, ntracers[1]*8))
             gs = gridspec.GridSpec(ntracers[0], ntracers[1])
         else:
+            fig = plt.figure(figsize=(ntracers * 11, ntracers * 8))
             gs = gridspec.GridSpec(ntracers, ntracers)
 
         for i, (tr_i, tr_j) in enumerate(plot_pairs):
