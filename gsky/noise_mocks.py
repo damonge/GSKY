@@ -85,15 +85,16 @@ class NoiseMocks(PipelineStage) :
 
         if self.config['path2cls'] != 'NONE':
             np.save(self.get_output('cls_signal_realiz'), cls)
-            logger.info('Written signal cls to {}.'.format(self.get_output('cls_signal_realiz')))
+            logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', 'npy')))
 
         np.save(self.get_output('cls_noise_realiz'), noisecls)
-        logger.info('Written noise cls to {}.'.format(self.get_output('cls_noise_realiz')))
+        logger.info('Written noise cls to {}.'.format(self.get_output_fname('cls_noise_realiz', 'npy')))
 
         np.save(self.get_output('l_eff_noise'), ells)
-        logger.info('Written ells to {}.'.format(self.get_output('l_eff_noise')))
+        logger.info('Written ells to {}.'.format(self.get_output_fname('l_eff_noise', 'npy')))
 
-        for i in range(self.config['nprobes']):
+        nprobes = len(self.config['probes'])
+        for i in range(nprobes):
             for ii in range(i + 1):
                 path2wsp = self.get_output_fname('wsp_probe1={}_probe2={}.dat'.format(i, ii))
                 wsps[i][ii].write_to(str(path2wsp))
