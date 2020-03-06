@@ -219,8 +219,8 @@ class PSpecPlotter(PipelineStage) :
             ntracers = np.array([ntracers0, ntracers1])
             logger.info('Plotting cross-correlations of tracers.')
             i = 0
-            for tr_i in tracer_list:
-                for tr_j in tracer_list:
+            for tr_i in tracer_list[:ntracers0]:
+                for tr_j in tracer_list[ntracers0:]:
                     if tr_i.split('_')[0] != tr_j.split('_')[0]:
                         # Generate the appropriate list of tracer combinations to plot
                         plot_pairs.append([tr_i, tr_j])
