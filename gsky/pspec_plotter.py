@@ -47,13 +47,27 @@ class PSpecPlotter(PipelineStage) :
         weightpow = self.config['weightpow']
 
         indices = []
-        for i in range(ntracers):
-            for ii in range(i + 1):
-                ind = (i, ii)
+        if self.config['plot_comb'] == 'all':
+            for i in range(ntracers):
+                for ii in range(i + 1):
+                    ind = (i, ii)
+                    indices.append(ind)
+        elif self.config['plot_comb'] == 'auto':
+            for i in range(ntracers):
+                ind = (i, i)
                 indices.append(ind)
+        elif self.config['plot_comb'] == 'cross':
+            assert ntracers.shape[0] == 2, 'ntracers required for cross-correlation needs to be 2D. Aborting.'
+            for i in ntracers[0]:
+                for ii in ntracers[1]:
+                    ind = (i, ii)
+                    indices.append(ind)
 
         fig = plt.figure(figsize=(44, 32))
-        gs = gridspec.GridSpec(ntracers, ntracers)
+        if np.atleast_1d(ntracers).shape[0] == 2:
+            gs = gridspec.GridSpec(ntracers[0], ntracers[1])
+        else:
+            gs = gridspec.GridSpec(ntracers, ntracers)
 
         for i, (tr_i, tr_j) in enumerate(plot_pairs):
 
@@ -102,7 +116,7 @@ class PSpecPlotter(PipelineStage) :
                 elltext = r'$\ell^{{{}}}$'.format(weightpow)
             ax.set_ylabel(elltext + r'$C_{\ell}$')
 
-            if tr_i == 0 and tr_j == 0:
+            if indices[i][0] == 0 and indices[i][1] == 0:
                 # handles, labels = ax.get_legend_handles_labels()
                 #
                 # handles = [handles[1], handles[0]]
@@ -127,14 +141,18 @@ class PSpecPlotter(PipelineStage) :
 
     def coadd_saccs(self, saccfiles):
 
+        logger.info('Coadding saccfiles.')
+
         for i, saccfile in enumerate(saccfiles):
             if not any('y_' in s for s in self.config['tracers']) and not any('kappa_' in s for s in self.config['tracers']):
                 if any('y_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
+                        logger.info('Removing y_0 from {}.'.format(self.config['saccdirs'][i]))
                         saccfile.remove_selection(tracers=('y_0', t))
                         saccfile.remove_selection(tracers=(t, 'y_0'))
                 if any('kappa_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
+                        logger.info('Removing kappa_0 from {}.'.format(self.config['saccdirs'][i]))
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
             if i == 0:
@@ -168,9 +186,11 @@ class PSpecPlotter(PipelineStage) :
         saccfile_coadd = self.coadd_saccs(saccfiles)
 
         if self.config['noisesaccs'] != 'NONE':
+            logger.info('Reading provided noise saccfile.')
             noise_saccfiles = [sacc.Sacc.load_fits(path2sacc) for path2sacc in self.config['path2noisesaccs']]
             noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles)
         else:
+            logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
 
         tracer_list = self.config['tracers']
@@ -190,13 +210,25 @@ class PSpecPlotter(PipelineStage) :
             for tr_i in tracer_list:
                 plot_pairs.append([tr_i, tr_i])
         elif self.config['plot_comb'] == 'cross':
+            tracer_type_list = [tr.split('_')[0] for tr in tracer_list]
+            # Get unique tracers and keep ordering
+            unique_trcs = []
+            [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
+            ntracers0 = tracer_type_list.count(unique_trcs[0])
+            ntracers1 = tracer_type_list.count(unique_trcs[1])
+            ntracers = np.array([ntracers0, ntracers1])
             logger.info('Plotting cross-correlations of tracers.')
             i = 0
             for tr_i in tracer_list:
-                for tr_j in tracer_list[:i]:
-                    # Generate the appropriate list of tracer combinations to plot
-                    plot_pairs.append([tr_i, tr_j])
+                for tr_j in tracer_list:
+                    if tr_i.split('_')[0] != tr_j.split('_')[0]:
+                        # Generate the appropriate list of tracer combinations to plot
+                        plot_pairs.append([tr_i, tr_j])
                 i += 1
+        else:
+            raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
+
+        logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
         self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles)
 
