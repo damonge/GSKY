@@ -74,13 +74,13 @@ class PSpecPlotter(PipelineStage) :
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
 
             if self.config['plot_errors']:
-                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=True)
+                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=True)
             else:
-                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
+                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
 
             if noise_saccfile is not None:
                 if tr_i == tr_j:
-                    ell_curr, cl_noise_curr = noise_saccfile.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
+                    ell_curr, cl_noise_curr = noise_saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
                     cl_curr -= cl_noise_curr
 
             if self.config['plot_errors']:
@@ -92,7 +92,7 @@ class PSpecPlotter(PipelineStage) :
                         color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
                 if fieldsaccs is not None:
                     for ii, fieldsacc in enumerate(fieldsaccs):
-                        ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
+                        ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
                         if indices[i][0] == 0 and indices[i][1] == 0:
                             ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
                                 markeredgecolor=colors[ii], color=colors[ii], label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
