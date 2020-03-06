@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class NoiseMocks(PipelineStage) :
     name="NoiseMocks"
     inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
-    outputs=[('cls_noise_realiz', NpyFile), ('l_eff_noise', NpyFile)]
+    outputs=[]
     config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
     'path2cls': 'NONE', 'ell_bpws': [100.0,200.0,300.0,
                                      400.0,600.0,800.0,
