@@ -8,6 +8,7 @@ import os
 #  Download catalog-level data #
 #                              #
 ################################
+'''
 #Per-frame metadata
 write_frames("s16a_wide","frames_wide.sql",submit=True)
 write_frames("s16a_deep","frames_deep.sql",submit=True)
@@ -36,7 +37,6 @@ for fld in ['cosmos','sxds'] :
                       submit=True,strict_cuts=True,do_download=False,
                       w_lensing=False)
 
-'''
 #WIDE-depth COSMOS
 for see in ['best','median','worst'] :
     write_fieldsearch("pdr1_cosmos_widedepth_"+see,"none","field_cosmo_wide_"+see+".sql",
@@ -97,7 +97,6 @@ for fld in ['cosmos','sxds'] :
 for see in ['best','median','worst'] :
     fname=prd.predir_saving+'PDR1_COSMOS_WIDEDEPTH_'+see.upper()+'_NONE_shearcat_forced.fits'
     add_Arcturus_flag(fname)
-'''
 
 ###########################
 #                         #
@@ -130,6 +129,7 @@ def get_cosmos30band() :
         os.remove('./COSMOS2015_Laigle+_v1.1.fits.gz')
         os.system('mv ./COSMOS2015_Laigle+_v1.1.fits '+fname_out)
 get_cosmos30band()
+'''
 
 
 ##########################
@@ -141,23 +141,24 @@ get_cosmos30band()
 def get_pdfs(fld):
     predir=prd.predir_saving+'pzs/'+fld.upper()+'/'
     if os.path.isfile(predir+'done') :
-        print("Found pdfs - ("+fld+")")
+        print("Found pdfs - ("+fld+") "+predir)
         return
 
     print(predir)
+    os.system('mkdir -p '+predir)
     url='https://hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/Sirius/'+fld.upper()+'_tracts/'
     os.system('wget -np -r --user=damonge --password=$HSC_SSP_CAS_PASSWORD '+url)
     predir_i = 'hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/Sirius/'+fld.upper()+'_tracts/'
     os.system('rm ' + predir_i + 'index.html')
-    os.system('mkdir -p '+predir)
     os.system('mv '+predir_i+'*.fits '+predir)
     os.system('rm -r '+predir_i)
     os.system('touch '+predir+'done')
 
-for f in ['aegis','gama09h','gama15h','hectomap','vvds',
-          'wide12h','xmm']:
+#for f in ['aegis','gama09h','gama15h','hectomap','vvds', 'wide12h','xmm']:
+for f in ['gama15h']:
     get_pdfs(f)
 
+'''
 for c in ['demp', 'ephor', 'ephor_ab', 'frankenz', 'mizuki', 'mlz', 'nnpz']:
     url = 'https://hsc-release.mtk.nao.ac.jp/archive/filetree/s16a-shape-catalog/pz_pdf_bins_'+c+'.fits'
     os.system('wget --user=damonge --password=$HSC_SSP_CAS_PASSWORD '+url)
@@ -166,3 +167,4 @@ for c in ['demp', 'ephor', 'ephor_ab', 'frankenz', 'mizuki', 'mlz', 'nnpz']:
         fname = prd.predir_saving+'pzs/'+f.upper()+'/'+c+'/pz_pdf_bins.fits'
         os.system('cp pz_pdf_bins_'+c+'.fits '+fname)
     os.system('rm pz_pdf_bins_'+c+'.fits')
+'''
