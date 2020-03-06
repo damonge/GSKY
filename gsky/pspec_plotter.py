@@ -186,9 +186,13 @@ class PSpecPlotter(PipelineStage) :
             saccfiles.append(sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc')))
         saccfile_coadd = self.coadd_saccs(saccfiles)
 
-        if self.config['noisesaccs'] != 'NONE':
+        if self.config['noisesacc_filename'] != 'NONE':
             logger.info('Reading provided noise saccfile.')
-            noise_saccfiles = [sacc.Sacc.load_fits(path2sacc) for path2sacc in self.config['path2noisesaccs']]
+            noise_saccfiles = []
+            for saccdir in self.config['saccdirs']:
+                if self.config['output_run_dir'] != 'NONE':
+                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
+                noise_saccfiles.append(sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc')))
             noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles)
         else:
             logger.info('No noise saccfile provided.')
