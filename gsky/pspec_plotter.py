@@ -103,12 +103,13 @@ class PSpecPlotter(PipelineStage) :
             ax.set_ylabel(elltext + r'$C_{\ell}$')
 
             if tr_i == 0 and tr_j == 0:
-                handles, labels = ax.get_legend_handles_labels()
+                # handles, labels = ax.get_legend_handles_labels()
+                #
+                # handles = [handles[1], handles[0]]
+                # labels = [labels[1], labels[0]]
 
-                handles = [handles[1], handles[0]]
-                labels = [labels[1], labels[0]]
-
-                ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
+                # ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
+                ax.legend(loc='best', prop={'size': 16}, ncol=2, frameon=False)
             else:
                 ax.legend(loc='best', prop={'size': 16}, frameon=False)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
