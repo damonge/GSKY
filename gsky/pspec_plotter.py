@@ -110,6 +110,7 @@ class PSpecPlotter(PipelineStage) :
                 ax.set_yscale('log')
 
         if self.config['fig_name'] != 'NONE':
+            logger.info('Saving figure to {}.'.format(os.path.join(self.output_plot_dir, self.config['fig_name'])))
             plt.savefig(os.path.join(self.output_plot_dir, self.config['fig_name']), bbox_inches="tight")
 
             return
