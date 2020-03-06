@@ -58,8 +58,8 @@ class PSpecPlotter(PipelineStage) :
                 indices.append(ind)
         elif self.config['plot_comb'] == 'cross':
             assert ntracers.shape[0] == 2, 'ntracers required for cross-correlation needs to be 2D. Aborting.'
-            for i in ntracers[0]:
-                for ii in ntracers[1]:
+            for i in range(ntracers[0]):
+                for ii in range(ntracers[1]):
                     ind = (i, ii)
                     indices.append(ind)
 
