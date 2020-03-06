@@ -42,7 +42,7 @@ class PSpecPlotter(PipelineStage) :
 
         return
 
-    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None):
+    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None):
 
         weightpow = self.config['weightpow']
 
@@ -71,11 +71,16 @@ class PSpecPlotter(PipelineStage) :
 
             if self.config['plot_errors']:
                 ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=errs[tbin] * np.power(ell, weightpow),
-                            color=colors[3], linestyle='None', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
+                            color=colors[3], linestyle='--', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
                             label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
             else:
-                ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='None', marker='o', markeredgecolor=colors[3],
-                        color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
+                        color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                if fieldsaccs is not None:
+                    for i, fieldsacc in enumerate(fieldsaccs):
+                        ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
+                        ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+                                markeredgecolor=colors[i], color=colors[i], label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][i][:-5]))
             if self.config['plot_theory']:
                 if tr_i == 0 and tr_j == 0:
                     ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \

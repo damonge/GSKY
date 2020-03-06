@@ -11,5 +11,5 @@ PSpecPlotter:
     plot_errors: False
     plot_theory: False
     weightpow: 2
-    logscale_x: False
-    logscale_y: False
+    logscale_x: True
+    logscale_y: True
