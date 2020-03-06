@@ -2,7 +2,7 @@ from ceci import PipelineStage
 import logging
 import numpy as np
 import os
-from .types import FitsFile, NpyFile
+from .types import FitsFile, DummyFile
 from gsky.flatmaps import read_flat_map
 from gsky.sims_gauss.MockSurvey import MockSurvey
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class NoiseMocks(PipelineStage) :
     name="NoiseMocks"
     inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
-    outputs=[]
+    outputs=[('dummy', DummyFile)]
     config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
     'path2cls': 'NONE', 'ell_bpws': [100.0,200.0,300.0,
                                      400.0,600.0,800.0,
@@ -35,7 +35,7 @@ class NoiseMocks(PipelineStage) :
         """
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
-        self.output_dir = os.path.dirname(self.get_output('cls_noise_realiz'))
+        self.output_dir = self.get_output('dummy', final_name=True)[:-5]
         if self.config['output_run_dir'] != 'NONE':
             self.output_dir = os.path.join(self.output_dir, self.config['output_run_dir'])
         if not os.path.isdir(self.output_dir):
