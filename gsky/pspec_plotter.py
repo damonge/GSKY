@@ -208,7 +208,7 @@ class PSpecPlotter(PipelineStage) :
             for tr_i in tracer_list:
                 for tr_j in tracer_list[:i+1]:
                     # Generate the appropriate list of tracer combinations to plot
-                    plot_pairs.append([tr_i, tr_j])
+                    plot_pairs.append([tr_j, tr_i])
                 i += 1
         elif self.config['plot_comb'] == 'auto':
             logger.info('Plotting auto-correlations of tracers.')
