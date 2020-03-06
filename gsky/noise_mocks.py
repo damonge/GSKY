@@ -2,6 +2,7 @@ from ceci import PipelineStage
 import logging
 import numpy as np
 import os
+import sacc
 from .types import FitsFile, DummyFile
 from gsky.flatmaps import read_flat_map
 from gsky.sims_gauss.MockSurvey import MockSurvey
@@ -24,9 +25,11 @@ class NoiseMocks(PipelineStage) :
     'posfromshearcat': 1, 'shearrot': 'flipu'}
 
     def get_output_fname(self, name, ext=None):
-        fname = self.output_dir+name
         if ext is not None:
-            fname += '.'+ext
+            fname = name+'.'+ext
+        else:
+            fname = name
+        fname = os.path.join(self.output_dir, fname)
         return fname
 
     def parse_input(self) :
@@ -46,24 +49,33 @@ class NoiseMocks(PipelineStage) :
 
         return
 
-    # def cl_realiz_arr_to_sacc(self, cl_realiz_arr, tracer_types, sacc_template):
-    #
-    #     cl_mean = np.mean(cl_realiz_arr, axis=2)
-    #
-    #     sim_noise_sacc = sacc_template.copy()
-    #     sim_noise_sacc_mean = np.zeros_like(sacc_template.mean)
-    #
-    #     if any('wl_' in tr for tr in tracer_types):
-    #         nspin2 = tracer_types.count()
-    #     for i, tr in enumerate(tracer_types):
-    #         if 'wl_' in tr:
-    #             ind_ee = sim_noise_sacc.indices(data_type='cl_ee', tracers=(tr, tr))
-    #             ind_bb = sim_noise_sacc.indices(data_type='cl_bb', tracers=(tr, tr))
-    #             sim_noise_sacc_mean[ind_ee] = cl_mean[i, i, :]
-    #             sim_noise_sacc_mean[ind_bb] = cl_mean[i+1, i+1, :]
-    #             i += 2
+    def cl_realiz_arr_to_sacc(self, cl_realiz_arr, tracer_types, sacc_template):
 
+        logger.info('Creating saccfile for simulated noise.')
 
+        cl_mean = np.mean(cl_realiz_arr, axis=2)
+
+        cl_sacc = sacc_template.copy()
+        cl_sacc_mean = np.zeros_like(sacc_template.mean)
+
+        spin2_trcs = [1 for tr in tracer_types if 'wl_' in tr]
+        nspin2 = sum(spin2_trcs)
+        logger.info('Number of spin 2 fields in tracer array = {}.'.format(nspin2))
+
+        for i, tr in enumerate(tracer_types):
+            if 'wl_' in tr:
+                ind_ee = cl_sacc.indices(data_type='cl_ee', tracers=(tr, tr))
+                ind_bb = cl_sacc.indices(data_type='cl_bb', tracers=(tr, tr))
+                cl_sacc_mean[ind_ee] = cl_mean[i, i, :]
+                cl_sacc_mean[ind_bb] = cl_mean[i+nspin2, i+nspin2, :]
+            if 'gc_' in tr:
+                ind_00 = cl_sacc.indices(data_type='cl_00', tracers=(tr, tr))
+                cl_sacc_mean[ind_00] = cl_mean[i, i, :]
+
+        # Set mean of new saccfile to coadded mean
+        cl_sacc.mean = cl_sacc_mean
+
+        return cl_sacc
 
     def run(self):
         """
@@ -102,15 +114,26 @@ class NoiseMocks(PipelineStage) :
 
         cls, noisecls, ells, wsps = mocksurvey.reconstruct_cls_parallel()
 
+        if os.path.isfile(self.get_output_fname('noi_bias',ext='sacc')):
+            logger.info('Reading template sacc from {}.'.format(self.get_output_fname('noi_bias', ext='sacc')))
+            sacc_template = sacc.Sacc.load_fits(self.get_output_fname('noi_bias', ext='sacc'))
+        else:
+            raise RuntimeError('Need template sacc file for analytic noise.')
+
+        noise_sacc = self.cl_realiz_arr_to_sacc(noisecls, self.config['tracers'], sacc_template)
+
         if self.config['path2cls'] != 'NONE':
             np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
-            logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', 'npy')))
+            logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', ext='npy')))
 
         np.save(self.get_output_fname('cls_noise_realiz', 'npy'), noisecls)
-        logger.info('Written noise cls to {}.'.format(self.get_output_fname('cls_noise_realiz', 'npy')))
+        logger.info('Written noise realization cls to {}.'.format(self.get_output_fname('cls_noise_realiz', ext='npy')))
 
         np.save(self.get_output_fname('l_eff_noise', 'npy'), ells)
-        logger.info('Written ells to {}.'.format(self.get_output_fname('l_eff_noise', 'npy')))
+        logger.info('Written ells to {}.'.format(self.get_output_fname('l_eff_noise', ext='npy')))
+
+        noise_sacc.save_fits(self.get_output_fname('noi_bias_sim', ext='sacc'), overwrite=True)
+        logger.info('Written mean noise cls to {}.'.format(self.get_output_fname('noi_bias_sim', ext='sacc')))
 
         nprobes = len(self.config['probes'])
         for i in range(nprobes):
