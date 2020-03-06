@@ -191,7 +191,7 @@ class PSpecPlotter(PipelineStage) :
                     plot_pairs.append([tr_i, tr_j])
                 i += 1
 
-        self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd)
+        self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
