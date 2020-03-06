@@ -46,6 +46,25 @@ class NoiseMocks(PipelineStage) :
 
         return
 
+    # def cl_realiz_arr_to_sacc(self, cl_realiz_arr, tracer_types, sacc_template):
+    #
+    #     cl_mean = np.mean(cl_realiz_arr, axis=2)
+    #
+    #     sim_noise_sacc = sacc_template.copy()
+    #     sim_noise_sacc_mean = np.zeros_like(sacc_template.mean)
+    #
+    #     if any('wl_' in tr for tr in tracer_types):
+    #         nspin2 = tracer_types.count()
+    #     for i, tr in enumerate(tracer_types):
+    #         if 'wl_' in tr:
+    #             ind_ee = sim_noise_sacc.indices(data_type='cl_ee', tracers=(tr, tr))
+    #             ind_bb = sim_noise_sacc.indices(data_type='cl_bb', tracers=(tr, tr))
+    #             sim_noise_sacc_mean[ind_ee] = cl_mean[i, i, :]
+    #             sim_noise_sacc_mean[ind_bb] = cl_mean[i+1, i+1, :]
+    #             i += 2
+
+
+
     def run(self):
         """
         Main routine. This stage:
@@ -84,13 +103,13 @@ class NoiseMocks(PipelineStage) :
         cls, noisecls, ells, wsps = mocksurvey.reconstruct_cls_parallel()
 
         if self.config['path2cls'] != 'NONE':
-            np.save(self.get_output('cls_signal_realiz'), cls)
+            np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
             logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', 'npy')))
 
-        np.save(self.get_output('cls_noise_realiz'), noisecls)
+        np.save(self.get_output_fname('cls_noise_realiz', 'npy'), noisecls)
         logger.info('Written noise cls to {}.'.format(self.get_output_fname('cls_noise_realiz', 'npy')))
 
-        np.save(self.get_output('l_eff_noise'), ells)
+        np.save(self.get_output_fname('l_eff_noise', 'npy'), ells)
         logger.info('Written ells to {}.'.format(self.get_output_fname('l_eff_noise', 'npy')))
 
         nprobes = len(self.config['probes'])
