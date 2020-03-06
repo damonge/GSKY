@@ -79,8 +79,12 @@ class PSpecPlotter(PipelineStage) :
                 if fieldsaccs is not None:
                     for i, fieldsacc in enumerate(fieldsaccs):
                         ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_j, tr_i, return_cov=False)
-                        ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+                        if tr_i == 0 and tr_j == 0:
+                            ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
                                 markeredgecolor=colors[i], color=colors[i], label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][i][:-5]))
+                        else:
+                            ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+                                markeredgecolor=colors[i], color=colors[i])
             if self.config['plot_theory']:
                 if tr_i == 0 and tr_j == 0:
                     ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \
@@ -104,9 +108,9 @@ class PSpecPlotter(PipelineStage) :
                 handles = [handles[1], handles[0]]
                 labels = [labels[1], labels[0]]
 
-                ax.legend(handles, labels, loc='best', prop={'size': 35})
+                ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
             else:
-                ax.legend(loc='best', prop={'size': 35})
+                ax.legend(loc='best', prop={'size': 16}, frameon=False)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
 
             if self.config['logscale_x']:
@@ -136,6 +140,8 @@ class PSpecPlotter(PipelineStage) :
                 coadd_mean = saccfile.mean
             else:
                 coadd_mean += saccfile.mean
+
+        coadd_mean /= len(saccfiles)
 
         # Copy sacc
         saccfile_coadd = saccfiles[0].copy()
