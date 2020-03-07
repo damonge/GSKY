@@ -1,15 +1,17 @@
 PSpecPlotter:
     output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj'
-    saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
-    noisesaccs: NONE
+    # saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
+    saccdirs: ['GAMA15H_ceci', 'WIDE12H_ceci', 'XMM_ceci']
+    noisesacc_filename: NONE
     output_plot_dir: 'plots'
-    fig_name: 'cls_gamma_all.pdf'
-    tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
-    plot_comb: 'all'
-    cl_type: 'cl_ee'
+    fig_name: 'cls_kappaxwl_all_0e.pdf'
+    # tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    tracers: ['kappa_0', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    plot_comb: 'cross'
+    cl_type: 'cl_0e'
     plot_errors: False
     plot_theory: False
-    weightpow: 2
+    weightpow: 1
     logscale_x: True
-    logscale_y: True
+    logscale_y: False

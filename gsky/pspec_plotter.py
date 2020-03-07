@@ -10,7 +10,7 @@ from .types import FitsFile, NpyFile
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-colors = ['#e3a19c', '#85a1ca', '#596d82', '#725e9c', '#3d306b', '#AE7182']
+colors = ['#e3a19c', '#85a1ca', '#596d82', '#725e9c', '#3d306b', '#AE7182', 'IndianRed']
 
 class PSpecPlotter(PipelineStage) :
     name="PSpecPlotter"
