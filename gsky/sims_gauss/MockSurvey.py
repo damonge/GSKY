@@ -361,6 +361,10 @@ class MockSurvey(object):
                     cl_uncoupled = self.wsps[j][j].decouple_cell(cl_coupled)
                     noisecls[j, j, :] = cl_uncoupled
 
+        if not self.params['signal'] and self.params['noise']:
+            noisecls = copy.deepcopy(cls)
+            cls = np.zeros_like(noisecls)
+
         return cls, noisecls, ells_uncoupled
 
     def compute_wsps(self):
