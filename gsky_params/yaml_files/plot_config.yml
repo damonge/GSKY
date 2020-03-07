@@ -1,7 +1,7 @@
 PSpecPlotter:
     output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj'
-    saccdirs: ['GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
+    saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
     noisesaccs: NONE
     output_plot_dir: 'plots'
     fig_name: 'cls_gamma_all.pdf'

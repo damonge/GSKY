@@ -54,7 +54,7 @@ NoiseMocks:
     nell_theor: 5000
     noisemodel: data
     posfromshearcat: 1
-    shearrot: 'flipu'
+    shearrot: 'flipqu'
     ntomo_bins: [0, 1, 2, 3]
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
     # path2deltagmask: '../HSC/data/map_gamma_HSC.fits'
