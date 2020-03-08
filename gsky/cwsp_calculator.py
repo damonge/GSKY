@@ -19,8 +19,7 @@ class CwspCalc(CovGauss) :
             ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
             ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
             ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
-    outputs=[('dummy',DummyFile),
-             ('cov_wodpj',SACCFile),('cov_wdpj',SACCFile)]
+    outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
                                 1000.0,1400.0,1800.0,
@@ -67,7 +66,7 @@ class CwspCalc(CovGauss) :
         tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
         self.ntracers = len(tracers_nc)
-        self.nmaps = self.ntracers_counts + self.ntracers_comptony + 2*self.ntracers_shear
+        self.nmaps = self.ntracers_counts + self.ntracers_comptony + self.ntracers_kappa + 2*self.ntracers_shear
         self.ncross = self.nmaps * (self.nmaps + 1) // 2 + self.ntracers_shear
 
         # Set up mapping

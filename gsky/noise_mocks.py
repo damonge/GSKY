@@ -22,7 +22,7 @@ class NoiseMocks(PipelineStage) :
                                      4600.0,6200.0,7800.0,
                                      9400.0,12600.0,15800.0],
     'pixwindow': 0, 'nell_theor': 5000, 'noisemodel': 'data',
-    'posfromshearcat': 1, 'shearrot': 'flipu'}
+    'posfromshearcat': 1, 'shearrot': 'flipqu'}
 
     def get_output_fname(self, name, ext=None):
         if ext is not None:

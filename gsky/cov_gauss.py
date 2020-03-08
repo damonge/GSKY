@@ -96,7 +96,7 @@ class CovGauss(PowerSpecter) :
                             [tracers[tr_i1].type, tracers[tr_j1].type, tracers[tr_i2].type, tracers[tr_j2].type])
 
                         # All galaxy maps
-                        if set(tr_types_cur) == {'ngal_maps'}:
+                        if set(tr_types_cur) == {'delta_g', 'delta_g', 'delta_g', 'delta_g'}:
                             if not hasattr(self, 'cwsp_counts'):
                                 counts_indx = tracer_type_arr.index('ngal_maps')
                                 if not os.path.isfile(
@@ -111,6 +111,10 @@ class CovGauss(PowerSpecter) :
                                         self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
                                                                                               counts_indx,
                                                                                               counts_indx) + '.dat')
+                                    logger.info("Covariance MCM written to {}.".format(
+                                        self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
+                                                                                              counts_indx,
+                                                                                              counts_indx) + '.dat'))
                                 else:
                                     logger.info("Reading covariance MCM for counts.")
                                     self.cwsp_counts = nmt.NmtCovarianceWorkspaceFlat()
@@ -118,23 +122,27 @@ class CovGauss(PowerSpecter) :
                                         self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
                                                                                               counts_indx,
                                                                                               counts_indx) + '.dat')
+                                    logger.info("Covariance MCM read from {}.".format(
+                                        self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
+                                                                                              counts_indx,
+                                                                                              counts_indx) + '.dat'))
 
                             cwsp_curr = self.cwsp_counts
 
                         # At least one galaxy map
-                        elif 'ngal_maps' in tr_types_cur and not set(tr_types_cur) == {'ngal_maps'}:
-                            counts_indx = tracer_type_arr.index('ngal_maps')
+                        elif 'delta_g' in tr_types_cur:
+                            counts_indx = tracer_type_arr.index('delta_g')
                             i1_curr = tr_i1
                             j1_curr = tr_j1
                             i2_curr = tr_i2
                             j2_curr = tr_j2
-                            if tracers[tr_i1].type == 'ngal_maps':
+                            if tracers[tr_i1].type == 'delta_g':
                                 i1_curr = counts_indx
-                            if tracers[tr_j1].type == 'ngal_maps':
+                            if tracers[tr_j1].type == 'delta_g':
                                 j1_curr = counts_indx
-                            if tracers[tr_i2].type == 'ngal_maps':
+                            if tracers[tr_i2].type == 'delta_g':
                                 i2_curr = counts_indx
-                            if tracers[tr_j2].type == 'ngal_maps':
+                            if tracers[tr_j2].type == 'delta_g':
                                 j2_curr = counts_indx
                             cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                             if not os.path.isfile(
@@ -146,14 +154,22 @@ class CovGauss(PowerSpecter) :
                                 cwsp_curr.write_to(
                                     self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr,
                                                                                           j2_curr) + '.dat')
+                                logger.info("Covariance MCM written to {}.".format(
+                                    self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr,
+                                                                                          j2_curr) + '.dat'))
                             else:
                                 logger.info("Reading covariance MCM for counts xcorr.")
                                 cwsp_curr.read_from(
                                     self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr,
                                                                                           j2_curr) + '.dat')
+                                logger.info("Covariance MCM read from {}.".format(
+                                    self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr,
+                                                                                          j2_curr) + '.dat'))
 
                         # No galaxy maps
                         else:
+                            logger.info("Computing covariance MCM for {}.".format(self.get_output_fname('cov_mcm') +
+                                                            '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat'))
                             cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                             cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
                                                                     tracers[tr_i2].field, tracers[tr_j2].field, bpws)
