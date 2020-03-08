@@ -98,7 +98,7 @@ class CovGauss(PowerSpecter) :
                         # All galaxy maps
                         if set(tr_types_cur) == {'delta_g', 'delta_g', 'delta_g', 'delta_g'}:
                             if not hasattr(self, 'cwsp_counts'):
-                                counts_indx = tracer_type_arr.index('ngal_maps')
+                                counts_indx = tracer_type_arr.index('delta_g')
                                 if not os.path.isfile(
                                         self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
                                                                                               counts_indx,
