@@ -31,7 +31,7 @@ class CwspCalc(CovGauss) :
                     'gaus_covar_type':'analytic','oc_all_bands':True,
                     'mask_systematics':False,'noise_bias_type':'analytic',
                     'output_run_dir': 'NONE','sys_collapse_type':'average',
-                    'tracerCombInd': int, 'gt100remd': 'NONE'}
+                    'tracerCombInd': int, 'gt1000remd': 'NONE'}
 
     def run(self) :
         """
@@ -45,9 +45,9 @@ class CwspCalc(CovGauss) :
         self.parse_input()
 
         # Deal with the fact that SLURM only allows job array indices <= 1000
-        if self.config['gt100remd'] != 'NONE':
+        if self.config['gt1000remd'] != 'NONE':
             logger.info('SLURM jobID is larger than 1000. Old jobID = {}.'.format(self.config['tracerCombInd']))
-            self.config['tracerCombInd'] += self.config['gt100remd']
+            self.config['tracerCombInd'] += self.config['gt1000remd']
             logger.info('New jobID = {}.'.format(self.config['tracerCombInd']))
 
         logger.info("Reading mask.")
