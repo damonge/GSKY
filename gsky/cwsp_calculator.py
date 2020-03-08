@@ -31,7 +31,7 @@ class CwspCalc(CovGauss) :
                     'gaus_covar_type':'analytic','oc_all_bands':True,
                     'mask_systematics':False,'noise_bias_type':'analytic',
                     'output_run_dir': 'NONE','sys_collapse_type':'average',
-                    'tracerCombInd': int}
+                    'tracerCombInd': int, 'gt100remd': 'NONE'}
 
     def run(self) :
         """
@@ -43,6 +43,12 @@ class CwspCalc(CovGauss) :
         - Estimates the deprojection bias
         """
         self.parse_input()
+
+        # Deal with the fact that SLURM only allows job array indices <= 1000
+        if self.config['gt100remd'] != 'NONE':
+            logger.info('SLURM jobID is larger than 1000. Old jobID = {}.'.format(self.config['tracerCombInd']))
+            self.config['tracerCombInd'] += self.config['gt100remd']
+            logger.info('New jobID = {}.'.format(self.config['tracerCombInd']))
 
         logger.info("Reading mask.")
         self.msk_bi,self.mskfrac,self.mp_depth=self.get_masks()
