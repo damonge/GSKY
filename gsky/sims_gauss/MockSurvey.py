@@ -210,7 +210,7 @@ class MockSurvey(object):
         # First compute the cls of map realization for all the probes
         for j in range(self.params['nprobes']):
             for jj in range(j+1):
-                
+
                 if j == jj:
                     compute_cls = True
                 else:

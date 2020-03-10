@@ -232,15 +232,15 @@ class NoiseMaps(object):
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
                     # Remove masked objects
                     logger.info('Removing masked objects.')
-                    if self.config['mask_type'] == 'arcturus':
-                        logger.info('Applying mask_type = {}.'.format(self.config['mask_type']))
+                    if self.params['mask_type'] == 'arcturus':
+                        logger.info('Applying mask_type = {}.'.format(self.params['mask_type']))
                         msk = cat['mask_Arcturus'].astype(bool)
-                    elif self.config['mask_type'] == 'sirius':
-                        logger.info('Applying mask_type = {}.'.format(self.config['mask_type']))
+                    elif self.params['mask_type'] == 'sirius':
+                        logger.info('Applying mask_type = {}.'.format(self.params['mask_type']))
                         msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
                         msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
                     else:
-                        raise KeyError("Mask type " + self.config['mask_type'] +
+                        raise KeyError("Mask type " + self.params['mask_type'] +
                                        " not supported. Choose arcturus or sirius")
                     logger.info('Applying FDFC mask.')
                     msk *= cat['wl_fulldepth_fullcolor']
