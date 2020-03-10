@@ -173,9 +173,9 @@ class CovGauss(PowerSpecter) :
                             cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                             cwsp_curr.compute_coupling_coefficients(tracers[tr_i1].field, tracers[tr_j1].field, bpws,
                                                                     tracers[tr_i2].field, tracers[tr_j2].field, bpws)
-                        # Write to file
-                        cwsp_curr.write_to(
-                            self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
+                            # Write to file
+                            cwsp_curr.write_to(
+                                self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(tr_i1, tr_j1, tr_i2, tr_j2) + '.dat')
 
                     # File exists
                     else:
