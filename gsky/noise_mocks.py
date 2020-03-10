@@ -104,6 +104,9 @@ class NoiseMocks(PipelineStage) :
 
         noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat', 'shearrot']
         noiseparams = {key: self.config[key] for key in noiseparams_keys}
+        if 'ntomo_bins' in self.config.keys():
+            logger.info('Tomographic bin no provided.')
+            noiseparams['ntomo_bins'] = self.config['ntomo_bins']
         noiseparams['path2shearcat'] = self.get_input('clean_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
         simparams_keys = ['probes', 'spins', 'path2theorycls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
