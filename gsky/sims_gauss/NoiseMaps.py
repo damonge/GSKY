@@ -230,6 +230,21 @@ class NoiseMaps(object):
                     hdulist = fits.open(self.params['path2shearcat'])
                     cat = hdulist[1].data
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
+                    # Remove masked objects
+                    logger.info('Removing masked objects.')
+                    if self.config['mask_type'] == 'arcturus':
+                        logger.info('Applying mask_type = {}.'.format(self.config['mask_type']))
+                        msk = cat['mask_Arcturus'].astype(bool)
+                    elif self.config['mask_type'] == 'sirius':
+                        logger.info('Applying mask_type = {}.'.format(self.config['mask_type']))
+                        msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
+                        msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+                    else:
+                        raise KeyError("Mask type " + self.config['mask_type'] +
+                                       " not supported. Choose arcturus or sirius")
+                    logger.info('Applying FDFC mask.')
+                    msk *= cat['wl_fulldepth_fullcolor']
+                    cat = cat[msk]
                     if 'shear_cat' in cat.dtype.names:
                         logger.info('Applying shear cuts to catalog')
                         logger.info('Initial size = {}.'.format(cat['ra'].shape))

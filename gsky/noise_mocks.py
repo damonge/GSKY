@@ -22,7 +22,7 @@ class NoiseMocks(PipelineStage) :
                                      4600.0,6200.0,7800.0,
                                      9400.0,12600.0,15800.0],
     'pixwindow': 0, 'nell_theor': 5000, 'noisemodel': 'data',
-    'posfromshearcat': 1, 'shearrot': 'flipqu'}
+    'posfromshearcat': 1, 'shearrot': 'flipqu', 'mask_type': 'sirius'}
 
     def get_output_fname(self, name, ext=None):
         if ext is not None:
@@ -91,10 +91,10 @@ class NoiseMocks(PipelineStage) :
         logger.info('Number of probes = {}.'.format(nprobes))
 
         logger.info("Reading masks from {}.".format(self.get_input('gamma_maps')))
-        # Here assuming for simplicity that masks are the same
+        # Here we read the weight masks
         masks = []
         for i in self.config['ntomo_bins']:
-            fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
+            fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+2)
             mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
             masks.append(mask_temp)
         masks += [mask_temp]*(nprobes*(nprobes-1)//2)
@@ -102,7 +102,7 @@ class NoiseMocks(PipelineStage) :
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
 
-        noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat', 'shearrot']
+        noiseparams_keys = ['probes', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
         noiseparams = {key: self.config[key] for key in noiseparams_keys}
         if 'ntomo_bins' in self.config.keys():
             logger.info('Tomographic bin no provided.')
