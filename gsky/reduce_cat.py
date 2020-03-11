@@ -229,8 +229,19 @@ class ReduceCat(PipelineStage):
         ishape_resolution_mask = cat['ishape_hsm_regauss_resolution'] >= 0.3
         ishape_shear_mod_mask = (cat['ishape_hsm_regauss_e1']**2 + cat['ishape_hsm_regauss_e2']**2) < 2
         ishape_sigma_mask *= (cat['ishape_hsm_regauss_sigma'] >= 0.)*(cat['ishape_hsm_regauss_sigma'] <= 0.4)
+        # Remove masked objects
+        if self.config['mask_type'] == 'arcturus':
+            star_mask = cat['mask_Arcturus'].astype(bool)
+        elif self.config['mask_type'] == 'sirius':
+            star_mask = np.logical_not(cat['iflags_pixel_bright_object_center'])
+            star_mask *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+        else:
+            raise KeyError("Mask type "+self.config['mask_type'] +
+                           " not supported. Choose arcturus or sirius")
+        fdfc_mask = cat['wl_fulldepth_fullcolor']
 
-        shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask
+        shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask*star_mask*fdfc_mask
+        
         return shearmask
 
     def shear_calibrate(self, cat):
@@ -251,9 +262,9 @@ class ReduceCat(PipelineStage):
                               weights=cat[mask_bin]['ishape_hsm_regauss_derived_shape_weight'])
             mhats[ibin] = mhat
             e1 = (cat[mask_bin]['ishape_hsm_regauss_e1']/(2.*resp) -
-                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c1']) / mhat
+                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c1']) / (1 + mhat)
             e2 = (cat[mask_bin]['ishape_hsm_regauss_e2']/(2.*resp) -
-                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c2']) / mhat
+                  cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c2']) / (1 + mhat)
             e1cal[mask_bin] = e1
             e2cal[mask_bin] = e2
         return e1cal, e2cal, mhats, resp
