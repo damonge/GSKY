@@ -43,6 +43,7 @@ PowerSpecter:
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClFit_Dpj0_DpjBands1# Parameters defining signal maps
 
 NoiseMocks:
+    tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
     probes: ['gamma', 'gamma', 'gamma', 'gamma']
     spins: [2, 2, 2, 2]
     nrealiz: 1000
@@ -53,9 +54,9 @@ NoiseMocks:
     nell_theor: 5000
     noisemodel: data
     posfromshearcat: 1
-    shearrot: 'flipu'
-    tomo_bins: [0, 1, 2, 3]
-    output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj/noise_mocks
+    shearrot: 'flipqu'
+    ntomo_bins: [0, 1, 2, 3]
+    output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
     # path2deltagmask: '../HSC/data/map_gamma_HSC.fits'
     # Ngal: 2057541 # Number of galaxies in WL catalog
 

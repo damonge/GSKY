@@ -230,15 +230,30 @@ class NoiseMaps(object):
                     hdulist = fits.open(self.params['path2shearcat'])
                     cat = hdulist[1].data
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
+                    # Remove masked objects
+                    logger.info('Removing masked objects.')
+                    if self.params['mask_type'] == 'arcturus':
+                        logger.info('Applying mask_type = {}.'.format(self.params['mask_type']))
+                        msk = cat['mask_Arcturus'].astype(bool)
+                    elif self.params['mask_type'] == 'sirius':
+                        logger.info('Applying mask_type = {}.'.format(self.params['mask_type']))
+                        msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
+                        msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+                    else:
+                        raise KeyError("Mask type " + self.params['mask_type'] +
+                                       " not supported. Choose arcturus or sirius")
+                    logger.info('Applying FDFC mask.')
+                    msk *= cat['wl_fulldepth_fullcolor']
+                    cat = cat[msk]
                     if 'shear_cat' in cat.dtype.names:
                         logger.info('Applying shear cuts to catalog')
                         logger.info('Initial size = {}.'.format(cat['ra'].shape))
                         cat = cat[cat['shear_cat']]
                         logger.info('Size after cut = {}.'.format(cat['ra'].shape))
-                    if 'tomo_bins' in self.params.keys():
-                        logger.info('Selecting galaxies falling in tomographic bin {}.'.format(self.params['tomo_bins'][i]))
+                    if 'ntomo_bins' in self.params.keys():
+                        logger.info('Selecting galaxies falling in tomographic bin {}.'.format(self.params['ntomo_bins'][i]))
                         logger.info('Initial size = {}.'.format(cat['ra'].shape))
-                        cat = cat[cat['tomo_bin']==self.params['tomo_bins'][i]]
+                        cat = cat[cat['tomo_bin']==self.params['ntomo_bins'][i]]
                         logger.info('Size after cut = {}.'.format(cat['ra'].shape))
                     data[probe]['shearcat'] = cat
                     logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
