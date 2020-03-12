@@ -1,12 +1,11 @@
 #!/bin/bash
 
-#for f in AEGIS GAMA09H GAMA15H HECTOMAP WIDE12H VVDS XMM
-for f in GAMA09H GAMA15H HECTOMAP WIDE12H VVDS XMM
+for f in AEGIS GAMA09H GAMA15H HECTOMAP WIDE12H VVDS XMM
 do
     fh=$f
     fl="${f,,}"
     
-    #python -m gsky ReduceCat   --raw_data=./gsky_params/input_list_${fl}.txt   --clean_catalog=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//clean_catalog.fits   --dust_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//dust_map.fits   --star_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//star_map.fits   --bo_mask=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//bo_mask.fits   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --depth_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//depth_map.fits   --ePSF_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ePSF_map.fits   --ePSFres_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ePSFres_map.fits   --config=./gsky_params/yaml_files/${fl}_config.yml
+    python -m gsky ReduceCat   --raw_data=./gsky_params/input_list_${fl}.txt   --clean_catalog=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//clean_catalog.fits   --dust_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//dust_map.fits   --star_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//star_map.fits   --bo_mask=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//bo_mask.fits   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --depth_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//depth_map.fits   --ePSF_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ePSF_map.fits   --ePSFres_map=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ePSFres_map.fits   --config=./gsky_params/yaml_files/${fl}_config.yml
 
     #python -m gsky SystMapper   --frames_data=/global/cscratch1/sd/damonge/GSKY/HSC_data/S16A_WIDE_frames.fits   --masked_fraction=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//masked_fraction.fits   --ccdtemp_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ccdtemp_maps.fits   --airmass_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//airmass_maps.fits   --exptime_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//exptime_maps.fits   --skylevel_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//skylevel_maps.fits   --sigma_sky_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//sigma_sky_maps.fits   --seeing_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//seeing_maps.fits   --ellipt_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//ellipt_maps.fits   --nvisit_maps=/global/cscratch1/sd/damonge/GSKY/outputs/${fh}_ceci//nvisit_maps.fits   --config=./gsky_params/yaml_files/${fl}_config.yml
 
