@@ -9,7 +9,7 @@ global:
   mask_type: sirius
   band: i
   mask_thr: 0.5
-  shearrot: flipqu
+  shearrot: noflip
   sys_collapse_type: average
   pz_code: ephor_ab
   pz_mark: best
@@ -75,7 +75,6 @@ NoiseMocks:
     nell_theor: 5000
     noisemodel: data
     posfromshearcat: 1
-    shearrot: 'flipqu'
     ntomo_bins: [0, 1, 2, 3]
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
 

@@ -35,7 +35,7 @@ class ReduceCat(PipelineStage):
                                   'res_bo': 0.003, 'pad': 0.1,
                                   'projection': 'CAR'},
                       'band': 'i', 'depth_method': 'fluxerr',
-                      'shearrot': 'flipqu', 'mask_type': 'sirius',
+                      'shearrot': 'noflip', 'mask_type': 'sirius',
                       'ra':  'ra', 'dec':  'dec',
                       'pz_code': 'ephor_ab', 'pz_mark': 'best',
                       'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.5]}
