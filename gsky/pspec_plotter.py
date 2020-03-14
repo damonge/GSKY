@@ -138,6 +138,8 @@ class PSpecPlotter(PipelineStage) :
                 elltext = ''
             elif weightpow == 1:
                 elltext = r'$\ell$'
+            elif weightpow == -1:
+                elltext = r'$\ell (\ell+1)/(2\pi)$'
             else:
                 elltext = r'$\ell^{{{}}}$'.format(weightpow)
             ax.set_ylabel(elltext + r'$C_{\ell}$')
