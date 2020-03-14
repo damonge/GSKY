@@ -42,7 +42,7 @@ class PSpecPlotter(PipelineStage) :
 
         return
 
-    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None):
+    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None):
 
         weightpow = self.config['weightpow']
 
@@ -94,6 +94,10 @@ class PSpecPlotter(PipelineStage) :
                 if fieldsaccs is not None:
                     for ii, fieldsacc in enumerate(fieldsaccs):
                         ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
+                        if field_noisesaccs is not None:
+                            _, cl_noise_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j,
+                                                                       return_cov=False)
+                            cl_field -= cl_noise_field
                         if indices[i][0] == 0 and indices[i][1] == 0:
                             ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
                                 markeredgecolor=colors[ii], color=colors[ii], label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
@@ -197,6 +201,7 @@ class PSpecPlotter(PipelineStage) :
         else:
             logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
+            noise_saccfiles = None
 
         tracer_list = self.config['tracers']
         ntracers = len(tracer_list)
@@ -235,7 +240,8 @@ class PSpecPlotter(PipelineStage) :
 
         logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
-        self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles)
+        self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles,
+                          field_noisesaccs=noise_saccfiles)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
