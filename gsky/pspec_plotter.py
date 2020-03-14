@@ -98,7 +98,7 @@ class PSpecPlotter(PipelineStage) :
                     ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
                             color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=1.2, markersize=7)
                 else:
-                    ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o',
+                    ax.plot(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, linestyle='--', marker='o',
                             markeredgecolor='k',
                             color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=1.2, markersize=7)
                 if fieldsaccs is not None:
