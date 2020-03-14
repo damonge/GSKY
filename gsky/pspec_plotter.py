@@ -94,8 +94,13 @@ class PSpecPlotter(PipelineStage) :
                                 color=colors[3], linestyle='--', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
                                 label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
             else:
-                ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
-                        color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=1.2, markersize=45)
+                if weightpow != -1:
+                    ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
+                            color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=1.2, markersize=7)
+                else:
+                    ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o',
+                            markeredgecolor='k',
+                            color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=1.2, markersize=7)
                 if fieldsaccs is not None:
                     for ii, fieldsacc in enumerate(fieldsaccs):
                         ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
