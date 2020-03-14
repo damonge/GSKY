@@ -95,7 +95,7 @@ class PSpecPlotter(PipelineStage) :
                     for ii, fieldsacc in enumerate(fieldsaccs):
                         ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
                         if field_noisesaccs is not None:
-                            _, cl_noise_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j,
+                            _, cl_noise_field = field_noisesaccs[ii].get_ell_cl(self.config['cl_type'], tr_i, tr_j,
                                                                        return_cov=False)
                             cl_field -= cl_noise_field
                         if indices[i][0] == 0 and indices[i][1] == 0:
