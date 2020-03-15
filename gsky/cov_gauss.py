@@ -20,10 +20,8 @@ class CovGauss(PowerSpecter) :
             ('depth_map',FitsFile),('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),
             ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
             ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
-            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile),
-            ('power_spectra_wodpj', SACCFile),('power_spectra_wdpj', SACCFile)]
-    outputs=[('dummy',DummyFile),
-             ('cov_wodpj',SACCFile),('cov_wdpj',SACCFile)]
+            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
+    outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
                                 1000.0,1400.0,1800.0,
@@ -615,34 +613,34 @@ class CovGauss(PowerSpecter) :
             cov_wdpj=self.get_covar(lth,clth,bpws,tracers_wc,wsp,temps,cl_deproj_bias)
 
         # Write covariances into existing sacc
-        if self.get_input('power_spectra_wodpj') != 'NONE':
-            logger.info('{} provided.'.format(self.get_input('power_spectra_wodpj')))
-            logger.info('Adding non deprojected covariance matrix to {}.'.format(self.get_input('power_spectra_wodpj')))
-            s_wodpj = sacc.Sacc.load_fits(self.get_input('power_spectra_wodpj'))
+        if os.path.isfile(self.get_output_fname('power_spectra_wodpj',ext='sacc')):
+            logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
+            logger.info('Adding non deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
+            s_wodpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'))
             s_wodpj.add_covariance(cov_wodpj)
-            s_wodpj.save_fits(self.get_input('power_spectra_wodpj'), overwrite=True)
+            s_wodpj.save_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'), overwrite=True)
             logger.info('Written non deprojected covariance matrix.')
         else:
-            logger.info('{} not provided.'.format(self.get_input('power_spectra_wodpj')))
-            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output('cov_wodpj')))
+            logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
+            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wodpj',ext='sacc')))
             s_wodpj = sacc.Sacc()
             s_wodpj.add_covariance(cov_wodpj)
-            s_wodpj.save_fits(self.get_output('cov_wodpj'), overwrite=True)
+            s_wodpj.save_fits(self.get_output_fname('cov_wodpj',ext='sacc'), overwrite=True)
             logger.info('Written non deprojected covariance matrix.')
 
-        if self.get_input('power_spectra_wdpj') != 'NONE':
-            logger.info('{} provided.'.format(self.get_input('power_spectra_wdpj')))
-            logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_input('power_spectra_wdpj')))
-            s_wdpj = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj'))
+        if os.path.isfile(self.get_output_fname('power_spectra_wdpj',ext='sacc')):
+            logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
+            logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
+            s_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
             s_wdpj.add_covariance(cov_wdpj)
-            s_wdpj.save_fits(self.get_input('power_spectra_wdpj'), overwrite=True)
+            s_wdpj.save_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'), overwrite=True)
             logger.info('Written deprojected covariance matrix.')
         else:
-            logger.info('{} not provided.'.format(self.get_input('power_spectra_wdpj')))
-            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output('cov_wdpj')))
+            logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
+            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wdpj',ext='sacc')))
             s_wdpj = sacc.Sacc()
             s_wdpj.add_covariance(cov_wdpj)
-            s_wdpj.save_fits(self.get_output('cov_wdpj'), overwrite=True)
+            s_wdpj.save_fits(self.get_output_fname('cov_wdpj',ext='sacc'), overwrite=True)
             logger.info('Written deprojected covariance matrix.')
 
 if __name__ == '__main__':
