@@ -564,14 +564,14 @@ class CovGauss(PowerSpecter) :
         self.ncross = self.nmaps * (self.nmaps + 1) // 2 + self.ntracers_shear
         if self.config['gaus_covar_type'] == 'analytic':
             logger.info("Computing analytic covariance.")
-            if not os.path.isfile(self.get_input('power_spectra_wdpj')):
+            if not os.path.isfile(self.get_output_fname('power_spectra_wdpj',ext='sacc')):
                 logger.info("Computing deprojected power spectra.")
                 logger.info(" W. deprojections.")
                 cls_wdpj, _ = self.get_power_spectra(tracers_wc, wsp, bpws)
 
             else:
                 logger.info("Reading deprojected power spectra.")
-                s = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj'))
+                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
                 cls_wdpj_mean = s.mean
                 cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
 
@@ -583,18 +583,18 @@ class CovGauss(PowerSpecter) :
 
         else:
             logger.info("Computing simulated covariance.")
-            if not os.path.isfile(self.get_input('power_spectra_wdpj')):
+            if not os.path.isfile(self.get_output_fname('power_spectra_wdpj',ext='sacc')):
                 logger.info("Computing deprojected power spectra.")
                 logger.info(" W. deprojections.")
                 cls_wdpj, cls_wdpj_coupled = self.get_power_spectra(tracers_wc, wsp, bpws)
 
             else:
                 logger.info("Reading deprojected power spectra.")
-                s = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj'))
+                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
                 cls_wdpj_mean = s.mean
                 cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
                 logger.info("Reading deprojected coupled power spectra.")
-                s = sacc.Sacc.load_fits(self.get_input('power_spectra_wdpj_coupled'))
+                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj_coupled',ext='sacc'))
                 cls_wdpj_coupled_mean = s.mean
                 cls_wdpj_coupled = self.convert_sacc_to_clarr(cls_wdpj_coupled_mean, tracers_wc)
 
