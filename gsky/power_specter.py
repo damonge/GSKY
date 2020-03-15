@@ -1246,8 +1246,12 @@ class PowerSpecter(PipelineStage) :
             tr_i, tr_j = trcs
             for i in range(len(self.pss2tracers)):
                 for ii in range(len(self.pss2tracers[i])):
-                    if self.pss2tracers[i][ii] == trcs and [ii, i] not in self.tracers2maps[tr_i][tr_j]:
-                        self.tracers2maps[tr_i][tr_j].append([i, ii])
+                    if not (trcs[tr_i].spin == 2 and trcs[tr_j].spin == 2):
+                        if self.pss2tracers[i][ii] == trcs and [ii, i] not in self.tracers2maps[tr_i][tr_j]:
+                            self.tracers2maps[tr_i][tr_j].append([i, ii])
+                    else:
+                        if self.pss2tracers[i][ii] == trcs and len(self.tracers2maps[tr_i][tr_j]) < 4:
+                            self.tracers2maps[tr_i][tr_j].append([i, ii])
 
         for i in range(len(self.tracers2maps)):
             for ii in range(len(self.tracers2maps[i])):
