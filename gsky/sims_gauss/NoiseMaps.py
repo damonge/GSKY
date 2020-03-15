@@ -273,7 +273,7 @@ class NoiseMaps(object):
                     logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
                     fsk, _ = read_flat_map(self.params['path2fsk'])
                     data[probe]['fsk'] = fsk
-                    
+
                     if self.params['posfromshearcat'] == 0:
                         assert 'path2shearmask' in self.params, 'Requesting randomized galaxy positions for gamma but path2shearmask not provided. Aborting.'
                         tempmap = read_flat_map(self.params['path2shearmask'], i_map=6*i+3)

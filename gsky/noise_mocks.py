@@ -94,7 +94,12 @@ class NoiseMocks(PipelineStage) :
         # Here we read the weight masks
         masks = []
         for i in self.config['ntomo_bins']:
-            fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+2)
+            if self.config['weightmask'] == 1:
+                logger.info('Using weightmask.')
+                fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+2)
+            else:
+                logger.info('Using binary mask.')
+                fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
             mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
             masks.append(mask_temp)
         masks += [mask_temp]*(nprobes*(nprobes-1)//2)
