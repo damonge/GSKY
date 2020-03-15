@@ -140,10 +140,9 @@ class NoiseMocks(PipelineStage) :
 
         nprobes = len(self.config['probes'])
         for i in range(nprobes):
-            for ii in range(i + 1):
-                path2wsp = self.get_output_fname('wsp_probe1={}_probe2={}.dat'.format(i, ii))
-                wsps[i][ii].write_to(str(path2wsp))
-                logger.info('Written wsp for probe1 = {} and probe2 = {} to {}.'.format(i, ii, path2wsp))
+            path2wsp = self.get_output_fname('wsp_probe1={}_probe2={}.dat'.format(i, i))
+            wsps[i][i].write_to(str(path2wsp))
+            logger.info('Written wsp for probe1 = {} and probe2 = {} to {}.'.format(i, i, path2wsp))
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

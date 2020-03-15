@@ -230,6 +230,7 @@ class NoiseMaps(object):
                     hdulist = fits.open(self.params['path2shearcat'])
                     cat = hdulist[1].data
                     logger.info('Read {}.'.format(self.params['path2shearcat']))
+
                     # Remove masked objects
                     logger.info('Removing masked objects.')
                     if self.params['mask_type'] == 'arcturus':
@@ -245,20 +246,34 @@ class NoiseMaps(object):
                     logger.info('Applying FDFC mask.')
                     msk *= cat['wl_fulldepth_fullcolor']
                     cat = cat[msk]
-                    if 'shear_cat' in cat.dtype.names:
-                        logger.info('Applying shear cuts to catalog')
-                        logger.info('Initial size = {}.'.format(cat['ra'].shape))
-                        cat = cat[cat['shear_cat']]
-                        logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+
                     if 'ntomo_bins' in self.params.keys():
                         logger.info('Selecting galaxies falling in tomographic bin {}.'.format(self.params['ntomo_bins'][i]))
-                        logger.info('Initial size = {}.'.format(cat['ra'].shape))
-                        cat = cat[cat['tomo_bin']==self.params['ntomo_bins'][i]]
-                        logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+                        if 'shear_cat' in cat.dtype.names:
+                            logger.info('Applying shear cuts to catalog')
+                            logger.info('Initial size = {}.'.format(cat['ra'].shape))
+                            mask = (cat['tomo_bin']==self.params['ntomo_bins'][i]) & (cat['shear_cat'])
+                            cat = cat[mask]
+                            logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+                        else:
+                            logger.info('Initial size = {}.'.format(cat['ra'].shape))
+                            mask = (cat['tomo_bin'] == self.params['ntomo_bins'][i])
+                            cat = cat[mask]
+                            logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+                    else:
+                        if 'shear_cat' in cat.dtype.names:
+                            logger.info('Applying shear cuts to catalog')
+                            logger.info('Initial size = {}.'.format(cat['ra'].shape))
+                            mask = (cat['shear_cat'])
+                            cat = cat[mask]
+                            logger.info('Size after cut = {}.'.format(cat['ra'].shape))
+
                     data[probe]['shearcat'] = cat
+
                     logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
                     fsk, _ = read_flat_map(self.params['path2fsk'])
                     data[probe]['fsk'] = fsk
+                    
                     if self.params['posfromshearcat'] == 0:
                         assert 'path2shearmask' in self.params, 'Requesting randomized galaxy positions for gamma but path2shearmask not provided. Aborting.'
                         tempmap = read_flat_map(self.params['path2shearmask'], i_map=6*i+3)
