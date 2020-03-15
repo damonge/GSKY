@@ -553,7 +553,7 @@ class CovGauss(PowerSpecter) :
         tracers_nc, tracers_wc = self.get_all_tracers(temps)
 
         self.ntracers = len(tracers_nc)
-        self.nmaps = self.ntracers_counts + self.ntracers_comptony + 2*self.ntracers_shear
+        self.nmaps = self.ntracers_counts + self.ntracers_comptony + self.ntracers_kappa + 2*self.ntracers_shear
 
         # Set up mapping
         self.mapping(tracers_nc)
