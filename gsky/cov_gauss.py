@@ -276,10 +276,10 @@ class CovGauss(PowerSpecter) :
                 ps_inds3 = self.tracers2maps[tr_j1][tr_i2]
                 ps_inds4 = self.tracers2maps[tr_j1][tr_j2]
 
-                ca1b1 = clth[ps_inds1[:, 0][:4], ps_inds1[:, 1][:4]]
-                ca1b2 = clth[ps_inds2[:, 0][:4], ps_inds2[:, 1][:4]]
-                ca2b1 = clth[ps_inds3[:, 0][:4], ps_inds3[:, 1][:4]]
-                ca2b2 = clth[ps_inds4[:, 0][:4], ps_inds4[:, 1][:4]]
+                ca1b1 = clth[ps_inds1[:, 0], ps_inds1[:, 1]]
+                ca1b2 = clth[ps_inds2[:, 0], ps_inds2[:, 1]]
+                ca2b1 = clth[ps_inds3[:, 0], ps_inds3[:, 1]]
+                ca2b2 = clth[ps_inds4[:, 0], ps_inds4[:, 1]]
 
                 cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin,
                                                         tracers[tr_j1].spin,
