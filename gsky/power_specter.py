@@ -691,9 +691,9 @@ class PowerSpecter(PipelineStage) :
             if (len(hdul)-1)%6!=0 :
                 raise ValueError("Input file should have six HDUs per map")
             nmaps=(len(hdul)-1)//6
-            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
+            tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=False)
                             for i in range(nmaps)]
-            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
+            tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=False)
                            for i in range(nmaps)]
 
         elif map_type == 'Compton_y_maps':
