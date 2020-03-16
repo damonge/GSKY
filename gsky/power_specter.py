@@ -1242,8 +1242,8 @@ class PowerSpecter(PipelineStage) :
 
         self.tracers2maps = [[[] for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
-        for trcs in tracer_combs:
-            tr_i, tr_j = trcs
+        for trc in tracer_combs:
+            tr_i, tr_j = trc
             for i in range(len(self.pss2tracers)):
                 for ii in range(len(self.pss2tracers[i])):
                     if not (trcs[tr_i].spin == 2 and trcs[tr_j].spin == 2):
