@@ -252,12 +252,18 @@ class NoiseMaps(object):
                         if 'shear_cat' in cat.dtype.names:
                             logger.info('Applying shear cuts to catalog')
                             logger.info('Initial size = {}.'.format(cat['ra'].shape))
-                            mask = (cat['tomo_bin']==self.params['ntomo_bins'][i]) & (cat['shear_cat'])
+                            if self.params['ntomo_bins'][i] != -1:
+                                mask = (cat['tomo_bin']==self.params['ntomo_bins'][i]) & (cat['shear_cat'])
+                            else:
+                                mask = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                             cat = cat[mask]
                             logger.info('Size after cut = {}.'.format(cat['ra'].shape))
                         else:
                             logger.info('Initial size = {}.'.format(cat['ra'].shape))
-                            mask = (cat['tomo_bin'] == self.params['ntomo_bins'][i])
+                            if self.params['ntomo_bins'][i] != -1:
+                                mask = (cat['tomo_bin'] == self.params['ntomo_bins'][i])
+                            else:
+                                mask = (cat['tomo_bin'] >= 0)
                             cat = cat[mask]
                             logger.info('Size after cut = {}.'.format(cat['ra'].shape))
                     else:
