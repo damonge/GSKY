@@ -555,6 +555,9 @@ class CovGauss(PowerSpecter) :
         self.ntracers = len(tracers_nc)
         self.nmaps = self.ntracers_counts + self.ntracers_comptony + self.ntracers_kappa + 2*self.ntracers_shear
 
+        logger.info("Translating into SACC tracers.")
+        tracers_sacc = self.get_sacc_tracers(tracers_wc)
+
         # Set up mapping
         self.mapping(tracers_nc)
 
@@ -571,9 +574,8 @@ class CovGauss(PowerSpecter) :
 
             else:
                 logger.info("Reading deprojected power spectra.")
-                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
-                cls_wdpj_mean = s.mean
-                cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
+                sacc_cls_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
+                cls_wdpj = self.convert_sacc_to_clarr(sacc_cls_wdpj, tracers_sacc)
 
             logger.info("Getting guess power spectra.")
             lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
@@ -590,21 +592,18 @@ class CovGauss(PowerSpecter) :
 
             else:
                 logger.info("Reading deprojected power spectra.")
-                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
-                cls_wdpj_mean = s.mean
-                cls_wdpj = self.convert_sacc_to_clarr(cls_wdpj_mean, tracers_wc)
+                sacc_cls_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
+                cls_wdpj = self.convert_sacc_to_clarr(sacc_cls_wdpj, tracers_sacc)
                 logger.info("Reading deprojected coupled power spectra.")
-                s = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj_coupled',ext='sacc'))
-                cls_wdpj_coupled_mean = s.mean
-                cls_wdpj_coupled = self.convert_sacc_to_clarr(cls_wdpj_coupled_mean, tracers_wc)
+                sacc_cls_wdpj_coupled = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj_coupled',ext='sacc'))
+                cls_wdpj_coupled = self.convert_sacc_to_clarr(sacc_cls_wdpj_coupled, tracers_sacc)
 
             logger.info("Getting guess power spectra.")
             lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
 
             if os.path.isfile(self.get_output_fname('dpj_bias', ext='sacc')):
-                s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias', ext='sacc'))
-                cl_deproj_bias_mean = s.mean
-                cl_deproj_bias = self.convert_sacc_to_clarr(cl_deproj_bias_mean, tracers_wc)
+                sacc_cl_deproj_bias = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias', ext='sacc'))
+                cl_deproj_bias = self.convert_sacc_to_clarr(sacc_cl_deproj_bias, tracers_sacc)
             else:
                 logger.info("Computing deprojection bias.")
                 _, cl_deproj_bias = self.get_dpj_bias(tracers_wc, lth, clth, cls_wdpj_coupled, wsp, bpws)

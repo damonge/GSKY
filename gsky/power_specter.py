@@ -1145,46 +1145,178 @@ class PowerSpecter(PipelineStage) :
 
         saccfile.save_fits(fname_out, overwrite=True)
 
-    def convert_sacc_to_clarr(self, saccmean, trc):
+    def convert_sacc_to_clarr(self, saccfile, sacc_t) :
+        """
+        Write a vector of power spectrum measurements into a SACC file.
+        :param fname_out: path to output file
+        :param sacc_t: list of SACC tracers
+        :param sacc_b: SACC Binning object.
+        :param cls: list of power spectrum measurements.
+        :param covar: covariance matrix:
+        :param verbose: do you want to print out information about the SACC file?
+        """
 
-        cl_arr = np.zeros((self.nmaps, self.nmaps, self.nbands))
+        cls = np.zeros((self.nmaps, self.nmaps, self.nbands))
 
         map_i = 0
-        ind_sacc = 0
         for tr_i in range(self.ntracers):
             map_j = map_i
             for tr_j in range(tr_i, self.ntracers):
-                if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
-                    cl_arr[map_i, map_j, :] = saccmean[ind_sacc*self.nbands:(ind_sacc+1)*self.nbands]
+                if sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'delta_g':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                                                'gc_{}'.format(tr_i),
+                                                                'gc_{}'.format(tr_j),
+                                                                return_cov=False)
                     map_j += 1
-                    ind_sacc += 1
-                elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
-                    tempmeans = saccmean[ind_sacc*self.nbands:(ind_sacc+2)*self.nbands].reshape((2, -1))
-                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
-                    cl_arr[map_i, map_j+1, :] = tempmeans[1, :]
-                    map_j += 2
-                    ind_sacc += 2
-                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
-                    tempmeans = saccmean[ind_sacc * self.nbands:(ind_sacc+2) * self.nbands].reshape((2, -1))
-                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
-                    cl_arr[map_i+1, map_j, :] = tempmeans[1, :]
-                    map_j += 1
-                    ind_sacc += 2
-                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 2:
-                    tempmeans = saccmean[ind_sacc * self.nbands:(ind_sacc+4) * self.nbands].reshape((4, -1))
-                    cl_arr[map_i, map_j, :] = tempmeans[0, :]
-                    cl_arr[map_i+1, map_j, :] = tempmeans[1, :]
-                    cl_arr[map_i, map_j+1, :] = tempmeans[2, :]
-                    cl_arr[map_i+1, map_j+1, :] = tempmeans[3, :]
-                    map_j += 2
-                    ind_sacc += 4
 
-            if trc[tr_i].spin == 2:
+                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                 'gc_{}'.format(tr_i),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 return_cov=False)
+                    _, cls[map_i, map_j + 1, :] = saccfile.get_ell_cl('cl_0b',
+                                 'gc_{}'.format(tr_i),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 return_cov=False)
+                    map_j += 2
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'delta_g':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'gc_{}'.format(tr_j),
+                                         return_cov=False)
+                    _, cls[map_i + 1, map_j, :] = saccfile.get_ell_cl('cl_0b',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'gc_{}'.format(tr_j),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'Compton_y':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'Compton_y':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'gc_{}'.format(tr_i),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'delta_g':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'gc_{}'.format(tr_j),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                         return_cov=False)
+                    _, cls[map_i, map_j + 1, :] = saccfile.get_ell_cl('cl_0b',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                         return_cov=False)
+                    map_j += 2
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'Compton_y':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                         return_cov=False)
+                    _, cls[map_i + 1, map_j, :] = saccfile.get_ell_cl('cl_0b',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'kappa':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'kappa':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'gc_{}'.format(tr_i),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'delta_g':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'gc_{}'.format(tr_j),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'kappa':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'y_{}'.format(tr_i - self.ntracers_counts),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'Compton_y':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'y_{}'.format(tr_j - self.ntracers_counts),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        return_cov=False)
+                    _, cls[map_i, map_j + 1, :] = saccfile.get_ell_cl('cl_0b',
+                                        'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
+                                        'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        return_cov=False)
+                    map_j += 2
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'kappa':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                         return_cov=False)
+                    _, cls[map_i + 1, map_j, :] = saccfile.get_ell_cl('cl_0b',
+                                        'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                        'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
+                                         return_cov=False)
+                    map_j += 1
+
+                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                    _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_ee',
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                  return_cov=False)
+                    _, cls[map_i + 1, map_j, :] = saccfile.get_ell_cl('cl_eb',
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                  return_cov=False)
+                    _, cls[map_i, map_j + 1, :] = saccfile.get_ell_cl('cl_be',
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                  return_cov=False)
+                    _, cls[map_i + 1, map_j + 1, :] = saccfile.get_ell_cl('cl_bb',
+                                 'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                 'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
+                                  return_cov=False)
+                    map_j += 2
+
+            if sacc_t[tr_i].spin == 2:
                 map_i += 2
             else:
                 map_i += 1
 
-        return cl_arr
+        return cls
+
 
     def mapping(self, trcs):
 
