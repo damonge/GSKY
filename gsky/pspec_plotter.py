@@ -257,7 +257,7 @@ class PSpecPlotter(PipelineStage) :
                         assert noise_sacc_curr.covariance is not None, \
                             'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
                 noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles)
+            noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True)
         else:
             logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
