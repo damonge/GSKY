@@ -289,7 +289,7 @@ class PowerSpecter(PipelineStage) :
 
         return nls_all
 
-    def get_dpj_bias(self,trc,lth,clth,cl_coupled,wsp,bpws) :
+    def get_dpj_bias(self, trc, sacc_t, lth, clth, cl_coupled, wsp, bpws) :
         """
         Estimate the deprojection bias
         :param trc: list of Tracers.
@@ -302,9 +302,8 @@ class PowerSpecter(PipelineStage) :
         #Compute deprojection bias
         if os.path.isfile(self.get_output_fname('dpj_bias',ext='sacc')) :
             print("Reading deprojection bias")
-            s = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
-            cl_deproj_bias_mean = s.mean
-            cl_deproj_bias = self.convert_sacc_to_clarr(cl_deproj_bias_mean, trc)
+            sacc_deproj_bias = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias',ext='sacc'))
+            cl_deproj_bias = self.convert_sacc_to_clarr(sacc_deproj_bias, sacc_t)
             cl_deproj = np.zeros_like(cl_deproj_bias)
 
             # Remove deprojection bias
@@ -1426,7 +1425,7 @@ class PowerSpecter(PipelineStage) :
         self.nmaps = self.ntracers_counts + self.ntracers_comptony + self.ntracers_kappa + 2*self.ntracers_shear
 
         logger.info("Translating into SACC tracers.")
-        tracers_sacc=self.get_sacc_tracers(tracers_nc)
+        tracers_sacc = self.get_sacc_tracers(tracers_nc)
 
         # Set up mapping
         self.mapping(tracers_nc)
@@ -1448,7 +1447,7 @@ class PowerSpecter(PipelineStage) :
         lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
 
         logger.info("Computing deprojection bias.")
-        cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc,lth,clth,cls_wdpj_coupled,wsp,bpws)
+        cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)
 
         logger.info("Computing noise bias.")
         nls=self.get_noise(tracers_nc,wsp,bpws)
