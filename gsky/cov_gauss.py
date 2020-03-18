@@ -270,219 +270,230 @@ class CovGauss(PowerSpecter) :
         for k1, tup1 in enumerate(tracer_combs):
             tr_i1, tr_j1 = tup1
             ix_2 = ix_1
-            for tr_i2, tr_j2 in tracer_combs[k1:]:
-                ps_inds1 = self.tracers2maps[tr_i1][tr_i2]
-                ps_inds2 = self.tracers2maps[tr_i1][tr_j2]
-                ps_inds3 = self.tracers2maps[tr_j1][tr_i2]
-                ps_inds4 = self.tracers2maps[tr_j1][tr_j2]
+            for k2, tup2 in tracer_combs:
+                tr_i2, tr_j2 = tup2
+                if k1 <= k2:
+                    ps_inds1 = self.tracers2maps[tr_i1][tr_i2]
+                    ps_inds2 = self.tracers2maps[tr_i1][tr_j2]
+                    ps_inds3 = self.tracers2maps[tr_j1][tr_i2]
+                    ps_inds4 = self.tracers2maps[tr_j1][tr_j2]
 
-                ca1b1 = clth[ps_inds1[:, 0], ps_inds1[:, 1]]
-                ca1b2 = clth[ps_inds2[:, 0], ps_inds2[:, 1]]
-                ca2b1 = clth[ps_inds3[:, 0], ps_inds3[:, 1]]
-                ca2b2 = clth[ps_inds4[:, 0], ps_inds4[:, 1]]
+                    ca1b1 = clth[ps_inds1[:, 0], ps_inds1[:, 1]]
+                    ca1b2 = clth[ps_inds2[:, 0], ps_inds2[:, 1]]
+                    ca2b1 = clth[ps_inds3[:, 0], ps_inds3[:, 1]]
+                    ca2b2 = clth[ps_inds4[:, 0], ps_inds4[:, 1]]
 
-                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin,
-                                                        tracers[tr_j1].spin,
-                                                        tracers[tr_i2].spin, tracers[tr_j2].spin, lth,
-                                                        ca1b1, ca1b2, ca2b1, ca2b2, wsp[tr_i1][tr_j1],
-                                                        wsp[tr_i2][tr_j2])
+                    cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin,
+                                                            tracers[tr_j1].spin,
+                                                            tracers[tr_i2].spin, tracers[tr_j2].spin, lth,
+                                                            ca1b1, ca1b2, ca2b1, ca2b2, wsp[tr_i1][tr_j1],
+                                                            wsp[tr_i2][tr_j2])
 
                 if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
-                    covar[ix_1, :, ix_2, :] = cov_here
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_here.T
+                    if k1 <= k2:
+                        covar[ix_1, :, ix_2, :] = cov_here
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_here.T
                     ix_2 += 1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
-                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
-                    cov_te_te = cov_here[:, 0, :, 0]
-                    cov_te_tb = cov_here[:, 0, :, 1]
-                    cov_tb_te = cov_here[:, 1, :, 0]
-                    cov_tb_tb = cov_here[:, 1, :, 1]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
+                        cov_te_te = cov_here[:, 0, :, 0]
+                        cov_te_tb = cov_here[:, 0, :, 1]
+                        cov_tb_te = cov_here[:, 1, :, 0]
+                        cov_tb_tb = cov_here[:, 1, :, 1]
 
-                    covar[ix_1, :, ix_2, :] = cov_te_te
-                    covar[ix_1, :, ix_2 + 1, :] = cov_te_tb
-                    covar[ix_1 + 1, :, ix_2, :] = cov_tb_te
-                    covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_tb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_te_te.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_te_tb.T
-                        covar[ix_2, :, ix_1 + 1, :] = cov_tb_te.T
-                        covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_tb.T
+                        covar[ix_1, :, ix_2, :] = cov_te_te
+                        covar[ix_1, :, ix_2 + 1, :] = cov_te_tb
+                        covar[ix_1 + 1, :, ix_2, :] = cov_tb_te
+                        covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_tb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_te_te.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_te_tb.T
+                            covar[ix_2, :, ix_1 + 1, :] = cov_tb_te.T
+                            covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_tb.T
                     ix_2 += 2
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
-                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
-                    cov_tt_te = cov_here[:, 0, :, 0]
-                    cov_tt_tb = cov_here[:, 0, :, 1]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
+                        cov_tt_te = cov_here[:, 0, :, 0]
+                        cov_tt_tb = cov_here[:, 0, :, 1]
 
-                    covar[ix_1, :, ix_2, :] = cov_tt_te
-                    covar[ix_1, :, ix_2 + 1, :] = cov_tt_tb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_tt_te.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_tt_tb.T
+                        covar[ix_1, :, ix_2, :] = cov_tt_te
+                        covar[ix_1, :, ix_2 + 1, :] = cov_tt_tb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_tt_te.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_tt_tb.T
                     ix_2 += 2
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
-                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
-                    cov_tt_te = cov_here[:, 0, :, 0]
-                    cov_tt_tb = cov_here[:, 0, :, 1]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
+                        cov_tt_te = cov_here[:, 0, :, 0]
+                        cov_tt_tb = cov_here[:, 0, :, 1]
 
-                    covar[ix_1, :, ix_2, :] = cov_tt_te
-                    covar[ix_1 + 1, :, ix_2, :] = cov_tt_tb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_tt_te.T
-                        covar[ix_2, :, ix_1 + 1, :] = cov_tt_tb.T
+                        covar[ix_1, :, ix_2, :] = cov_tt_te
+                        covar[ix_1 + 1, :, ix_2, :] = cov_tt_tb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_tt_te.T
+                            covar[ix_2, :, ix_1 + 1, :] = cov_tt_tb.T
                     ix_2 += 1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
-                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
-                    cov_tt_ee = cov_here[:, 0, :, 0]
-                    cov_tt_eb = cov_here[:, 0, :, 1]
-                    cov_tt_be = cov_here[:, 0, :, 2]
-                    cov_tt_bb = cov_here[:, 0, :, 3]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
+                        cov_tt_ee = cov_here[:, 0, :, 0]
+                        cov_tt_eb = cov_here[:, 0, :, 1]
+                        cov_tt_be = cov_here[:, 0, :, 2]
+                        cov_tt_bb = cov_here[:, 0, :, 3]
 
-                    covar[ix_1, :, ix_2, :] = cov_tt_ee
-                    covar[ix_1, :, ix_2 + 1, :] = cov_tt_eb
-                    covar[ix_1, :, ix_2 + 2, :] = cov_tt_be
-                    covar[ix_1, :, ix_2 + 3, :] = cov_tt_bb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_tt_ee.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_tt_eb.T
-                        covar[ix_2 + 2, :, ix_1, :] = cov_tt_be.T
-                        covar[ix_2 + 3, :, ix_1, :] = cov_tt_bb.T
+                        covar[ix_1, :, ix_2, :] = cov_tt_ee
+                        covar[ix_1, :, ix_2 + 1, :] = cov_tt_eb
+                        covar[ix_1, :, ix_2 + 2, :] = cov_tt_be
+                        covar[ix_1, :, ix_2 + 3, :] = cov_tt_bb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_tt_ee.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_tt_eb.T
+                            covar[ix_2 + 2, :, ix_1, :] = cov_tt_be.T
+                            covar[ix_2 + 3, :, ix_1, :] = cov_tt_bb.T
                     ix_2 += 4
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
-                    cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
-                    cov_tt_ee = cov_here[:, 0, :, 0]
-                    cov_tt_eb = cov_here[:, 0, :, 1]
-                    cov_tt_be = cov_here[:, 0, :, 2]
-                    cov_tt_bb = cov_here[:, 0, :, 3]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
+                        cov_tt_ee = cov_here[:, 0, :, 0]
+                        cov_tt_eb = cov_here[:, 0, :, 1]
+                        cov_tt_be = cov_here[:, 0, :, 2]
+                        cov_tt_bb = cov_here[:, 0, :, 3]
 
-                    covar[ix_1, :, ix_2, :] = cov_tt_ee
-                    covar[ix_1 + 2, :, ix_2, :] = cov_tt_eb
-                    covar[ix_1 + 2, :, ix_2, :] = cov_tt_be
-                    covar[ix_1 + 3, :, ix_2, :] = cov_tt_bb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_tt_ee.T
-                        covar[ix_2, :, ix_1 + 2, :] = cov_tt_eb.T
-                        covar[ix_2, :, ix_1 + 2, :] = cov_tt_be.T
-                        covar[ix_2, :, ix_1 + 3, :] = cov_tt_bb.T
+                        covar[ix_1, :, ix_2, :] = cov_tt_ee
+                        covar[ix_1 + 2, :, ix_2, :] = cov_tt_eb
+                        covar[ix_1 + 2, :, ix_2, :] = cov_tt_be
+                        covar[ix_1 + 3, :, ix_2, :] = cov_tt_bb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_tt_ee.T
+                            covar[ix_2, :, ix_1 + 2, :] = cov_tt_eb.T
+                            covar[ix_2, :, ix_1 + 2, :] = cov_tt_be.T
+                            covar[ix_2, :, ix_1 + 3, :] = cov_tt_bb.T
                     ix_2 += 1
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
-                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
-                    cov_te_ee = cov_here[:, 0, :, 0]
-                    cov_te_eb = cov_here[:, 0, :, 1]
-                    cov_te_be = cov_here[:, 0, :, 2]
-                    cov_te_bb = cov_here[:, 0, :, 3]
-                    cov_tb_ee = cov_here[:, 1, :, 0]
-                    cov_tb_eb = cov_here[:, 1, :, 1]
-                    cov_tb_be = cov_here[:, 1, :, 2]
-                    cov_tb_bb = cov_here[:, 1, :, 3]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
+                        cov_te_ee = cov_here[:, 0, :, 0]
+                        cov_te_eb = cov_here[:, 0, :, 1]
+                        cov_te_be = cov_here[:, 0, :, 2]
+                        cov_te_bb = cov_here[:, 0, :, 3]
+                        cov_tb_ee = cov_here[:, 1, :, 0]
+                        cov_tb_eb = cov_here[:, 1, :, 1]
+                        cov_tb_be = cov_here[:, 1, :, 2]
+                        cov_tb_bb = cov_here[:, 1, :, 3]
 
-                    covar[ix_1, :, ix_2, :] = cov_te_ee
-                    covar[ix_1, :, ix_2 + 1, :] = cov_te_eb
-                    covar[ix_1, :, ix_2 + 2, :] = cov_te_be
-                    covar[ix_1, :, ix_2 + 3, :] = cov_te_bb
-                    covar[ix_1 + 1, :, ix_2, :] = cov_tb_ee
-                    covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_eb
-                    covar[ix_1 + 1, :, ix_2 + 2, :] = cov_tb_be
-                    covar[ix_1 + 1, :, ix_2 + 3, :] = cov_tb_bb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_te_ee.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_te_eb.T
-                        covar[ix_2 + 2, :, ix_1, :] = cov_te_be.T
-                        covar[ix_2 + 3, :, ix_1, :] = cov_te_bb.T
-                        covar[ix_2, :, ix_1 + 1, :] = cov_tb_ee.T
-                        covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_eb.T
-                        covar[ix_2 + 2, :, ix_1 + 1, :] = cov_tb_be.T
-                        covar[ix_2 + 3, :, ix_1 + 1, :] = cov_tb_bb.T
+                        covar[ix_1, :, ix_2, :] = cov_te_ee
+                        covar[ix_1, :, ix_2 + 1, :] = cov_te_eb
+                        covar[ix_1, :, ix_2 + 2, :] = cov_te_be
+                        covar[ix_1, :, ix_2 + 3, :] = cov_te_bb
+                        covar[ix_1 + 1, :, ix_2, :] = cov_tb_ee
+                        covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_eb
+                        covar[ix_1 + 1, :, ix_2 + 2, :] = cov_tb_be
+                        covar[ix_1 + 1, :, ix_2 + 3, :] = cov_tb_bb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_te_ee.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_te_eb.T
+                            covar[ix_2 + 2, :, ix_1, :] = cov_te_be.T
+                            covar[ix_2 + 3, :, ix_1, :] = cov_te_bb.T
+                            covar[ix_2, :, ix_1 + 1, :] = cov_tb_ee.T
+                            covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_eb.T
+                            covar[ix_2 + 2, :, ix_1 + 1, :] = cov_tb_be.T
+                            covar[ix_2 + 3, :, ix_1 + 1, :] = cov_tb_bb.T
                     ix_2 += 4
                 elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
                         (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
-                    cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
-                    cov_te_ee = cov_here[:, 0, :, 0]
-                    cov_te_eb = cov_here[:, 0, :, 1]
-                    cov_te_be = cov_here[:, 0, :, 2]
-                    cov_te_bb = cov_here[:, 0, :, 3]
-                    cov_tb_ee = cov_here[:, 1, :, 0]
-                    cov_tb_eb = cov_here[:, 1, :, 1]
-                    cov_tb_be = cov_here[:, 1, :, 2]
-                    cov_tb_bb = cov_here[:, 1, :, 3]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
+                        cov_te_ee = cov_here[:, 0, :, 0]
+                        cov_te_eb = cov_here[:, 0, :, 1]
+                        cov_te_be = cov_here[:, 0, :, 2]
+                        cov_te_bb = cov_here[:, 0, :, 3]
+                        cov_tb_ee = cov_here[:, 1, :, 0]
+                        cov_tb_eb = cov_here[:, 1, :, 1]
+                        cov_tb_be = cov_here[:, 1, :, 2]
+                        cov_tb_bb = cov_here[:, 1, :, 3]
 
-                    covar[ix_1, :, ix_2, :] = cov_te_ee
-                    covar[ix_1 + 1, :, ix_2, :] = cov_te_eb
-                    covar[ix_1 + 2, :, ix_2, :] = cov_te_be
-                    covar[ix_1 + 3, :, ix_2, :] = cov_te_bb
-                    covar[ix_1, :, ix_2 + 1, :] = cov_tb_ee
-                    covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_eb
-                    covar[ix_1 + 2, :, ix_2 + 1, :] = cov_tb_be
-                    covar[ix_1 + 3, :, ix_2 + 1, :] = cov_tb_bb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_te_ee.T
-                        covar[ix_2, :, ix_1 + 1, :] = cov_te_eb.T
-                        covar[ix_2, :, ix_1 + 2, :] = cov_te_be.T
-                        covar[ix_2, :, ix_1 + 3, :] = cov_te_bb.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_tb_ee.T
-                        covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_eb.T
-                        covar[ix_2 + 1, :, ix_1 + 2, :] = cov_tb_be.T
-                        covar[ix_2 + 1, :, ix_1 + 3, :] = cov_tb_bb.T
+                        covar[ix_1, :, ix_2, :] = cov_te_ee
+                        covar[ix_1 + 1, :, ix_2, :] = cov_te_eb
+                        covar[ix_1 + 2, :, ix_2, :] = cov_te_be
+                        covar[ix_1 + 3, :, ix_2, :] = cov_te_bb
+                        covar[ix_1, :, ix_2 + 1, :] = cov_tb_ee
+                        covar[ix_1 + 1, :, ix_2 + 1, :] = cov_tb_eb
+                        covar[ix_1 + 2, :, ix_2 + 1, :] = cov_tb_be
+                        covar[ix_1 + 3, :, ix_2 + 1, :] = cov_tb_bb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_te_ee.T
+                            covar[ix_2, :, ix_1 + 1, :] = cov_te_eb.T
+                            covar[ix_2, :, ix_1 + 2, :] = cov_te_be.T
+                            covar[ix_2, :, ix_1 + 3, :] = cov_te_bb.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_tb_ee.T
+                            covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_eb.T
+                            covar[ix_2 + 1, :, ix_1 + 2, :] = cov_tb_be.T
+                            covar[ix_2 + 1, :, ix_1 + 3, :] = cov_tb_bb.T
                     ix_2 += 2
                 else:
-                    cov_here = cov_here.reshape([self.nbands, 4, self.nbands, 4])
-                    cov_ee_ee = cov_here[:, 0, :, 0]
-                    cov_ee_eb = cov_here[:, 0, :, 1]
-                    cov_ee_be = cov_here[:, 0, :, 2]
-                    cov_ee_bb = cov_here[:, 0, :, 3]
-                    cov_eb_ee = cov_here[:, 1, :, 0]
-                    cov_eb_eb = cov_here[:, 1, :, 1]
-                    cov_eb_be = cov_here[:, 1, :, 2]
-                    cov_eb_bb = cov_here[:, 1, :, 3]
-                    cov_be_ee = cov_here[:, 2, :, 0]
-                    cov_be_eb = cov_here[:, 2, :, 1]
-                    cov_be_be = cov_here[:, 2, :, 2]
-                    cov_be_bb = cov_here[:, 2, :, 3]
-                    cov_bb_ee = cov_here[:, 3, :, 0]
-                    cov_bb_eb = cov_here[:, 3, :, 1]
-                    cov_bb_be = cov_here[:, 3, :, 2]
-                    cov_bb_bb = cov_here[:, 3, :, 3]
+                    if k1 <= k2:
+                        cov_here = cov_here.reshape([self.nbands, 4, self.nbands, 4])
+                        cov_ee_ee = cov_here[:, 0, :, 0]
+                        cov_ee_eb = cov_here[:, 0, :, 1]
+                        cov_ee_be = cov_here[:, 0, :, 2]
+                        cov_ee_bb = cov_here[:, 0, :, 3]
+                        cov_eb_ee = cov_here[:, 1, :, 0]
+                        cov_eb_eb = cov_here[:, 1, :, 1]
+                        cov_eb_be = cov_here[:, 1, :, 2]
+                        cov_eb_bb = cov_here[:, 1, :, 3]
+                        cov_be_ee = cov_here[:, 2, :, 0]
+                        cov_be_eb = cov_here[:, 2, :, 1]
+                        cov_be_be = cov_here[:, 2, :, 2]
+                        cov_be_bb = cov_here[:, 2, :, 3]
+                        cov_bb_ee = cov_here[:, 3, :, 0]
+                        cov_bb_eb = cov_here[:, 3, :, 1]
+                        cov_bb_be = cov_here[:, 3, :, 2]
+                        cov_bb_bb = cov_here[:, 3, :, 3]
 
-                    covar[ix_1, :, ix_2, :] = cov_ee_ee
-                    covar[ix_1, :, ix_2 + 1, :] = cov_ee_eb
-                    covar[ix_1, :, ix_2 + 2, :] = cov_ee_be
-                    covar[ix_1, :, ix_2 + 3, :] = cov_ee_bb
-                    covar[ix_1 + 1, :, ix_2, :] = cov_eb_ee
-                    covar[ix_1 + 1, :, ix_2 + 1, :] = cov_eb_eb
-                    covar[ix_1 + 1, :, ix_2 + 2, :] = cov_eb_be
-                    covar[ix_1 + 1, :, ix_2 + 3, :] = cov_eb_bb
-                    covar[ix_1 + 2, :, ix_2, :] = cov_be_ee
-                    covar[ix_1 + 2, :, ix_2 + 1, :] = cov_be_eb
-                    covar[ix_1 + 2, :, ix_2 + 2, :] = cov_be_be
-                    covar[ix_1 + 2, :, ix_2 + 3, :] = cov_be_bb
-                    covar[ix_1 + 3, :, ix_2, :] = cov_bb_ee
-                    covar[ix_1 + 3, :, ix_2 + 1, :] = cov_bb_eb
-                    covar[ix_1 + 3, :, ix_2 + 2, :] = cov_bb_be
-                    covar[ix_1 + 3, :, ix_2 + 3, :] = cov_bb_bb
-                    if (tr_i1, tr_j1) != (tr_i2, tr_j2):
-                        covar[ix_2, :, ix_1, :] = cov_ee_ee.T
-                        covar[ix_2 + 1, :, ix_1, :] = cov_ee_eb.T
-                        covar[ix_2 + 2, :, ix_1, :] = cov_ee_be.T
-                        covar[ix_2 + 3, :, ix_1, :] = cov_ee_bb.T
-                        covar[ix_2, :, ix_1 + 1, :] = cov_eb_ee.T
-                        covar[ix_2 + 1, :, ix_1 + 1, :] = cov_eb_eb.T
-                        covar[ix_2 + 2, :, ix_1 + 1, :] = cov_eb_be.T
-                        covar[ix_2 + 3, :, ix_1 + 1, :] = cov_eb_bb.T
-                        covar[ix_2, :, ix_1 + 2, :] = cov_be_ee.T
-                        covar[ix_2 + 1, :, ix_1 + 2, :] = cov_be_eb.T
-                        covar[ix_2 + 2, :, ix_1 + 2, :] = cov_be_be.T
-                        covar[ix_2 + 3, :, ix_1 + 2, :] = cov_be_bb.T
-                        covar[ix_2, :, ix_1 + 3, :] = cov_bb_ee.T
-                        covar[ix_2 + 1, :, ix_1 + 3, :] = cov_bb_eb.T
-                        covar[ix_2 + 2, :, ix_1 + 3, :] = cov_bb_be.T
-                        covar[ix_2 + 3, :, ix_1 + 3, :] = cov_bb_bb.T
+                        covar[ix_1, :, ix_2, :] = cov_ee_ee
+                        covar[ix_1, :, ix_2 + 1, :] = cov_ee_eb
+                        covar[ix_1, :, ix_2 + 2, :] = cov_ee_be
+                        covar[ix_1, :, ix_2 + 3, :] = cov_ee_bb
+                        covar[ix_1 + 1, :, ix_2, :] = cov_eb_ee
+                        covar[ix_1 + 1, :, ix_2 + 1, :] = cov_eb_eb
+                        covar[ix_1 + 1, :, ix_2 + 2, :] = cov_eb_be
+                        covar[ix_1 + 1, :, ix_2 + 3, :] = cov_eb_bb
+                        covar[ix_1 + 2, :, ix_2, :] = cov_be_ee
+                        covar[ix_1 + 2, :, ix_2 + 1, :] = cov_be_eb
+                        covar[ix_1 + 2, :, ix_2 + 2, :] = cov_be_be
+                        covar[ix_1 + 2, :, ix_2 + 3, :] = cov_be_bb
+                        covar[ix_1 + 3, :, ix_2, :] = cov_bb_ee
+                        covar[ix_1 + 3, :, ix_2 + 1, :] = cov_bb_eb
+                        covar[ix_1 + 3, :, ix_2 + 2, :] = cov_bb_be
+                        covar[ix_1 + 3, :, ix_2 + 3, :] = cov_bb_bb
+                        if (tr_i1, tr_j1) != (tr_i2, tr_j2):
+                            covar[ix_2, :, ix_1, :] = cov_ee_ee.T
+                            covar[ix_2 + 1, :, ix_1, :] = cov_ee_eb.T
+                            covar[ix_2 + 2, :, ix_1, :] = cov_ee_be.T
+                            covar[ix_2 + 3, :, ix_1, :] = cov_ee_bb.T
+                            covar[ix_2, :, ix_1 + 1, :] = cov_eb_ee.T
+                            covar[ix_2 + 1, :, ix_1 + 1, :] = cov_eb_eb.T
+                            covar[ix_2 + 2, :, ix_1 + 1, :] = cov_eb_be.T
+                            covar[ix_2 + 3, :, ix_1 + 1, :] = cov_eb_bb.T
+                            covar[ix_2, :, ix_1 + 2, :] = cov_be_ee.T
+                            covar[ix_2 + 1, :, ix_1 + 2, :] = cov_be_eb.T
+                            covar[ix_2 + 2, :, ix_1 + 2, :] = cov_be_be.T
+                            covar[ix_2 + 3, :, ix_1 + 2, :] = cov_be_bb.T
+                            covar[ix_2, :, ix_1 + 3, :] = cov_bb_ee.T
+                            covar[ix_2 + 1, :, ix_1 + 3, :] = cov_bb_eb.T
+                            covar[ix_2 + 2, :, ix_1 + 3, :] = cov_bb_be.T
+                            covar[ix_2 + 3, :, ix_1 + 3, :] = cov_bb_bb.T
                     ix_2 += 4
             if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
                     (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
