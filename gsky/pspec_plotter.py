@@ -75,7 +75,8 @@ class PSpecPlotter(PipelineStage) :
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
 
             if self.config['plot_errors']:
-                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=True)
+                ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=True)
+                err_curr = np.sqrt(np.diag(cov_curr))
             else:
                 ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
 
@@ -86,13 +87,13 @@ class PSpecPlotter(PipelineStage) :
 
             if self.config['plot_errors']:
                 if weightpow != -1:
-                    ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=errs[tbin] * np.power(ell, weightpow),
-                                color=colors[3], linestyle='--', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
-                                label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                    ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=err_curr * np.power(ell_curr, weightpow),
+                                color='k', linestyle='--', marker='o', markeredgecolor='k', linewidth=2, markersize=9,
+                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
                 else:
-                    ax.errorbar(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, yerr=errs[tbin] * np.power(ell, weightpow),
-                                color=colors[3], linestyle='--', marker='.', markersize=15, elinewidth=2.4, capthick=2.4, capsize=3.5,
-                                label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                    ax.errorbar(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, yerr=err_curr * ell_curr*(ell_curr+1)/2./np.pi,
+                                color='k', linestyle='--', marker='o', markeredgecolor='k', linewidth=2, markersize=9,
+                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
             else:
                 if weightpow != -1:
                     ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
@@ -111,19 +112,20 @@ class PSpecPlotter(PipelineStage) :
                         if indices[i][0] == 0 and indices[i][1] == 0:
                             if weightpow != -1:
                                 ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
-                                    markeredgecolor=colors[ii], color=colors[ii], zorder=-1, label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
+                                    markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8,
+                                    label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
                             else:
                                 ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
                                         marker='o',
-                                        markeredgecolor=colors[ii], color=colors[ii], zorder=-1,
+                                        markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8,
                                         label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
                         else:
                             if weightpow != -1:
                                 ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
-                                    markeredgecolor=colors[ii], color=colors[ii], zorder=-1)
+                                    markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8)
                             else:
                                 ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
-                                        marker='o', zorder=-1,
+                                        marker='o', zorder=-1, alpha=0.8,
                                         markeredgecolor=colors[ii], color=colors[ii])
             if self.config['plot_theory']:
                 if indices[i][0] == 0 and indices[i][1] == 0:
@@ -185,15 +187,24 @@ class PSpecPlotter(PipelineStage) :
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
             if i == 0:
                 coadd_mean = saccfile.mean
+                if self.config['plot_errors']:
+                    coadd_cov = saccfile.covariance.covmat
             else:
                 coadd_mean += saccfile.mean
+                if self.config['plot_errors']:
+                    coadd_cov += saccfile.covariance.covmat
 
-        coadd_mean /= len(saccfiles)
+        n_saccs = len(saccfiles)
+        coadd_mean /= n_saccs
+        if self.config['plot_errors']:
+            coadd_cov /= n_saccs**2
 
         # Copy sacc
         saccfile_coadd = saccfiles[0].copy()
         # Set mean of new saccfile to coadded mean
         saccfile_coadd.mean = coadd_mean
+        if self.config['plot_errors']:
+            saccfile_coadd.add_covariance(coadd_cov)
 
         return saccfile_coadd
 
@@ -210,7 +221,11 @@ class PSpecPlotter(PipelineStage) :
         for saccdir in self.config['saccdirs']:
             if self.config['output_run_dir'] != 'NONE':
                 path2sacc = os.path.join(saccdir, self.config['output_run_dir']+'/'+'power_spectra_wodpj')
-            saccfiles.append(sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc')))
+            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+            if self.config['plot_errors']:
+                assert sacc_curr.covariance is not None, \
+                    'plot_errors = True but saccfiles {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
+            saccfiles.append(sacc_curr)
         saccfile_coadd = self.coadd_saccs(saccfiles)
 
         if self.config['noisesacc_filename'] != 'NONE':
@@ -219,7 +234,11 @@ class PSpecPlotter(PipelineStage) :
             for saccdir in self.config['saccdirs']:
                 if self.config['output_run_dir'] != 'NONE':
                     path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
-                noise_saccfiles.append(sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc')))
+                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                if self.config['plot_errors']:
+                    assert noise_sacc_curr.covariance is not None, \
+                        'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
+                noise_saccfiles.append(noise_sacc_curr)
             noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles)
         else:
             logger.info('No noise saccfile provided.')
