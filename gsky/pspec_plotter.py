@@ -86,6 +86,7 @@ class PSpecPlotter(PipelineStage) :
                     ell_curr, cl_noise_curr = noise_saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
                     cl_curr -= cl_noise_curr
 
+            # Plot the mean
             if self.config['plot_errors']:
                 if weightpow != -1:
                     ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=err_curr * np.power(ell_curr, weightpow),
@@ -103,31 +104,33 @@ class PSpecPlotter(PipelineStage) :
                     ax.plot(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, linestyle='--', marker='o',
                             markeredgecolor='k',
                             color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
-                if fieldsaccs is not None:
-                    for ii, fieldsacc in enumerate(fieldsaccs):
-                        ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
-                        if field_noisesaccs is not None:
-                            _, cl_noise_field = field_noisesaccs[ii].get_ell_cl(self.config['cl_type'], tr_i, tr_j,
-                                                                       return_cov=False)
-                            cl_field -= cl_noise_field
-                        if indices[i][0] == 0 and indices[i][1] == 0:
-                            if weightpow != -1:
-                                ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+
+            # Now plot the individual fields
+            if fieldsaccs is not None:
+                for ii, fieldsacc in enumerate(fieldsaccs):
+                    ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
+                    if field_noisesaccs is not None:
+                        _, cl_noise_field = field_noisesaccs[ii].get_ell_cl(self.config['cl_type'], tr_i, tr_j,
+                                                                   return_cov=False)
+                        cl_field -= cl_noise_field
+                    if indices[i][0] == 0 and indices[i][1] == 0:
+                        if weightpow != -1:
+                            ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+                                markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8,
+                                label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
+                        else:
+                            ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
+                                    marker='o',
                                     markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8,
                                     label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
-                            else:
-                                ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
-                                        marker='o',
-                                        markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8,
-                                        label=r'$\mathrm{{{}}}$'.format(self.config['saccdirs'][ii][:-5]))
+                    else:
+                        if weightpow != -1:
+                            ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
+                                markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8)
                         else:
-                            if weightpow != -1:
-                                ax.plot(ell_field, cl_field * np.power(ell_field, weightpow), linestyle='--', marker='o',
-                                    markeredgecolor=colors[ii], color=colors[ii], zorder=-1, alpha=0.8)
-                            else:
-                                ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
-                                        marker='o', zorder=-1, alpha=0.8,
-                                        markeredgecolor=colors[ii], color=colors[ii])
+                            ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
+                                    marker='o', zorder=-1, alpha=0.8,
+                                    markeredgecolor=colors[ii], color=colors[ii])
             if self.config['plot_theory']:
                 if indices[i][0] == 0 and indices[i][1] == 0:
                     ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \
