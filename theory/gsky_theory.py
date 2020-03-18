@@ -85,10 +85,17 @@ class GSKY_Theory:
             self.pk_gMf = ccl.halos.halomod_Pk2D(self.C, self.hmc, self.pg, prof2=self.pM,
                                 normprof1=True, normprof2=True,
                                 lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+            self.pk_yMf = ccl.halos.halomod_Pk2D(self.C, self.hmc, self.py, prof2=self.pM,
+                                normprof1=True, normprof2=True,
+                                lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+            self.pk_ygf = ccl.halos.halomod_Pk2D(self.C, self.hmc, self.pg, prof2=self.py,
+                                normprof1=True, normprof2=True,
+                                lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
             self.pk_ggf = ccl.halos.halomod_Pk2D(self.C, self.hmc, self.pg, prof_2pt=self.HOD2pt,
                                 normprof1=True,
                                 lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
             self.have_spectra=True
+            
     def _tracer(self, letter, i):
         if letter == 'g':
             return self.tg[i]
@@ -111,10 +118,16 @@ class GSKY_Theory:
         tracer2 = self._tracer(typ[1],j)
         if typ == "gg":
             Pk = self.pk_ggf
-        elif typ=="gs" or type=="sg":
+        elif typ in ["gs", "sg", "gk", "kg"]:
             Pk = self.pk_gMf
-        else:
-            Pk = self.pk_MMf
-
+        elif typ in ["ys", "sy", "yk", "ky"]:
+            Pk = self.pk_gMf
+        elif typ in ["gy","yg"]:
+            Pk = self.pk_ygf
+        elif typ in ["ss","sk", "ks"]:
+            Pk = self.pk_MMf            
+        else: ## eg yy
+            print ("%s not implemented."%typ)
+            stop()
         return ccl.angular_cl(self.C, tracer1, tracer2, l_arr, p_of_k_a=Pk)
             
