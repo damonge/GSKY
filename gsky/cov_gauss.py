@@ -270,7 +270,7 @@ class CovGauss(PowerSpecter) :
         for k1, tup1 in enumerate(tracer_combs):
             tr_i1, tr_j1 = tup1
             ix_2 = ix_1
-            for k2, tup2 in tracer_combs:
+            for k2, tup2 in enumerate(tracer_combs):
                 tr_i2, tr_j2 = tup2
                 if k1 <= k2:
                     ps_inds1 = self.tracers2maps[tr_i1][tr_i2]
