@@ -915,8 +915,7 @@ class PowerSpecter(PipelineStage) :
                                  ells,
                                  cls[map_i, map_j, :],
                                  window=wins,
-                                 window_id=range(self.nbands)
-                                 )
+                                 window_id=range(self.nbands))
                     map_j += 1
 
                 elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
