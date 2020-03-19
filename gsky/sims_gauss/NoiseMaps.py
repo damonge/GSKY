@@ -55,13 +55,15 @@ class NoiseMaps(object):
         data = self.read_data()
         maps = [0 for i in range(self.params['nmaps'])]
         ii = 0
-        for i, probe in enumerate(self.params['probes']):
+        for i, tracer in enumerate(self.params['tracers']):
+            probe = self.params['probes'][i]
+            logger.info('Generating map for tracer = {}.'.format(tracer))
             logger.info('Generating map for probe = {}.'.format(probe))
             if probe != 'gamma':
                 if self.params['noisemodel'] == 'data':
-                    maps[ii] = self.datanoisemap(probe, data[probe])
+                    maps[ii] = self.datanoisemap(probe, data[tracer])
                 else:
-                    maps[ii] = self.gaussnoisemap(probe, data[probe])
+                    maps[ii] = self.gaussnoisemap(probe, data[tracer])
                 ii += 1
             else:
                 if self.params['noisemodel'] == 'data':
@@ -70,9 +72,9 @@ class NoiseMaps(object):
                     else:
                         shearmaps = signalmaps
 
-                    tempmaps = self.datanoisemap(probe, data[probe], shearmaps)
+                    tempmaps = self.datanoisemap(probe, data[tracer], shearmaps)
                 else:
-                    tempmaps = self.gaussnoisemap(probe, data[probe])
+                    tempmaps = self.gaussnoisemap(probe, data[tracer])
                 maps[ii] = tempmaps[0]
                 maps[ii+1] = tempmaps[1]
                 ii += 2
@@ -214,7 +216,9 @@ class NoiseMaps(object):
         """
 
         data = {}
-        for i, probe in enumerate(self.params['probes']):
+        for i, tracer in enumerate(self.params['tracers']):
+            probe = self.params['probes'][i]
+            logger.info('Reading noise data for tracer = {}.'.format(tracer))
             logger.info('Reading noise data for probe = {}.'.format(probe))
             logger.info('Noisemodel = {}.'.format(self.params['noisemodel']))
 
@@ -225,7 +229,7 @@ class NoiseMaps(object):
                     assert 'path2fsk' in self.params, 'Requesting noise model from data but path2fsk parameter not provided. Aborting.'
                     assert 'path2shearcat' in self.params, 'Requesting noise model from data but path2shearcat parameter not provided. Aborting.'
 
-                    data[probe] = {}
+                    data[tracer] = {}
 
                     hdulist = fits.open(self.params['path2shearcat'])
                     cat = hdulist[1].data
@@ -274,31 +278,31 @@ class NoiseMaps(object):
                             cat = cat[mask]
                             logger.info('Size after cut = {}.'.format(cat['ra'].shape))
 
-                    data[probe]['shearcat'] = cat
+                    data[tracer]['shearcat'] = cat
 
                     logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
                     fsk, _ = read_flat_map(self.params['path2fsk'])
-                    data[probe]['fsk'] = fsk
+                    data[tracer]['fsk'] = fsk
 
                     if self.params['posfromshearcat'] == 0:
                         assert 'path2shearmask' in self.params, 'Requesting randomized galaxy positions for gamma but path2shearmask not provided. Aborting.'
                         tempmap = read_flat_map(self.params['path2shearmask'], i_map=6*i+3)
-                        data[probe]['shearmask'] = tempmap
+                        data[tracer]['shearmask'] = tempmap
 
                 elif probe == 'deltag':
                     assert 'Ngal' in self.params, 'Requesting noise model from data but Ngal parameter not provided. Aborting.'
                     assert 'path2deltagmask' in self.params, 'Requesting noise model from data but path to galaxy mask not provided. Aborting.'
 
-                    data[probe] = {}
+                    data[tracer] = {}
 
                     tempmap = read_flat_map(self.params['path2deltagmask'])
                     if len(tempmap.shape) == 3:
                         tempmask = tempmap[0].astype('bool').astype('int')
                     else:
                         tempmask = tempmap.astype('bool').astype('int')
-                    data[probe]['deltagmask'] = tempmask
+                    data[tracer]['deltagmask'] = tempmask
                     logger.info('Read {}.'.format(self.params['path2deltagmask']))
-                    data[probe]['Ngal'] = self.params['Ngal']
+                    data[tracer]['Ngal'] = self.params['Ngal']
 
                 else:
                     raise NotImplementedError('Probes other than deltag, gamma not implemented at the moment. Aborting.')
@@ -306,9 +310,9 @@ class NoiseMaps(object):
             else:
                 assert 'path2noisecls' in self.params, 'Requesting theretical noise model but path2noisecls parameter not provided. Aborting.'
 
-                data[probe] = {}
+                data[tracer] = {}
 
-                data[probe]['noisecls'] = np.genfromtxt(self.params['path2noisecls'][i], usecols={1})
+                data[tracer]['noisecls'] = np.genfromtxt(self.params['path2noisecls'][i], usecols={1})
                 logger.info('Read {}.'.format(self.params['path2noisecls']))
 
         return data
