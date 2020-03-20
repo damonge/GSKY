@@ -564,6 +564,9 @@ class CovGauss(PowerSpecter) :
         logger.info("Getting MCM.")
         wsp = self.get_mcm(tracers_nc,bpws)
 
+        logger.info("Computing window functions.")
+        windows = self.get_windows(tracers_nc, wsp)
+
         self.ncross = self.nmaps * (self.nmaps + 1) // 2 + self.ntracers_shear
         if self.config['gaus_covar_type'] == 'analytic':
             logger.info("Computing analytic covariance.")
@@ -571,15 +574,22 @@ class CovGauss(PowerSpecter) :
                 logger.info("Computing deprojected power spectra.")
                 logger.info(" W. deprojections.")
                 cls_wdpj, _ = self.get_power_spectra(tracers_wc, wsp, bpws)
-
             else:
                 logger.info("Reading deprojected power spectra.")
                 sacc_cls_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
                 cls_wdpj = self.convert_sacc_to_clarr(sacc_cls_wdpj, tracers_sacc)
 
+            if not os.path.isfile(self.get_output_fname('power_spectra_wodpj',ext='sacc')):
+                logger.info("Computing non-deprojected power spectra.")
+                logger.info(" No deprojections.")
+                cls_wodpj, _ = self.get_power_spectra(tracers_nc, wsp, bpws)
+            else:
+                logger.info("Reading deprojected power spectra.")
+                sacc_cls_wodpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'))
+                cls_wodpj = self.convert_sacc_to_clarr(sacc_cls_wodpj, tracers_sacc)
+
             logger.info("Getting guess power spectra.")
             lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
-
             cov_wodpj = self.get_covar(lth,clth,bpws,tracers_wc,wsp,None,None)
             cov_wdpj = cov_wodpj.copy()
 
@@ -589,7 +599,6 @@ class CovGauss(PowerSpecter) :
                 logger.info("Computing deprojected power spectra.")
                 logger.info(" W. deprojections.")
                 cls_wdpj, cls_wdpj_coupled = self.get_power_spectra(tracers_wc, wsp, bpws)
-
             else:
                 logger.info("Reading deprojected power spectra.")
                 sacc_cls_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
@@ -614,25 +623,23 @@ class CovGauss(PowerSpecter) :
         # Write covariances into existing sacc
         if os.path.isfile(self.get_output_fname('power_spectra_wodpj',ext='sacc')):
             logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
-            logger.info('Adding non deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
-            s_wodpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'))
-            s_wodpj.add_covariance(cov_wodpj)
-            s_wodpj.save_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'), overwrite=True)
-            logger.info('Written non deprojected covariance matrix.')
+            logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
+            self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj', ext='sacc'), tracers_sacc,
+                                      cls_wodpj, ell_eff, windows, covar=cov_wodpj)
+            logger.info('Written deprojected covariance matrix.')
         else:
             logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
-            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wodpj',ext='sacc')))
+            logger.info('Writing deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wodpj',ext='sacc')))
             s_wodpj = sacc.Sacc()
             s_wodpj.add_covariance(cov_wodpj)
             s_wodpj.save_fits(self.get_output_fname('cov_wodpj',ext='sacc'), overwrite=True)
-            logger.info('Written non deprojected covariance matrix.')
+            logger.info('Written deprojected covariance matrix.')
 
         if os.path.isfile(self.get_output_fname('power_spectra_wdpj',ext='sacc')):
             logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
             logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
-            s_wdpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'))
-            s_wdpj.add_covariance(cov_wdpj)
-            s_wdpj.save_fits(self.get_output_fname('power_spectra_wdpj',ext='sacc'), overwrite=True)
+            self.write_vector_to_sacc(self.get_output_fname('power_spectra_wdpj', ext='sacc'), tracers_sacc,
+                                      cls_wdpj, ell_eff, windows, covar=cov_wdpj)
             logger.info('Written deprojected covariance matrix.')
         else:
             logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))

@@ -885,7 +885,7 @@ class PowerSpecter(PipelineStage) :
 
         return sacc_tracers
 
-    def write_vector_to_sacc(self, fname_out, sacc_t, cls, ells, windows, covar=None) :
+    def write_vector_to_sacc(self, fname_out, sacc_t, cls, ells, windows, covar=None):
         """
         Write a vector of power spectrum measurements into a SACC file.
         :param fname_out: path to output file
@@ -1432,7 +1432,7 @@ class PowerSpecter(PipelineStage) :
         logger.info("Getting MCM.")
         wsp = self.get_mcm(tracers_nc,bpws)
 
-        logger.info("Computing window function.")
+        logger.info("Computing window functions.")
         windows = self.get_windows(tracers_nc, wsp)
 
         logger.info("Computing power spectra.")
