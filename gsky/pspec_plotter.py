@@ -78,6 +78,9 @@ class PSpecPlotter(PipelineStage) :
             if self.config['plot_errors']:
                 ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=True)
                 err_curr = np.sqrt(np.diag(cov_curr))
+                if np.any(np.isnan(err_curr)):
+                    logger.info('Found negative diagonal elements of covariance matrix. Setting to zero.')
+                    err_curr[np.isnan(err_curr)] = 0
             else:
                 ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
 
@@ -242,6 +245,7 @@ class PSpecPlotter(PipelineStage) :
             if self.config['output_run_dir'] != 'NONE':
                 path2sacc = os.path.join(saccdir, self.config['output_run_dir']+'/'+'power_spectra_wodpj')
             sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
             if self.config['plot_errors']:
                 assert sacc_curr.covariance is not None, \
                     'plot_errors = True but saccfiles {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))

@@ -584,7 +584,7 @@ class CovGauss(PowerSpecter) :
                 logger.info(" No deprojections.")
                 cls_wodpj, _ = self.get_power_spectra(tracers_nc, wsp, bpws)
             else:
-                logger.info("Reading deprojected power spectra.")
+                logger.info("Reading non-deprojected power spectra.")
                 sacc_cls_wodpj = sacc.Sacc.load_fits(self.get_output_fname('power_spectra_wodpj',ext='sacc'))
                 cls_wodpj = self.convert_sacc_to_clarr(sacc_cls_wodpj, tracers_sacc)
 
