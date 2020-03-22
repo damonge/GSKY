@@ -3,7 +3,7 @@ import numpy as np
 
 
 class HaloProfileArnaud(ccl.halos.HaloProfile):
-    def __init__(self, b_hydro, rrange=(1e-3, 10), qpoints=1e2):
+    def __init__(self, b_hydro, rrange=(1e-3, 10), qpoints=100):
         self.c500 = 1.81
         self.alpha = 1.33
         self.beta = 4.13

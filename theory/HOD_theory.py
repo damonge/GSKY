@@ -1,6 +1,6 @@
 import numpy as np
 import pyccl as ccl
-from numpy import erf
+from scipy.special import erf
 
 
 class HaloProfileHOD(ccl.halos.HaloProfileNFW):
