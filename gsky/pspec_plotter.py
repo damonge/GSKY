@@ -5,12 +5,12 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sacc
-from .types import FitsFile, NpyFile
+from theory import predict_theory as theor
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-colors = ['#e3a19c', '#85a1ca', '#596d82', '#725e9c', '#3d306b', '#AE7182', 'IndianRed']
+colors = ['#e3a19c', '#85a1ca', '#596d82', '#725e9c', '#3d306b', '#AE7182', 'IndianRed', '#5d61a2']
 
 class PSpecPlotter(PipelineStage) :
     name="PSpecPlotter"
@@ -43,9 +43,14 @@ class PSpecPlotter(PipelineStage) :
 
         return
 
-    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None):
+    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None, params=None):
 
         weightpow = self.config['weightpow']
+
+        if self.config['plot_theory']:
+            logger.info('plot_theory = True. Computing theory predictions.')
+            ell_theor, _ = saccfile.get_ell_cl(self.config['cl_type'], plot_pairs[0][0], plot_pairs[0][1], return_cov=False)
+            cl_theor = theor.get_prediction(saccfile, params, ell_theor)
 
         indices = []
         if self.config['plot_comb'] == 'all':
@@ -135,12 +140,22 @@ class PSpecPlotter(PipelineStage) :
                                     marker='o', zorder=-1, alpha=0.8,
                                     markeredgecolor=colors[ii], color=colors[ii])
             if self.config['plot_theory']:
+                indx_curr = saccfile.indices(self.config['cl_type'], (tr_i, tr_j))
+                cl_theor_curr = cl_theor[indx_curr]
                 if indices[i][0] == 0 and indices[i][1] == 0:
-                    ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], \
-                            label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
+                    if weightpow != -1:
+                        ax.plot(ell_theor, cl_theor_curr * np.power(ell_theor, weightpow), color=colors[-1], \
+                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
+                    else:
+                        ax.plot(ell_theor, cl_theor_curr * ell_theor*(ell_theor+1)/2./np.pi, color=colors[-1], \
+                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
 
                 else:
-                    ax.plot(ell_theor, cls_theor * np.power(ell_theor, weightpow), color=colors[-1], lw=2.4, zorder=-32)
+                    if weightpow != -1:
+                        ax.plot(ell_theor, cl_theor_curr * np.power(ell_theor, weightpow), color=colors[-1], lw=2.4, zorder=-32)
+                    else:
+                        ax.plot(ell_theor, cl_theor_curr * ell_theor*(ell_theor+1)/2./np.pi, color=colors[-1], lw=2.4,
+                                zorder=-32)
 
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
