@@ -120,9 +120,19 @@ class GSKYTheory:
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
                     tracer_no = split_name[1]
-                    bias_tup = (p['bz_{}'.format(tracer_no)], p['bb_{}'.format(tracer_no)])
+                    if 'bb_{}'.format(tracer_no) in p.keys():
+                        logger.info('Galaxy bias array provided for {}.'.format(tracer))
+                        bias_tup = (p['bz_{}'.format(tracer_no)], p['bb_{}'.format(tracer_no)])
+                    else:
+                        logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer))
+                        bias_tup = (tracer.z, np.ones_like(tracer.z))
                 else:
-                    bias_tup = (p['bz'], p['bb'])
+                    if 'bb' in p.keys():
+                        logger.info('Galaxy bias array provided for {}.'.format(tracer))
+                        bias_tup = (p['bz'], p['bb'])
+                    else:
+                        logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer))
+                        bias_tup = (tracer.z, np.ones_like(tracer.z))
                 if p['HODmod'] == 'zevol':
                     ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (tracer.z, tracer.nz),
                                             bias=bias_tup),
