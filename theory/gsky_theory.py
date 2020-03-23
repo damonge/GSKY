@@ -167,7 +167,7 @@ class GSKYTheory:
             if not hasattr(self, 'pk_MMf'):
                 Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM,
                                         normprof1=True,
-                                        lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                        lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                 self.pk_MMf = Pk
             else:
                 Pk = self.pk_MMf
@@ -176,7 +176,7 @@ class GSKYTheory:
             if not hasattr(self, 'pk_yMf'):
                 Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.py, prof2=self.pM,
                                                          normprof1=True, normprof2=True,
-                                                         lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                                         lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                 self.pk_yMf = Pk
             else:
                 Pk = self.pk_yMf
@@ -186,7 +186,7 @@ class GSKYTheory:
                 if not hasattr(self, 'pk_gMf'):
                     Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pM,
                                                          normprof1=True, normprof2=True,
-                                                         lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                                         lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                     self.pk_gMf = Pk
                 else:
                     Pk = self.pk_gMf
@@ -197,13 +197,13 @@ class GSKYTheory:
                     tr_g_name = tr_j_name
                 Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.pM,
                                             normprof1=True, normprof2=True,
-                                            lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
         elif 'g' in tr_i_name and 'y' in tr_j_name or 'y' in tr_i_name and 'g' in tr_j_name:
             if self.params['HODmod'] == 'zevol':
                 if not hasattr(self, 'pk_ygf'):
                     Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.py,
                                                 normprof1=True, normprof2=True,
-                                                lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                     self.pk_ygf = Pk
                 else:
                     Pk = self.pk_ygf
@@ -214,13 +214,13 @@ class GSKYTheory:
                     tr_g_name = tr_j_name
                 Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.py,
                                        normprof1=True, normprof2=True,
-                                       lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                       lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
         elif 'g' in tr_i_name and 'g' in tr_j_name:
             if self.params['HODmod'] == 'zevol':
                 if not hasattr(self, 'pk_ggf'):
                     Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pg,
                                            prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
-                                           lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                           lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                     self.pk_ggf = Pk
                 else:
                     Pk = self.pk_ggf
@@ -228,7 +228,7 @@ class GSKYTheory:
                 Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name][1],
                                             prof2=self.ccl_tracers[tr_j_name][1],
                                             prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
-                                            lk_arr=np.log(GSKY_Theory.k_arr), a_arr=GSKY_Theory.a_arr)
+                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
         else: ## eg yy
             raise NotImplementedError('Tracer combination {}, {} not implemented. Aborting.'.format(tr_i_name, tr_j_name))
 
