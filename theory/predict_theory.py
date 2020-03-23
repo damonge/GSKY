@@ -1,5 +1,5 @@
 import numpy as np
-from gsky_theory import GSKYTheory
+from .gsky_theory import GSKYTheory
 import sacc
 
 import logging
