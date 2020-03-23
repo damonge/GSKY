@@ -33,7 +33,7 @@ class GSKYTheory:
                 'm0p'    : -1.43,
                 'm1'     : 13.27,
                 'm1p'    : 0.323,
-                'bhydro' : 1
+                'bhydro' : 0.2
                 }
 
         self.paramnames=self.params.keys()
@@ -230,7 +230,8 @@ class GSKYTheory:
                                             prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
                                             lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
         else: ## eg yy
-            raise NotImplementedError('Tracer combination {}, {} not implemented. Aborting.'.format(tr_i_name, tr_j_name))
+            logger.warning('Tracer combination {}, {} not implemented. Returning zero.'.format(tr_i_name, tr_j_name))
+            return np.zeros_like(l_arr)
 
         cls = ccl.angular_cl(self.cosmo, self.ccl_tracers[tr_i_name][0], self.ccl_tracers[tr_j_name][0], l_arr, p_of_k_a=Pk)
 
