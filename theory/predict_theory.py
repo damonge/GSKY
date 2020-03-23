@@ -16,6 +16,7 @@ def get_prediction(saccfile, params, ells):
     cls = np.zeros_like(saccfile.mean)
 
     for tr_i, tr_j in saccfile.get_tracer_combinations():
+        logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
         cl_temp = gskytheor.getCls(tr_i, tr_j, ells)
         if 'wl' not in tr_i and 'wl' not in tr_j:
             indx = saccfile.indices('cl_00', tr_i, tr_j)

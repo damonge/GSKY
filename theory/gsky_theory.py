@@ -3,6 +3,15 @@ import pyccl as ccl
 import HOD_theory as hod
 import SZ_theory as sz
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+ch = logging.StreamHandler()
+formatter = logging.Formatter('%(levelname)s: %(message)s')
+ch.setFormatter(formatter)
+if not logger.handlers:
+    logger.addHandler(ch)
+logger.propagate = False
 
 class GSKYTheory:
 
@@ -44,6 +53,9 @@ class GSKYTheory:
         self._setup_HM()
 
     def set_params(self,params):
+
+        logger.info('Setting parameters.')
+
         for k in params.keys():
             if k not in self.paramnames:
                 raise RuntimeError('Parameter {} not recognized. Aborting.'.format(k))
@@ -51,12 +63,18 @@ class GSKYTheory:
         self._setup_HM()
         
     def set_cosmology(self, cosmo):
+
+        logger.info('Setting cosmology.')
+
         self.cosmo = cosmo
         self.have_spectra=False
         self._setup_Cosmo()
         self._setup_HM()
         
     def _setup_Cosmo(self):
+
+        logger.info('Setting up cosmological quantities.')
+
         # Now we can put together HMCalculator
         # The Tinker 2008 mass function
         self.nM = ccl.halos.MassFuncTinker08(self.cosmo, mass_def=self.hmd_200m)
@@ -67,10 +85,14 @@ class GSKYTheory:
 
     def _setup_HM(self):
 
+        logger.info('Setting up halo model.')
+
         self._setup_profiles()
         self._setup_tracers()
 
     def _setup_profiles(self):
+
+        logger.info('Setting up halo profiles.')
 
         self.tracer_quantities = [tr.quantity for tr in self.tracer_list]
         if 'cosmic_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
@@ -87,11 +109,13 @@ class GSKYTheory:
         
     def _setup_tracers(self):
 
+        logger.info('Setting up tracers.')
+
         p = self.params
 
         ccl_tracer_dict = {}
 
-        for i, tracer in self.tracer_list:
+        for i, tracer in enumerate(self.tracer_list):
             if tracer.quantity == 'delta_g':
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
