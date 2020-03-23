@@ -97,9 +97,9 @@ class GSKYTheory:
         self.tracer_quantities = [tr.quantity for tr in self.tracer_list]
         if 'cosmic_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
             self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
-        if 'y' in self.tracer_quantities:
+        if 'Compton_y' in self.tracer_quantities:
             self.py = sz.HaloProfileArnaud(b_hydro=self.params['bhydro'])
-        if 'g' in self.tracer_quantities:
+        if 'delta_g' in self.tracer_quantities:
             self.HOD2pt = hod.Profile2ptHOD()
             if self.params['HODmod'] == 'zevol':
                 self.pg = hod.HaloProfileHOD(c_M_relation=self.cM,
