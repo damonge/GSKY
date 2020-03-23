@@ -4,7 +4,7 @@ import HOD_theory as hod
 import SZ_theory as sz
 
 
-class GSKY_Theory:
+class GSKYTheory:
 
     # Wavenumbers and scale factors
     k_arr = np.geomspace(1E-4,1E1,256)
