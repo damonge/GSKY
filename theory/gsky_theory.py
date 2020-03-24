@@ -2,6 +2,7 @@ import numpy as np
 import pyccl as ccl
 import theory.HOD_theory as hod
 import theory.SZ_theory as sz
+from theory.SZ_theory import ConcentrationDuffy08M500
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +20,7 @@ class GSKYTheory:
     k_arr = np.geomspace(1E-4,1E1,256)
     a_arr = np.linspace(0.1,1,32)
 
-    def __init__ (self, saccfile, params=None):
+    def __init__ (self, saccfile, params=None, massdef='M500c'):
         """ Nz -- list of (zarr,Nzarr) """
 
         if params is not None:
@@ -43,10 +44,18 @@ class GSKYTheory:
         tracer_list = list(saccfile.tracers.values())
         self.tracer_list = tracer_list
 
-        # We will use a mass definition with Delta = 200 times the matter density
-        self.hmd_200m = ccl.halos.MassDef200m()
-        # The Duffy 2008 concentration-mass relation
-        self.cM = ccl.halos.ConcentrationDuffy08(self.hmd_200m)
+        if massdef == 'M200m':
+            logger.info('Using M200m.')
+            # We will use a mass definition with Delta = 200 times the matter density
+            self.hm_def = ccl.halos.MassDef200m()
+            # The Duffy 2008 concentration-mass relation
+            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
+        elif massdef == 'M500c':
+            logger.info('Using M500c.')
+            self.hm_def = ccl.halos.MassDef(500, 'critical')
+            self.cM = ConcentrationDuffy08M500(self.hm_def)
+        else:
+            raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
         self.have_spectra=False
         self._setup_Cosmo()
@@ -77,11 +86,11 @@ class GSKYTheory:
 
         # Now we can put together HMCalculator
         # The Tinker 2008 mass function
-        self.nM = ccl.halos.MassFuncTinker08(self.cosmo, mass_def=self.hmd_200m)
+        self.nM = ccl.halos.MassFuncTinker08(self.cosmo, mass_def=self.hm_def)
         # The Tinker 2010 halo bias
-        self.bM = ccl.halos.HaloBiasTinker10(self.cosmo, mass_def=self.hmd_200m)
+        self.bM = ccl.halos.HaloBiasTinker10(self.cosmo, mass_def=self.hm_def)
 
-        self.hmc = ccl.halos.HMCalculator(self.cosmo, self.nM, self.bM, self.hmd_200m)
+        self.hmc = ccl.halos.HMCalculator(self.cosmo, self.nM, self.bM, self.hm_def)
 
     def _setup_HM(self):
 
