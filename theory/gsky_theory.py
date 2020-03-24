@@ -1,7 +1,7 @@
 import numpy as np
 import pyccl as ccl
-import HOD_theory as hod
-import SZ_theory as sz
+import theory.HOD_theory as hod
+import theory.SZ_theory as sz
 
 import logging
 logging.basicConfig(level=logging.INFO)
