@@ -1,7 +1,7 @@
 import pyccl as ccl
 import numpy as np
-from ccl.halos.concentration import Concentration
-from.ccl.halos.massdef import MassDef
+from pyccl.halos.concentration import Concentration
+from pyccl.halos.massdef import MassDef
 
 class ConcentrationDuffy08M500(Concentration):
     """ Concentration-mass relation by Duffy et al. 2008
