@@ -8,7 +8,8 @@ class HaloProfileHOD(ccl.halos.HaloProfileNFW):
     def __init__(self, c_M_relation,
                  lMmin=12.02, lMminp=-1.34,
                  lM0=6.6, lM0p=-1.43,
-                 lM1=13.27, lM1p=-0.323):
+                 lM1=13.27, lM1p=-0.323,
+                 sigmaLogM=0.4, alpha=1.):
         self.lMmin=lMmin
         self.lMminp=lMminp
         self.lM0=lM0
@@ -16,8 +17,8 @@ class HaloProfileHOD(ccl.halos.HaloProfileNFW):
         self.lM1=lM1
         self.lM1p=lM1p
         self.a0 = 1./(1+0.65)
-        self.sigmaLogM = 0.4
-        self.alpha = 1.
+        self.sigmaLogM = sigmaLogM
+        self.alpha = alpha
         super(HaloProfileHOD, self).__init__(c_M_relation)
         self._fourier = self._fourier_analytic_hod
 
