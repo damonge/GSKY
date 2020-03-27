@@ -2,7 +2,7 @@ import numpy as np
 import pyccl as ccl
 import theory.HOD_theory as hod
 import theory.SZ_theory as sz
-from theory.SZ_theory import ConcentrationDuffy08M500
+from theory.concentration import ConcentrationDuffy08M500c
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -53,7 +53,7 @@ class GSKYTheory:
         elif massdef == 'M500c':
             logger.info('Using M500c.')
             self.hm_def = ccl.halos.MassDef(500, 'critical')
-            self.cM = ConcentrationDuffy08M500(self.hm_def)
+            self.cM = ConcentrationDuffy08M500c(self.hm_def)
         else:
             raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
