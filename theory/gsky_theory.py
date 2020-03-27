@@ -17,8 +17,8 @@ logger.propagate = False
 class GSKYTheory:
 
     # Wavenumbers and scale factors
-    k_arr = np.geomspace(1E-4,1E1,256)
-    a_arr = np.linspace(0.1,1,32)
+    k_arr = np.geomspace(1E-4,1E2,256)
+    a_arr = np.linspace(0.2,1,32)
 
     def __init__ (self, saccfile, params=None, massdef='M500c'):
         """ Nz -- list of (zarr,Nzarr) """
