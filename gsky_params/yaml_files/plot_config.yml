@@ -22,4 +22,4 @@ PSpecPlotter:
     theory:
         massdef: 'M200c'
         pprof: 'Battaglia'
-        b_hydro: 0.2
+        bhydro: 0.2
