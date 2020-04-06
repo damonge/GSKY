@@ -254,6 +254,12 @@ class PSpecPlotter(PipelineStage) :
         """
 
         self.parse_input()
+        if 'theory' in self.config.keys():
+            logger.info('theory config provided.')
+            theory_params = self.config['theory']
+        else:
+            logger.info('No theory config provided.')
+            theory_params = None
 
         saccfiles = []
         for saccdir in self.config['saccdirs']:
@@ -323,7 +329,7 @@ class PSpecPlotter(PipelineStage) :
         logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
         self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles,
-                          field_noisesaccs=noise_saccfiles)
+                          field_noisesaccs=noise_saccfiles, params=theory_params)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

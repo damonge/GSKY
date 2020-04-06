@@ -14,56 +14,76 @@ if not logger.handlers:
     logger.addHandler(ch)
 logger.propagate = False
 
+DEFAULT_PARAMS = {
+                'HODmod': 'zevol',
+                'mmin': 12.02,
+                'mminp': -1.34,
+                'm0': 6.6,
+                'm0p': -1.43,
+                'm1': 13.27,
+                'm1p': 0.323,
+                'bhydro': 0.2,
+                'mass_def': 'M200c',
+                'pprof': 'Battaglia'
+                }
+
 class GSKYTheory:
 
     # Wavenumbers and scale factors
     k_arr = np.geomspace(1E-4,1E2,256)
     a_arr = np.linspace(0.2,1,32)
 
-    def __init__ (self, saccfile, params=None, massdef='M500c'):
+    def __init__ (self, saccfile, params=None, cosmo=None):
         """ Nz -- list of (zarr,Nzarr) """
 
         if params is not None:
             self.params = params
+            for key, value in DEFAULT_PARAMS.items():
+                if key not in params:
+                    logger.info('{} not provided.'.format(key))
+                    logger.info('Setting {} to default {}.'.format(key, value))
+                    self.params[key] = value
         else:
-            self.params = {
-                'HODmod': 'zevol',
-                'mmin'  : 12.02,
-                'mminp' : -1.34,
-                'm0'     : 6.6,
-                'm0p'    : -1.43,
-                'm1'     : 13.27,
-                'm1p'    : 0.323,
-                'bhydro' : 0.2
-                }
+            self.params = DEFAULT_PARAMS
 
         self.paramnames=self.params.keys()
-        self.cosmo = ccl.Cosmology(Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96)
+        if cosmo is None:
+            logger.info('No CCL cosmology object provided. Setting up default parameters.')
+            logger.info('Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96')
+            self.cosmo = ccl.Cosmology(Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96)
+        else:
+            logger.info('CCL cosmology object provided.')
+            self.cosmo = cosmo
 
         # Setup tracers
         tracer_list = list(saccfile.tracers.values())
         self.tracer_list = tracer_list
 
-        if massdef == 'M200m':
+        if self.params['massdef'] == 'M200m':
             logger.info('Using M200m.')
             # We will use a mass definition with Delta = 200 times the matter density
             self.hm_def = ccl.halos.MassDef200m()
             # The Duffy 2008 concentration-mass relation
             self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
-        elif massdef == 'M500c':
+        elif self.params['massdef'] == 'M200c':
+            logger.info('Using M200c.')
+            # We will use a mass definition with Delta = 200 times the critical density
+            self.hm_def = ccl.halos.MassDef200c()
+            # The Duffy 2008 concentration-mass relation
+            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
+        elif self.params['massdef'] == 'M500c':
             logger.info('Using M500c.')
             self.hm_def = ccl.halos.MassDef(500, 'critical')
             self.cM = ConcentrationDuffy08M500c(self.hm_def)
         else:
             raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
-        self.have_spectra=False
         self._setup_Cosmo()
         self._setup_HM()
 
-    def set_params(self,params):
+    def set_params(self, params):
 
-        logger.info('Setting parameters.')
+        logger.info('Updating parameters.')
 
         for k in params.keys():
             if k not in self.paramnames:
@@ -76,7 +96,6 @@ class GSKYTheory:
         logger.info('Setting cosmology.')
 
         self.cosmo = cosmo
-        self.have_spectra=False
         self._setup_Cosmo()
         self._setup_HM()
         
@@ -107,7 +126,14 @@ class GSKYTheory:
         if 'cosmic_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
             self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
         if 'Compton_y' in self.tracer_quantities:
-            self.py = sz.HaloProfileArnaud(b_hydro=self.params['bhydro'])
+            if self.params['pprof'] == 'Arnaud':
+                logger.info('Using Arnaud profile.')
+                self.py = sz.HaloProfileArnaud(b_hydro=self.params['bhydro'])
+            elif self.params['pprof'] == 'Battaglia':
+                logger.info('Using Battaglia profile.')
+                self.py = sz.HaloProfileBattaglia()
+            else:
+                raise NotImplementedError('Only pressure profiles Arnaud and Battaglia implemented.')
         if 'delta_g' in self.tracer_quantities:
             self.HOD2pt = hod.Profile2ptHOD()
             if self.params['HODmod'] == 'zevol':
