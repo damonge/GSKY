@@ -434,21 +434,27 @@ class PowerSpecter(PipelineStage) :
 
         return cl_deproj, cl_deproj_bias
 
-    def get_cl_guess(self,ld,cld) :
+    def get_cl_guess(self, ld, cld, sacc_t) :
         """
         Read or compute the guess power spectra.
         :param ld: list of multipoles at which the data power spectra have been measured.
         :param cld: list of power spectrum measurements from the data.
         """
 
-        if self.config['guess_spectrum']=='NONE' :
-            print("Interpolating data power spectra")
+        if self.config['guess_spectrum'] == 'NONE' :
+            logger.info("Interpolating data power spectra.")
             l_use=ld
             cl_use=cld
         else:
-            data=np.loadtxt(self.config['guess_spectrum'],unpack=True)
-            l_use=data[0]
-            cl_use=data[1:]
+            logger.info('Using provided guess_spectrum.')
+            theory_sacc = sacc.Sacc.load_fits(self.config['guess_spectrum'])
+            datatypes_curr = theory_sacc.get_data_types()
+            tracers_curr = theory_sacc.get_tracer_combinations(data_type=datatypes_curr[0])
+            ell_theor, _ = theory_sacc.get_ell_cl(datatypes_curr[0], tracers_curr[0][0], tracers_curr[0][1],
+                                               return_cov=False)
+            l_use = ell_theor
+            cl_theory_arr = self.convert_sacc_to_clarr(theory_sacc, sacc_t)
+            cl_use = cl_theory_arr
             if cl_use.shape != (self.nmaps, self.nmaps, self.nbands):
                 raise ValueError("Theory power spectra have a wrong shape.")
         #Interpolate

@@ -589,7 +589,7 @@ class CovGauss(PowerSpecter) :
                 cls_wodpj = self.convert_sacc_to_clarr(sacc_cls_wodpj, tracers_sacc)
 
             logger.info("Getting guess power spectra.")
-            lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
+            lth, clth = self.get_cl_guess(ell_eff, cls_wdpj, tracers_sacc)
             cov_wodpj = self.get_covar(lth,clth,bpws,tracers_wc,wsp,None,None)
             cov_wdpj = cov_wodpj.copy()
 
