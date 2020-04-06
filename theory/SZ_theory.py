@@ -118,7 +118,7 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         :return:
         """
 
-        x = np.logspace(-4, 5, 1000)
+        x = np.logspace(-4, 5, 200)
 
         ff = self._form_factor(x, M, a)
         if ff.ndim > 1:
