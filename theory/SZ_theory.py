@@ -272,7 +272,7 @@ class HaloProfileArnaud(ccl.halos.HaloProfile):
         # hydrostatic bias
         b = self.b_hydro
         # R_Delta*(1+z)
-        R = mass_def.get_radius(cosmo, M_use, a) / a
+        R = mass_def.get_radius(cosmo, M_use * (1-b), a) / a
 
         nn = self._norm(cosmo, M_use, a, b)
         prof = self._form_factor(r_use[None, :] / R[:, None])
@@ -295,7 +295,7 @@ class HaloProfileArnaud(ccl.halos.HaloProfile):
         # hydrostatic bias
         b = self.b_hydro
         # R_Delta*(1+z)
-        R = mass_def.get_radius(cosmo, M_use, a) / a
+        R = mass_def.get_radius(cosmo, M_use * (1-b), a) / a
 
         ff = self._fourier_interp(np.log10(k_use[None, :] * R[:, None]))
         nn = self._norm(cosmo, M_use, a, b)
@@ -422,7 +422,7 @@ class SZTracer(ccl.Tracer):
 
         # prefac = (sigma_t*(10**2)**2/(m_e*c**2/J2eV))*cm2pc*10**6
 
-        prefac = 4.017100792437957e-06
+        prefac = 4.01710079e-06
         w_arr = prefac * a_arr
 
         self._trc = []
