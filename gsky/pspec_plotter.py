@@ -326,6 +326,13 @@ class PSpecPlotter(PipelineStage) :
         else:
             raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
 
+        if not self.config['plot_fields']:
+            logger.info('Not plotting single fields.')
+            saccfiles = None
+            noise_saccfiles = None
+        else:
+            logger.info('Plotting single fields.')
+
         logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
         self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles,
