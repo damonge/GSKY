@@ -21,7 +21,7 @@ DEFAULT_PARAMS = {
                 'm0': 6.6,
                 'm0p': -1.43,
                 'm1': 13.27,
-                'm1p': 0.323,
+                'm1p': -0.323,
                 'bhydro': 0.2,
                 'massdef': 'M200c',
                 'pprof': 'Battaglia'
