@@ -1,6 +1,7 @@
 import numpy as np
 from .gsky_theory import GSKYTheory
 import sacc
+import pyccl as ccl
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -11,7 +12,13 @@ def get_prediction(saccfile, params, ells):
     if not type(saccfile) == sacc.sacc.Sacc:
         saccfile = sacc.Sacc.load_fits(saccfile)
 
-    gskytheor = GSKYTheory(saccfile, params)
+    if 'cosmo' in params.keys():
+        cosmo_params = params['cosmo']
+        cosmo = ccl.Cosmology(**cosmo_params)
+    else:
+        cosmo = None
+
+    gskytheor = GSKYTheory(saccfile, params, cosmo=cosmo)
 
     cls = np.zeros_like(saccfile.mean)
 

@@ -111,6 +111,21 @@ class GSKYTheory:
 
         self.hmc = ccl.halos.HMCalculator(self.cosmo, self.nM, self.bM, self.hm_def)
 
+    def _setup_systematics(self):
+
+        logger.info('Setting up systematics parameters.')
+
+        logger.info('Setting up z_c.')
+        self.z_c = {}
+        for (tr_index, thistracer) in enumerate(self.tracer_list):
+            if 'zwidth_bin{}'.format(tr_index) in self.params.keys():
+                bin_max = thistracer.nz.max()
+                imax = np.where(thistracer.nz == bin_max)
+                self.z_c['zwidth_bin{}'.format(tr_index)] = thistracer.z[imax[0][0]]
+
+        if self.z_c == {}:
+            logger.info('Nothing to be done.')
+
     def _setup_HM(self):
 
         logger.info('Setting up halo model.')
@@ -155,25 +170,61 @@ class GSKYTheory:
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
                     tracer_no = split_name[1]
+                    # Bias
                     if 'bb_{}'.format(tracer_no) in p.keys():
                         logger.info('Galaxy bias array provided for {}.'.format(tracer.name))
                         bias_tup = (p['bz_{}'.format(tracer_no)], p['bb_{}'.format(tracer_no)])
                     else:
                         logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer.name))
                         bias_tup = (tracer.z, np.ones_like(tracer.z))
+                    # z_shift parameter
+                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and (
+                            'zwidth_bin{}'.format(tracer_no) in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin{}'.format(tracer_no)]) * (
+                                1 + p['zwidth_bin{}'.format(tracer_no)]) + \
+                                p['zshift_bin{}'.format(tracer_no)] + self.z_c['zwidth_bin{}'.format(tracer_no)]
+
+                    elif 'zshift_bin{}'.format(tracer_no) in p.keys():
+                        zbins = tracer.z + p['zshift_bin{}'.format(tracer_no)]
+
+                    else:
+                        zbins = tracer.z
+
                 else:
+                    # Bias
                     if 'bb' in p.keys():
                         logger.info('Galaxy bias array provided for {}.'.format(tracer.name))
                         bias_tup = (p['bz'], p['bb'])
                     else:
                         logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer.name))
                         bias_tup = (tracer.z, np.ones_like(tracer.z))
+                    # z_shift parameter
+                    if ('zshift_bin' in p.keys()) and (
+                            'zwidth_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (
+                                1 + p['zwidth_bin']) + \
+                                p['zshift_bin'] + self.z_c['zwidth_bin']
+
+                    elif 'zshift_bin' in p.keys():
+                        zbins = tracer.z + p['zshift_bin']
+
+                    else:
+                        zbins = tracer.z
+                # pz method
+                if 'pzMethod' in p.keys():
+                    if p['pzMethod'] != 'COSMOS30':
+                        nz = tracer.extra_columns[p['pzMethod']]
+                    else:
+                        nz = tracer.nz
+                else:
+                    nz = tracer.nz
+
                 if p['HODmod'] == 'zevol':
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (tracer.z, tracer.nz),
+                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (zbins, nz),
                                             bias=bias_tup),
                                             self.pg)
                 else:
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (tracer.z, tracer.nz),
+                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (zbins, nz),
                                                                            bias=bias_tup),
                                                     hod.HaloProfileHOD(c_M_relation=self.cM,
                                                                        lMmin=p['mmin'], lMminp=p['mminp'],
@@ -186,7 +237,46 @@ class GSKYTheory:
                 ccl_tracer_dict[tracer.name] = (ccl.CMBLensingTracer(self.cosmo,z_source=1150),
                                       self.pM)
             elif tracer.quantity == 'cosmic_shear':
-                ccl_tracer_dict[tracer.name] = (ccl.WeakLensingTracer(self.cosmo, (tracer.z, tracer.nz)),
+
+                split_name = tracer.name.split('_')
+                if len(split_name) == 2:
+                    tracer_no = split_name[1]
+                    # z_shift parameter
+                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and (
+                            'zwidth_bin{}'.format(tracer_no) in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin{}'.format(tracer_no)]) * (
+                                1 + p['zwidth_bin{}'.format(tracer_no)]) + \
+                                p['zshift_bin{}'.format(tracer_no)] + self.z_c['zwidth_bin{}'.format(tracer_no)]
+
+                    elif 'zshift_bin{}'.format(tracer_no) in p.keys():
+                        zbins = tracer.z + p['zshift_bin{}'.format(tracer_no)]
+
+                    else:
+                        zbins = tracer.z
+
+                else:
+                    # z_shift parameter
+                    if ('zshift_bin' in p.keys()) and (
+                            'zwidth_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (
+                                1 + p['zwidth_bin']) + \
+                                p['zshift_bin'] + self.z_c['zwidth_bin']
+
+                    elif 'zshift_bin' in p.keys():
+                        zbins = tracer.z + p['zshift_bin']
+
+                    else:
+                        zbins = tracer.z
+                # pz method
+                if 'pzMethod' in p.keys():
+                    if p['pzMethod'] != 'COSMOS30':
+                        nz = tracer.extra_columns[p['pzMethod']]
+                    else:
+                        nz = tracer.nz
+                else:
+                    nz = tracer.nz
+
+                ccl_tracer_dict[tracer.name] = (ccl.WeakLensingTracer(self.cosmo, (zbins, nz)),
                                       self.pM)
             else:
                 raise NotImplementedError('Only tracers delta_g, Compton_y, kappa and cosmic_shear supported. Aborting.')
