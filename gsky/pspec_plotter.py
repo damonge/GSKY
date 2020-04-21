@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sacc
-from theory import predict_theory as theor
+from theory.predict_theory import GSKYPrediction
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,7 +50,8 @@ class PSpecPlotter(PipelineStage) :
         if self.config['plot_theory']:
             logger.info('plot_theory = True. Computing theory predictions.')
             ell_theor, _ = saccfile.get_ell_cl(self.config['cl_type'], plot_pairs[0][0], plot_pairs[0][1], return_cov=False)
-            cl_theor = theor.get_prediction(saccfile, params, ell_theor)
+            theor = GSKYPrediction(saccfile, ell_theor)
+            cl_theor = theor.get_prediction(params)
 
         indices = []
         if self.config['plot_comb'] == 'all':

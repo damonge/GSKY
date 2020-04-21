@@ -20,6 +20,7 @@ PSpecPlotter:
     logscale_x: True
     logscale_y: False
     theory:
-        massdef: 'M200c'
-        pprof: 'Battaglia'
-        bhydro: 0.2
+        hmparams:
+            massdef: 'M200c'
+            pprof: 'Battaglia'
+            bhydro: 0.2

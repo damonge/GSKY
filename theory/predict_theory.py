@@ -7,37 +7,70 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_prediction(saccfile, params, ells):
+DEFAULT_HMPARAMS_KEYS = ['HODmod', 'mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'massdef', 'pprof']
+DEFAULT_COSMO_KEYS = ['Omega_b', 'Omega_k', 'A_s', 'h', 'n_s', 'Omega_c', 'w0', 'wa']
 
-    if not type(saccfile) == sacc.sacc.Sacc:
-        saccfile = sacc.Sacc.load_fits(saccfile)
+class GSKYPrediction:
 
-    if 'cosmo' in params.keys():
-        cosmo_params = params['cosmo']
-        cosmo = ccl.Cosmology(**cosmo_params)
-    else:
-        cosmo = None
+    def __init__ (self, saccfile, ells, param_keys=None, hmparams=None, cosmo=None):
 
-    gskytheor = GSKYTheory(saccfile, params, cosmo=cosmo)
+        self.setup(saccfile, ells, param_keys, hmparams, cosmo)
 
-    cls = np.zeros_like(saccfile.mean)
+    def get_prediction(self, params):
 
-    for tr_i, tr_j in saccfile.get_tracer_combinations():
-        logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
-        cl_temp = gskytheor.getCls(tr_i, tr_j, ells)
-        if 'wl' not in tr_i and 'wl' not in tr_j:
-            logger.info('No shear tracers in combination. Returning scalar cls.')
-            indx = saccfile.indices('cl_00', (tr_i, tr_j))
-        elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
-            logger.info('One shear tracer in combination. Returning scalarxspin2 cls.')
-            indx = saccfile.indices('cl_0e', (tr_i, tr_j))
+        if type(params) is dict:
+            if 'cosmo' in params.keys():
+                cosmo_params = params['cosmo']
+                cosmo = ccl.Cosmology(**cosmo_params)
+            else:
+                cosmo = None
+            if 'hmparams' in params.keys():
+                hmparams = params['hmparams']
+            else:
+                hmparams = None
+
         else:
-            logger.info('Two shear tracers in combination. Returning spin2 cls.')
-            indx = saccfile.indices('cl_ee', (tr_i, tr_j))
+            cosmo_params = hmparams = {}
+            for i, key in enumerate(self.param_keys):
+                if key in DEFAULT_COSMO_KEYS:
+                    cosmo_params[key] = params[i]
+                elif key in DEFAULT_HMPARAMS_KEYS:
+                    hmparams[key] = params[i]
+                else:
+                    raise RuntimeError('Parameter {} not recognized. Aborting.'.format(key))
+            cosmo = ccl.Cosmology(**cosmo_params)
 
-        cls[indx] = cl_temp
+        self.gskytheor.update_params(cosmo, hmparams)
 
-    return cls
+        cls = np.zeros_like(self.saccfile.mean)
+
+        for tr_i, tr_j in self.saccfile.get_tracer_combinations():
+            logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
+            cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+            if 'wl' not in tr_i and 'wl' not in tr_j:
+                logger.info('No shear tracers in combination. Returning scalar cls.')
+                indx = self.saccfile.indices('cl_00', (tr_i, tr_j))
+            elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
+                logger.info('One shear tracer in combination. Returning scalarxspin2 cls.')
+                indx = self.saccfile.indices('cl_0e', (tr_i, tr_j))
+            else:
+                logger.info('Two shear tracers in combination. Returning spin2 cls.')
+                indx = self.saccfile.indices('cl_ee', (tr_i, tr_j))
+
+            cls[indx] = cl_temp
+
+        return cls
+
+    def setup(self, saccfile, ells, param_keys, hmparams, cosmo):
+
+        logger.info('Setting up GSKYPrediction.')
+        if not type(saccfile) == sacc.sacc.Sacc:
+            saccfile = sacc.Sacc.load_fits(saccfile)
+        self.saccfile = saccfile
+        self.ells = ells
+        self.param_keys = param_keys
+
+        self.gskytheor = GSKYTheory(self.saccfile, hmparams, cosmo)
 
 
 

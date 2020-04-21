@@ -46,7 +46,7 @@ class GSKYTheory:
         else:
             self.params = DEFAULT_PARAMS
 
-        self.paramnames=self.params.keys()
+        self.paramnames = self.params.keys()
         if cosmo is None:
             logger.info('No CCL cosmology object provided. Setting up default parameters.')
             logger.info('Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96')
@@ -81,7 +81,13 @@ class GSKYTheory:
         self._setup_Cosmo()
         self._setup_HM()
 
-    def set_params(self, params):
+    def update_params(self, cosmo, hmparams):
+
+        logger.info('Updating model parameters.')
+        self.set_HMparams(hmparams)
+        self.set_cosmology(cosmo)
+
+    def set_HMparams(self, params):
 
         logger.info('Updating parameters.')
 
@@ -89,7 +95,15 @@ class GSKYTheory:
             if k not in self.paramnames:
                 raise RuntimeError('Parameter {} not recognized. Aborting.'.format(k))
         self.params.update(params)
+        self.check_params()
         self._setup_HM()
+
+    def check_params(self):
+
+        if self.params['pprof'] == 'Battaglia':
+            assert self.params['massdef'] == 'M200c', 'Battaglia pressure profile only supported for M200c. Aborting.'
+        if self.params['pprof'] == 'Arnaud':
+            assert self.params['massdef'] == 'M500c', 'Arnaud pressure profile only supported for M500c. Aborting.'
         
     def set_cosmology(self, cosmo):
 
