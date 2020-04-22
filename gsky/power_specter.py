@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 class PowerSpecter(PipelineStage) :
     name="PowerSpecter"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('act_maps', FitsFile), ('dust_map',FitsFile),('star_map',FitsFile),
-            ('depth_map',FitsFile),('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),
-            ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
-            ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
-            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
+            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_map',FitsFile),
+            ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
+            ('airmass_maps',FitsFile),('exptime_maps',FitsFile),('skylevel_maps',FitsFile),
+            ('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),('ellipt_maps',FitsFile),
+            ('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
     outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
@@ -704,8 +704,15 @@ class PowerSpecter(PipelineStage) :
         elif map_type == 'Compton_y_maps':
             logger.info('Creating Compton_y tracers.')
 
-            tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)]
-            tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)]
+            if self.get_input('y_beam') != 'NONE':
+                logger.info('y beam provided.')
+                _, beam = np.genfromtxt(self.get_input('y_beam'), unpack=True)
+            else:
+                logger.info('No y beam provided.')
+                beam = None
+
+            tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, beam=beam)]
+            tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type, beam=beam)]
 
         elif map_type == 'kappa_maps':
             logger.info('Creating kappa tracers.')
@@ -856,12 +863,19 @@ class PowerSpecter(PipelineStage) :
                                                                      'nz_' in key and key != 'nz_cosmos'})
 
             elif t.type == 'Compton_y':
+                if t.beam is not None:
+                    logger.info('Adding y beam to sacc tracer.')
+                    ell_beam = np.arange(t.beam.shape[0])
+                    beam = t.beam
+                else:
+                    ell_beam = -1*np.ones(self.nbands)
+                    beam = -1*np.ones(self.nbands)
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'y_{}'.format(i_t - self.ntracers_counts),
                                                       'Compton_y',
                                                       spin=0,
-                                                      ell=-1*np.ones(self.nbands),
-                                                      beam_ell=-1*np.ones(self.nbands))
+                                                      ell=ell_beam,
+                                                      beam_ell=beam)
 
             elif t.type == 'kappa':
                 tracer = sacc.tracers.BaseTracer.make('Map',
