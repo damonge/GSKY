@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import os
 import scipy.optimize
+import pyccl as ccl
 import sacc
 from theory.gsky_like import GSKYLike
 from theory.predict_theory import GSKYPrediction
