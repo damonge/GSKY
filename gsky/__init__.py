@@ -12,3 +12,4 @@ from .noise_mocks import NoiseMocks
 from .cov_gauss import CovGauss
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
+from .like_minimizer import LikeMinimizer
