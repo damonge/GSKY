@@ -49,8 +49,8 @@ class LikeMinimizer(PipelineStage) :
             logger.info('Size of saccfile after removing B-modes = {}.'.format(saccfile.mean.size))
 
         for i, saccfile in enumerate(saccfiles):
-            sacc_tracers = saccfile.tracers
-            if set(sacc_tracers) == set(self.config['tracers']):
+            sacc_tracers = saccfile.tracers.keys()
+            if set(sacc_tracers) == set(self.config['tracers'].keys()):
                 tempsacc = saccfile
                 ind_tmp = i
                 logger.info('Found sacc with all requested tracers at {}.'.format(ind_tmp))
@@ -71,9 +71,9 @@ class LikeMinimizer(PipelineStage) :
 
         for i, saccfile in enumerate(saccfiles):
             if i != ind_tmp:
-                sacc_tracers = saccfile.tracers
-                if set(sacc_tracers).issubset(self.config['tracers']) and len(sacc_tracers) < len(self.config['tracers']):
-                    missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
+                sacc_tracers = saccfile.tracers.keys()
+                if set(sacc_tracers).issubset(self.config['tracers'].keys()) and len(sacc_tracers) < len(self.config['tracers'].keys()):
+                    missing_tracers = list(set(self.config['tracers'].keys()) - set(sacc_tracers))
                     logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
 
                 for datatype in datatypes:

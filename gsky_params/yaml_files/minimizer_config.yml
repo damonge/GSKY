@@ -4,7 +4,7 @@ LikeMinimizer:
     saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci']
 #    noisesacc_filename: NONE
     noisesacc_filename: 'noi_bias_sim'
-    tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3''kappa_0', 'y_0']
+    tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3', 'kappa_0', 'y_0']
     param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro']
     theory:
         hmparams:
