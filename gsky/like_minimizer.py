@@ -30,8 +30,6 @@ class LikeMinimizer(PipelineStage) :
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
         self.output_dir = self.config['output_dir']+'/'
-        if self.config['output_run_dir'] != 'NONE':
-            self.output_dir = os.path.join(self.output_dir, self.config['output_run_dir'])
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
 
