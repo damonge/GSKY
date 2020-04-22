@@ -21,16 +21,15 @@ class GSKYPrediction:
         if type(params) is dict:
             if 'cosmo' in params.keys():
                 cosmo_params = params['cosmo']
-                cosmo = ccl.Cosmology(**cosmo_params)
             else:
-                cosmo = None
+                cosmo_params = {}
             if 'hmparams' in params.keys():
                 hmparams = params['hmparams']
             else:
-                hmparams = None
-
+                hmparams = {}
         else:
-            cosmo_params = hmparams = {}
+            cosmo_params = {}
+            hmparams = {}
             for i, key in enumerate(self.param_keys):
                 if key in DEFAULT_COSMO_KEYS:
                     cosmo_params[key] = params[i]
@@ -38,9 +37,17 @@ class GSKYPrediction:
                     hmparams[key] = params[i]
                 else:
                     raise RuntimeError('Parameter {} not recognized. Aborting.'.format(key))
-            cosmo = ccl.Cosmology(**cosmo_params)
 
-        self.gskytheor.update_params(cosmo, hmparams)
+        if cosmo_params != {} and hmparams != {}:
+            cosmo = ccl.Cosmology(**cosmo_params)
+            self.gskytheor.update_params(cosmo, hmparams)
+        elif cosmo_params == {} and hmparams != {}:
+            self.gskytheor.set_HMparams(hmparams)
+        elif cosmo_params != {} and hmparams == {}:
+            cosmo = ccl.Cosmology(**cosmo_params)
+            self.gskytheor.set_cosmology(cosmo)
+        else:
+            raise RuntimeError('Either hmparams or cosmo_params need to be provided. Aborting.')
 
         cls = np.zeros_like(self.saccfile.mean)
 
@@ -69,6 +76,7 @@ class GSKYPrediction:
         self.saccfile = saccfile
         self.ells = ells
         self.param_keys = param_keys
+        self.fid_cosmo = cosmo
 
         self.gskytheor = GSKYTheory(self.saccfile, hmparams, cosmo)
 
