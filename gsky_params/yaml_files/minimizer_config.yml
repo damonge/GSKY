@@ -5,6 +5,9 @@ LikeMinimizer:
 #    noisesacc_filename: NONE
     noisesacc_filename: 'noi_bias_sim'
     tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3', 'kappa_0', 'y_0']
+    ells: [  150.,   250.,   350.,   500.,   700.,   900.,  1200.,  1600.,
+             2000.,  2600.,  3400.,  4200.,  5400.,  7000.,  8600., 11000.,
+             14200.]
     param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro']
     theory:
         hmparams:
