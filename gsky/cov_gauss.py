@@ -608,7 +608,7 @@ class CovGauss(PowerSpecter) :
                 cls_wdpj_coupled = self.convert_sacc_to_clarr(sacc_cls_wdpj_coupled, tracers_sacc)
 
             logger.info("Getting guess power spectra.")
-            lth, clth = self.get_cl_guess(ell_eff, cls_wdpj)
+            lth, clth = self.get_cl_guess(ell_eff, cls_wdpj, tracers_sacc)
 
             if os.path.isfile(self.get_output_fname('dpj_bias', ext='sacc')):
                 sacc_cl_deproj_bias = sacc.Sacc.load_fits(self.get_output_fname('dpj_bias', ext='sacc'))
