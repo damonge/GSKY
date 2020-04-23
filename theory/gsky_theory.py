@@ -84,6 +84,7 @@ class GSKYTheory(object):
     def update_params(self, cosmo, hmparams):
 
         logger.info('Updating model parameters.')
+        self._delete_attrs()
         self.set_HMparams(hmparams)
         self.set_cosmology(cosmo)
 
@@ -109,6 +110,7 @@ class GSKYTheory(object):
 
         logger.info('Setting cosmology.')
 
+        self._delete_attrs()
         self.cosmo = cosmo
         self._setup_Cosmo()
         self._setup_HM()
@@ -124,6 +126,12 @@ class GSKYTheory(object):
         self.bM = ccl.halos.HaloBiasTinker10(self.cosmo, mass_def=self.hm_def)
 
         self.hmc = ccl.halos.HMCalculator(self.cosmo, self.nM, self.bM, self.hm_def)
+
+    def _delete_attrs(self):
+
+        for attr in ['pk_MMf', 'pk_yMf', 'pk_gMf', 'pk_ygf', 'pk_ggf']:
+            if hasattr(self, attr):
+                delattr(self, attr)
 
     def _setup_systematics(self):
 

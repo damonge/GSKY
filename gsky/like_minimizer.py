@@ -109,16 +109,20 @@ class LikeMinimizer(PipelineStage) :
 
     def like_func(self, params):
 
-        obs_theory = self.gskypred.get_prediction(params)
-        like = self.like.computeLike(obs_theory)
-        like *= (-1.)
+        try:
+            obs_theory = self.gskypred.get_prediction(params)
+            like = self.like.computeLike(obs_theory)
+            like *= (-1.)
+        except BaseException as e:
+            logger.error('{} for parameter set {}.'.format(e, params))
+            like = 1e10
 
         return like
 
     def minimize(self, minimizer_params):
 
-        res = scipy.optimize.minimize(self.like_func, minimizer_params['x0'], method=minimizer_params['method'], bounds=minimizer_params['bounds'],
-                                options={'disp': True, 'ftol':minimizer_params['ftol'], 'maxiter':minimizer_params['maxiter']})
+        res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'], bounds=minimizer_params['bounds'],
+                                options={'disp': True, 'ftol': int(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
 
         if res.success:
             logger.info('{}'.format(res.message))
