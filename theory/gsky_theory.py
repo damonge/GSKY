@@ -27,7 +27,7 @@ DEFAULT_PARAMS = {
                 'pprof': 'Battaglia'
                 }
 
-class GSKYTheory:
+class GSKYTheory(object):
 
     # Wavenumbers and scale factors
     k_arr = np.geomspace(1E-4,1E2,256)
