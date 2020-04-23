@@ -122,7 +122,7 @@ class LikeMinimizer(PipelineStage) :
     def minimize(self, minimizer_params):
 
         res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'], bounds=minimizer_params['bounds'],
-                                options={'disp': True, 'ftol': int(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
+                                options={'disp': True, 'ftol': float(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
 
         if res.success:
             logger.info('{}'.format(res.message))

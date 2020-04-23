@@ -84,17 +84,17 @@ class GSKYTheory(object):
     def update_params(self, cosmo, hmparams):
 
         logger.info('Updating model parameters.')
-        self._delete_attrs()
         self.set_HMparams(hmparams)
         self.set_cosmology(cosmo)
 
     def set_HMparams(self, params):
 
-        logger.info('Updating parameters.')
+        logger.info('Updating HM parameters.')
 
         for k in params.keys():
             if k not in self.paramnames:
                 raise RuntimeError('Parameter {} not recognized. Aborting.'.format(k))
+        self._delete_attrs()
         self.params.update(params)
         self.check_params()
         self._setup_HM()
