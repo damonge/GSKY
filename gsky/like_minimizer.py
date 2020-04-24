@@ -53,12 +53,14 @@ class LikeMinimizer(PipelineStage) :
             saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
             logger.info('Removing kappaxkappa.')
             saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
-            logger.info('Final size of saccfile = {}.'.format(saccfile.mean.size))
+            logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
 
+            logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
             for tr_i, tr_j in saccfile.get_tracer_combinations():
                 ell_max_curr = np.amin(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
                 logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                saccfile.remove_selection(ell__gt=ell_max_curr)
+                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+            logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
         for i, saccfile in enumerate(saccfiles):
             sacc_tracers = saccfile.tracers.keys()
