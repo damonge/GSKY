@@ -57,7 +57,7 @@ class LikeMinimizer(PipelineStage) :
 
             logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
             for tr_i, tr_j in saccfile.get_tracer_combinations():
-                ell_max_curr = np.amin(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+                ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
                 logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                 saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
             logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))

@@ -12,7 +12,7 @@ DEFAULT_COSMO_KEYS = ['Omega_b', 'Omega_k', 'A_s', 'h', 'n_s', 'Omega_c', 'w0', 
 
 class GSKYPrediction(object):
 
-    def __init__ (self, saccfile, ells, param_keys=None, hmparams=None, cosmo=None):
+    def __init__ (self, saccfile, ells=None, param_keys=None, hmparams=None, cosmo=None):
 
         self.setup(saccfile, ells, param_keys, hmparams, cosmo)
 
@@ -53,7 +53,11 @@ class GSKYPrediction(object):
 
         for tr_i, tr_j in self.saccfile.get_tracer_combinations():
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
-            cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+            if self.ells is not None:
+                cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+            else:
+                ells_curr = self.saccfile.get_tag('ell', tracers=(tr_i, tr_j))
+                cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 logger.info('No shear tracers in combination. Returning scalar cls.')
                 indx = self.saccfile.indices('cl_00', (tr_i, tr_j))
@@ -75,6 +79,8 @@ class GSKYPrediction(object):
             saccfile = sacc.Sacc.load_fits(saccfile)
         self.saccfile = saccfile
         self.ells = ells
+        if self.ells is None:
+            logger.info('No ell array provided using probe-specific ells from sacc.')
         self.param_keys = param_keys
         self.fid_cosmo = cosmo
 
