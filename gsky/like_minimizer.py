@@ -34,6 +34,8 @@ class LikeMinimizer(PipelineStage) :
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
 
+        self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+
         return
 
     def coadd_saccs(self, saccfiles, is_noisesacc=False):
@@ -52,6 +54,11 @@ class LikeMinimizer(PipelineStage) :
             logger.info('Removing kappaxkappa.')
             saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
             logger.info('Final size of saccfile = {}.'.format(saccfile.mean.size))
+
+            for tr_i, tr_j in saccfile.get_tracer_combinations():
+                ell_max_curr = np.amin(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                saccfile.remove_selection(ell__gt=ell_max_curr)
 
         for i, saccfile in enumerate(saccfiles):
             sacc_tracers = saccfile.tracers.keys()
@@ -125,8 +132,9 @@ class LikeMinimizer(PipelineStage) :
 
     def minimize(self, minimizer_params):
 
-        res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'], bounds=minimizer_params['bounds'],
-                                options={'disp': True, 'ftol': float(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
+        res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'],
+                                      bounds=minimizer_params['bounds'],
+                                      options={'disp': True, 'ftol': float(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
 
         if res.success:
             logger.info('{}'.format(res.message))
