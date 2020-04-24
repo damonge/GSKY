@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 class CovGauss(PowerSpecter) :
     name="CovGauss"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('act_maps', FitsFile), ('dust_map',FitsFile),('star_map',FitsFile),
-            ('depth_map',FitsFile),('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),
-            ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
-            ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
-            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
+            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_map',FitsFile),
+            ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
+            ('airmass_maps',FitsFile),('exptime_maps',FitsFile),('skylevel_maps',FitsFile),
+            ('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),('ellipt_maps',FitsFile),
+            ('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
     outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
