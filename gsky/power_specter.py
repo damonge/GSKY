@@ -448,6 +448,7 @@ class PowerSpecter(PipelineStage) :
         else:
             logger.info('Using provided guess_spectrum.')
             theory_sacc = sacc.Sacc.load_fits(self.config['guess_spectrum'])
+            logger.info('Read {}.'.format(self.config['guess_spectrum']))
             datatypes_curr = theory_sacc.get_data_types()
             tracers_curr = theory_sacc.get_tracer_combinations(data_type=datatypes_curr[0])
             ell_theor, _ = theory_sacc.get_ell_cl(datatypes_curr[0], tracers_curr[0][0], tracers_curr[0][1],
