@@ -53,10 +53,10 @@ class GSKYPrediction(object):
 
         for tr_i, tr_j in self.saccfile.get_tracer_combinations():
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
-            if self.ells is not None:
+            if self.ells != 'NONE':
                 cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
             else:
-                ells_curr = self.saccfile.get_tag('ell', tracers=(tr_i, tr_j))
+                ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j)))
                 cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 logger.info('No shear tracers in combination. Returning scalar cls.')

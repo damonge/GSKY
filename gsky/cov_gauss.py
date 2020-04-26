@@ -148,7 +148,8 @@ class CovGauss(PowerSpecter) :
                                                                                           j2_curr) + '.dat'):
                                 # Compute wsp for counts (is always the same as mask is the same)
                                 logger.info("Computing covariance MCM for counts xcorr.")
-                                cwsp_curr.compute_coupling_coefficients(tracers[0].field, tracers[0].field, bpws)
+                                cwsp_curr.compute_coupling_coefficients(tracers[i1_curr].field, tracers[j1_curr].field, bpws,
+                                                                    tracers[i2_curr].field, tracers[j2_curr].field, bpws)
                                 cwsp_curr.write_to(
                                     self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(i1_curr, j1_curr, i2_curr,
                                                                                           j2_curr) + '.dat')

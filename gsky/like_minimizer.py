@@ -53,6 +53,9 @@ class LikeMinimizer(PipelineStage) :
             saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
             logger.info('Removing kappaxkappa.')
             saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
+            logger.info('Removing kappaxy.')
+            saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'y_0'))
+            saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
             logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
 
             logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
@@ -104,8 +107,8 @@ class LikeMinimizer(PipelineStage) :
                             coadd_mean[ind_tempsacc] += cl
                             nmeans[ind_tempsacc] += 1
                             if not is_noisesacc:
-                                coadd_cov[ind_tempsacc][:, ind_tempsacc] += cov
-                                ncovs[ind_tempsacc][:, ind_tempsacc] += 1
+                                coadd_cov[np.ix_(ind_tempsacc, ind_tempsacc)] += cov
+                                ncovs[np.ix_(ind_tempsacc, ind_tempsacc)] += 1
 
         coadd_mean /= nmeans
         if not is_noisesacc:
@@ -134,8 +137,13 @@ class LikeMinimizer(PipelineStage) :
 
     def minimize(self, minimizer_params):
 
+        if minimizer_params['bounds'] == 'NONE':
+            bounds = None
+        else:
+            bounds = minimizer_params['bounds']
+
         res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'],
-                                      bounds=minimizer_params['bounds'],
+                                      bounds=bounds,
                                       options={'disp': True, 'ftol': float(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
 
         if res.success:
