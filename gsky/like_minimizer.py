@@ -65,81 +65,192 @@ class LikeMinimizer(PipelineStage) :
                 saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
             logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
+        ntracers_arr = np.array([len(saccfile.tracers) for saccfile in saccfiles])
+        ntracers_unique = np.unique(ntracers_arr)[::-1]
+
+        saccs_list = [[] for i in range(ntracers_unique.shape[0])]
+        for i in range(ntracers_unique.shape[0]):
+            for saccfile in saccfiles:
+                if len(saccfile.tracers) == ntracers_unique[i]:
+                    saccs_list[i].append(saccfile)
+
+        sacc_coadds = [[] for i in range(ntracers_unique.shape[0])]
+        for i in range(ntracers_unique.shape[0]):
+            len_curr = ntracers_unique[i]
+            nsacc_curr = len(saccs_list[i])
+            logger.info('Found {} saccfiles of length {}.'.format(nsacc_curr, len_curr))
+            for j, saccfile in enumerate(saccs_list[i]):
+                if j == 0:
+                    coadd_mean = saccfile.mean
+                    if not is_noisesacc:
+                        coadd_cov = saccfile.covariance.covmat
+                else:
+                    coadd_mean += saccfile.mean
+                    if not is_noisesacc:
+                        coadd_cov += saccfile.covariance.covmat
+
+            coadd_mean /= nsacc_curr
+            if not is_noisesacc:
+                coadd_cov /= nsacc_curr ** 2
+
+            # Copy sacc
+            saccfile_coadd = saccfile.copy()
+            # Set mean of new saccfile to coadded mean
+            saccfile_coadd.mean = coadd_mean
+            if not is_noisesacc:
+                saccfile_coadd.add_covariance(coadd_cov)
+            sacc_coadds[i] = saccfile_coadd
+
+        tempsacc = sacc_coadds[0]
+        datatypes = tempsacc.get_data_types()
+        mean_coadd = tempsacc.mean
+        invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
+
         for i, saccfile in enumerate(saccfiles):
             sacc_tracers = saccfile.tracers.keys()
-            if set(sacc_tracers) == set(self.config['tracers']):
-                tempsacc = saccfile
-                ind_tmp = i
-                logger.info('Found sacc with all requested tracers at {}.'.format(ind_tmp))
-                break
+            missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
+            logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
 
-        try:
-            coadd_mean = tempsacc.mean
-            if not is_noisesacc:
-                coadd_cov = tempsacc.covariance.covmat
-            datatypes = tempsacc.get_data_types()
+            invcov_small_curr = np.linalg.inv(saccfile.covariance.covmat)
 
-            nmeans = np.ones_like(coadd_mean)
-            if not is_noisesacc:
-                ncovs = np.ones_like(coadd_cov)
+            mean_big_curr = np.zeros_like(tempsacc.mean)
+            invcov_big_curr = np.zeros_like(tempsacc.covariance.covmat)
 
-        except:
-            raise RuntimeError('More tracers requested than contained in any of the provided sacc files. Aborting.')
+            for datatype in datatypes:
+                tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
+                for tr_i1, tr_j1 in tracer_combs:
+                    _, cl = saccfile.get_ell_cl(datatype, tr_i1, tr_j1, return_cov=False)
 
-        for i, saccfile in enumerate(saccfiles):
-            if i != ind_tmp:
-                sacc_tracers = saccfile.tracers.keys()
-                if set(sacc_tracers).issubset(self.config['tracers']) and len(sacc_tracers) < len(self.config['tracers']):
-                    missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
-                    logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
+                    ind_here = saccfile.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+                    ind_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+                    if not ind_here.size == 0:
+                        mean_big_curr[ind_tempsacc] = cl
+                    for tr_i2, tr_j2 in tracer_combs:
+                        ind_i1j1_curr = saccfile.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+                        ind_i2j2_curr = saccfile.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
 
-                for datatype in datatypes:
-                    tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
-                    for tr_i, tr_j in tracer_combs:
-                        _, cl = saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+                        subinvcov_curr = invcov_small_curr[np.ix_(ind_i1j1_curr, ind_i2j2_curr)]
 
-                        ind_here = saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
-                        ind_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i, tr_j))
-                        if not ind_here.size == 0:
-                            coadd_mean[ind_tempsacc] += cl
-                            nmeans[ind_tempsacc] += 1
+                        ind_i1j1_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+                        ind_i2j2_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
 
-        for i, saccfile in enumerate(saccfiles):
-            if i != ind_tmp:
-                sacc_tracers = saccfile.tracers.keys()
-                if set(sacc_tracers).issubset(self.config['tracers']) and len(sacc_tracers) < len(self.config['tracers']):
-                    missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
-                    logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
+                        if ind_i1j1_curr.size != 0 and ind_i2j2_curr.size != 0:
+                            invcov_big_curr[np.ix_(ind_i1j1_tempsacc, ind_i2j2_tempsacc)] = subinvcov_curr
 
-                for datatype in datatypes:
-                    tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
-                    for tr_i1, tr_j1 in tracer_combs:
-                        for tr_i2, tr_j2 in tracer_combs:
-                            ind_i1j1_curr = saccfile.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
-                            ind_i2j2_curr = saccfile.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
-
-                            cov_curr = saccfile.covariance.covmat
-                            cov_curr = cov_curr[np.ix_(ind_i1j1_curr, ind_i2j2_curr)]
-
-                            ind_i1j1_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
-                            ind_i2j2_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
-
-                            if ind_i1j1_curr.size != 0 and ind_i2j2_curr.size != 0:
-                                coadd_cov[np.ix_(ind_i1j1_tempsacc, ind_i2j2_tempsacc)] += cov_curr
-                                ncovs[np.ix_(ind_i1j1_tempsacc, ind_i2j2_tempsacc)] += 1
-
-        coadd_mean /= nmeans
-        if not is_noisesacc:
-            coadd_cov /= ncovs ** 2
+            mean_coadd += np.dot(invcov_big_curr, mean_big_curr)
+            invcov_coadd += invcov_big_curr
 
         # Copy sacc
         saccfile_coadd = tempsacc.copy()
         # Set mean of new saccfile to coadded mean
-        saccfile_coadd.mean = coadd_mean
+        saccfile_coadd.mean = mean_coadd
         if not is_noisesacc:
-            saccfile_coadd.add_covariance(coadd_cov)
+            saccfile_coadd.add_covariance(np.linalg.inv(invcov_coadd))
 
         return saccfile_coadd
+
+    # def coadd_saccs(self, saccfiles, is_noisesacc=False):
+    #
+    #     logger.info('Coadding saccfiles.')
+    #
+    #     for saccfile in saccfiles:
+    #         logger.info('Initial size of saccfile = {}.'.format(saccfile.mean.size))
+    #         logger.info('Removing B-modes.')
+    #         saccfile.remove_selection(data_type='cl_eb')
+    #         saccfile.remove_selection(data_type='cl_be')
+    #         saccfile.remove_selection(data_type='cl_bb')
+    #         saccfile.remove_selection(data_type='cl_0b')
+    #         logger.info('Removing yxy.')
+    #         saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
+    #         logger.info('Removing kappaxkappa.')
+    #         saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
+    #         logger.info('Removing kappaxy.')
+    #         saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'y_0'))
+    #         saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
+    #         logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
+    #
+    #         logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+    #         for tr_i, tr_j in saccfile.get_tracer_combinations():
+    #             ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+    #             logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+    #             saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+    #         logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+    #
+    #     for i, saccfile in enumerate(saccfiles):
+    #         sacc_tracers = saccfile.tracers.keys()
+    #         if set(sacc_tracers) == set(self.config['tracers']):
+    #             tempsacc = saccfile
+    #             ind_tmp = i
+    #             logger.info('Found sacc with all requested tracers at {}.'.format(ind_tmp))
+    #             break
+    #
+    #     try:
+    #         coadd_mean = tempsacc.mean
+    #         if not is_noisesacc:
+    #             coadd_cov = tempsacc.covariance.covmat
+    #         datatypes = tempsacc.get_data_types()
+    #
+    #         nmeans = np.ones_like(coadd_mean)
+    #         if not is_noisesacc:
+    #             ncovs = np.ones_like(coadd_cov)
+    #
+    #     except:
+    #         raise RuntimeError('More tracers requested than contained in any of the provided sacc files. Aborting.')
+    #
+    #     for i, saccfile in enumerate(saccfiles):
+    #         if i != ind_tmp:
+    #             sacc_tracers = saccfile.tracers.keys()
+    #             if set(sacc_tracers).issubset(self.config['tracers']) and len(sacc_tracers) < len(self.config['tracers']):
+    #                 missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
+    #                 logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
+    #
+    #             for datatype in datatypes:
+    #                 tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
+    #                 for tr_i, tr_j in tracer_combs:
+    #                     _, cl = saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+    #
+    #                     ind_here = saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
+    #                     ind_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i, tr_j))
+    #                     if not ind_here.size == 0:
+    #                         coadd_mean[ind_tempsacc] += cl
+    #                         nmeans[ind_tempsacc] += 1
+    #
+    #     for i, saccfile in enumerate(saccfiles):
+    #         if i != ind_tmp:
+    #             sacc_tracers = saccfile.tracers.keys()
+    #             if set(sacc_tracers).issubset(self.config['tracers']) and len(sacc_tracers) < len(self.config['tracers']):
+    #                 missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
+    #                 logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
+    #
+    #             for datatype in datatypes:
+    #                 tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
+    #                 for tr_i1, tr_j1 in tracer_combs:
+    #                     for tr_i2, tr_j2 in tracer_combs:
+    #                         ind_i1j1_curr = saccfile.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+    #                         ind_i2j2_curr = saccfile.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
+    #
+    #                         cov_curr = saccfile.covariance.covmat
+    #                         cov_curr = cov_curr[np.ix_(ind_i1j1_curr, ind_i2j2_curr)]
+    #
+    #                         ind_i1j1_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i1, tr_j1))
+    #                         ind_i2j2_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i2, tr_j2))
+    #
+    #                         if ind_i1j1_curr.size != 0 and ind_i2j2_curr.size != 0:
+    #                             coadd_cov[np.ix_(ind_i1j1_tempsacc, ind_i2j2_tempsacc)] += cov_curr
+    #                             ncovs[np.ix_(ind_i1j1_tempsacc, ind_i2j2_tempsacc)] += 1
+    #
+    #     coadd_mean /= nmeans
+    #     if not is_noisesacc:
+    #         coadd_cov /= ncovs ** 2
+    #
+    #     # Copy sacc
+    #     saccfile_coadd = tempsacc.copy()
+    #     # Set mean of new saccfile to coadded mean
+    #     saccfile_coadd.mean = coadd_mean
+    #     if not is_noisesacc:
+    #         saccfile_coadd.add_covariance(coadd_cov)
+    #
+    #     return saccfile_coadd
 
     def like_func(self, params):
 
