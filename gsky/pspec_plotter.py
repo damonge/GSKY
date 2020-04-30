@@ -41,6 +41,8 @@ class PSpecPlotter(PipelineStage) :
         if not os.path.isdir(self.output_plot_dir):
             os.makedirs(self.output_plot_dir)
 
+        self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+
         return
 
     def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None, params=None):
