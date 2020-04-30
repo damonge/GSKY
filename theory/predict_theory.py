@@ -12,11 +12,17 @@ DEFAULT_COSMO_KEYS = ['Omega_b', 'Omega_k', 'A_s', 'h', 'n_s', 'Omega_c', 'w0', 
 
 class GSKYPrediction(object):
 
-    def __init__ (self, saccfile, ells=None, param_keys=None, hmparams=None, cosmo=None):
+    def __init__ (self, saccfile, ells='NONE', param_keys=None, hmparams=None, cosmo=None):
 
         self.setup(saccfile, ells, param_keys, hmparams, cosmo)
 
-    def get_prediction(self, params):
+    def get_prediction(self, params, trc_combs=None):
+
+        if trc_combs is None:
+            logger.info('Computing theory predictions for all tracer combinations in sacc.')
+            trc_combs = self.saccfile.get_tracer_combinations()
+        else:
+            logger.info('Computing theory predictions for tracer combinations {}.'.format(trc_combs))
 
         if type(params) is dict:
             if 'cosmo' in params.keys():
@@ -51,7 +57,7 @@ class GSKYPrediction(object):
 
         cls = np.zeros_like(self.saccfile.mean)
 
-        for tr_i, tr_j in self.saccfile.get_tracer_combinations():
+        for tr_i, tr_j in trc_combs:
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
             if self.ells != 'NONE':
                 cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)

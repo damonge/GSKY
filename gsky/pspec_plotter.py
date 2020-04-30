@@ -51,9 +51,8 @@ class PSpecPlotter(PipelineStage) :
 
         if self.config['plot_theory']:
             logger.info('plot_theory = True. Computing theory predictions.')
-            ell_theor, _ = saccfile.get_ell_cl(self.config['cl_type'], plot_pairs[0][0], plot_pairs[0][1], return_cov=False)
-            theor = GSKYPrediction(saccfile, ell_theor)
-            cl_theor = theor.get_prediction(params)
+            theor = GSKYPrediction(saccfile)
+            cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
         indices = []
         if self.config['plot_comb'] == 'all':
