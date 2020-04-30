@@ -74,7 +74,7 @@ class LikeMinimizer(PipelineStage) :
                 if len(saccfile.tracers) == ntracers_unique[i]:
                     saccs_list[i].append(saccfile)
 
-        sacc_coadds = [[] for i in range(ntracers_unique.shape[0])]
+        sacc_coadds = [0 for i in range(ntracers_unique.shape[0])]
         for i in range(ntracers_unique.shape[0]):
             len_curr = ntracers_unique[i]
             nsacc_curr = len(saccs_list[i])
@@ -103,10 +103,10 @@ class LikeMinimizer(PipelineStage) :
 
         tempsacc = sacc_coadds[0]
         datatypes = tempsacc.get_data_types()
-        mean_coadd = tempsacc.mean
         invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
+        mean_coadd = np.dot(invcov_coadd, tempsacc.mean)
 
-        for i, saccfile in enumerate(saccfiles):
+        for i, saccfile in enumerate(sacc_coadds[1:]):
             sacc_tracers = saccfile.tracers.keys()
             missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
             logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
@@ -143,9 +143,10 @@ class LikeMinimizer(PipelineStage) :
         # Copy sacc
         saccfile_coadd = tempsacc.copy()
         # Set mean of new saccfile to coadded mean
-        saccfile_coadd.mean = mean_coadd
+        cov_coadd = np.linalg.inv(invcov_coadd)
+        saccfile_coadd.mean = np.dot(cov_coadd, mean_coadd)
         if not is_noisesacc:
-            saccfile_coadd.add_covariance(np.linalg.inv(invcov_coadd))
+            saccfile_coadd.add_covariance(cov_coadd)
 
         return saccfile_coadd
 
