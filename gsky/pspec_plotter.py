@@ -19,7 +19,7 @@ class PSpecPlotter(PipelineStage) :
     config_options={'saccdirs': [str], 'output_run_dir': 'NONE', 'output_plot_dir': 'NONE', 'output_dir': 'NONE',
                     'noisesaccs': 'NONE', 'fig_name': str, 'tracers': [str], 'plot_comb': 'all', 'cl_type': 'cl_ee',
                     'plot_errors': False, 'plot_theory': False, 'weightpow': 2, 'logscale_x': False, 'logscale_y': False,
-                    'coadd_noise': False, 'coadd_mode': 'invvar'}
+                    'coadd_noise': False, 'coadd_mode': 'invvar', 'plot_fields': False, 'ell_theor': 'NONE'}
 
     def get_output_fname(self,name,ext=None):
         fname=self.output_dir+name
@@ -51,7 +51,7 @@ class PSpecPlotter(PipelineStage) :
 
         if self.config['plot_theory']:
             logger.info('plot_theory = True. Computing theory predictions.')
-            theor = GSKYPrediction(saccfile)
+            theor = GSKYPrediction(saccfile, self.config['ell_theor'])
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
         indices = []
@@ -144,6 +144,10 @@ class PSpecPlotter(PipelineStage) :
             if self.config['plot_theory']:
                 indx_curr = saccfile.indices(self.config['cl_type'], (tr_i, tr_j))
                 cl_theor_curr = cl_theor[indx_curr]
+                if self.config['ell_theor'] == 'NONE':
+                    ell_theor = ell_curr
+                else:
+                    ell_theor = self.config['ell_theor']
                 if indices[i][0] == 0 and indices[i][1] == 0:
                     if weightpow != -1:
                         ax.plot(ell_theor, cl_theor_curr * np.power(ell_theor, weightpow), color=colors[-1], \
