@@ -7,11 +7,13 @@ PSpecPlotter:
     noisesacc_filename: NONE
     # noisesacc_filename: 'noi_bias_sim'
     output_plot_dir: 'plots'
-    fig_name: 'cls_kappaxwl_all_0e.pdf'
-    # tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
-    # tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
-    tracers: ['kappa_0', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
-    # tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'y_0']
+    tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3', 'kappa_0', 'y_0']
+    ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000, 2000, 2000]
+    fig_name: 'cls_kappaxwl_all_0e_test.pdf'
+    # plot_tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    # plot_tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
+    plot_tracers: ['kappa_0', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    # plot_tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'y_0']
     plot_comb: 'cross'
     cl_type: 'cl_0e'
     plot_errors: False

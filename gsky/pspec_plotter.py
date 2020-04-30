@@ -421,24 +421,24 @@ class PSpecPlotter(PipelineStage) :
             noise_saccfile_coadd = None
             noise_saccfiles = None
 
-        tracer_list = self.config['tracers']
-        ntracers = len(tracer_list)
+        plot_tracer_list = self.config['plot_tracers']
+        ntracers = len(plot_tracer_list)
 
         plot_pairs = []
         if self.config['plot_comb'] == 'all':
             logger.info('Plotting auto- and cross-correlations of tracers.')
             i = 0
-            for tr_i in tracer_list:
-                for tr_j in tracer_list[:i+1]:
+            for tr_i in plot_tracer_list:
+                for tr_j in plot_tracer_list[:i+1]:
                     # Generate the appropriate list of tracer combinations to plot
                     plot_pairs.append([tr_j, tr_i])
                 i += 1
         elif self.config['plot_comb'] == 'auto':
             logger.info('Plotting auto-correlations of tracers.')
-            for tr_i in tracer_list:
+            for tr_i in plot_tracer_list:
                 plot_pairs.append([tr_i, tr_i])
         elif self.config['plot_comb'] == 'cross':
-            tracer_type_list = [tr.split('_')[0] for tr in tracer_list]
+            tracer_type_list = [tr.split('_')[0] for tr in plot_tracer_list]
             # Get unique tracers and keep ordering
             unique_trcs = []
             [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
@@ -447,8 +447,8 @@ class PSpecPlotter(PipelineStage) :
             ntracers = np.array([ntracers0, ntracers1])
             logger.info('Plotting cross-correlations of tracers.')
             i = 0
-            for tr_i in tracer_list[:ntracers0]:
-                for tr_j in tracer_list[ntracers0:]:
+            for tr_i in plot_tracer_list[:ntracers0]:
+                for tr_j in plot_tracer_list[ntracers0:]:
                     if tr_i.split('_')[0] != tr_j.split('_')[0]:
                         # Generate the appropriate list of tracer combinations to plot
                         plot_pairs.append([tr_i, tr_j])
