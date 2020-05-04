@@ -85,7 +85,7 @@ class GSKYPrediction(object):
             saccfile = sacc.Sacc.load_fits(saccfile)
         self.saccfile = saccfile
         self.ells = ells
-        if self.ells is None:
+        if self.ells == 'NONE':
             logger.info('No ell array provided using probe-specific ells from sacc.')
         self.param_keys = param_keys
         self.fid_cosmo = cosmo
