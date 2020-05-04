@@ -45,26 +45,46 @@ class PSpecPlotter(PipelineStage) :
 
         return
 
-    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None, params=None):
+    def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None,
+                     params=None, plot_indx=None):
 
-        weightpow = self.config['weightpow']
+        if plot_indx is not None:
+            weightpow = self.config['weightpow'][plot_indx]
+            plot_theory = self.config['plot_theory']
+            plot_comb = self.config['plot_comb'][plot_indx]
+            plot_errors = self.config['plot_errors']
+            cl_type = self.config['cl_type'][plot_indx]
+            ell_theor = self.config['ell_theor'][plot_indx]
+            logscale_x = self.config['logscale_x'][plot_indx]
+            logscale_y = self.config['logscale_y'][plot_indx]
+            fig_name = self.config['fig_name'][plot_indx]
+        else:
+            weightpow = self.config['weightpow']
+            plot_theory = self.config['plot_theory']
+            plot_comb = self.config['plot_comb']
+            plot_errors = self.config['plot_errors']
+            cl_type = self.config['cl_type']
+            ell_theor = self.config['ell_theor']
+            logscale_x = self.config['logscale_x']
+            logscale_y = self.config['logscale_y']
+            fig_name = self.config['fig_name']
 
-        if self.config['plot_theory']:
+        if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
-            theor = GSKYPrediction(saccfile, self.config['ell_theor'])
+            theor = GSKYPrediction(saccfile, ell_theor)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
         indices = []
-        if self.config['plot_comb'] == 'all':
+        if plot_comb == 'all':
             for i in range(ntracers):
                 for ii in range(i + 1):
                     ind = (i, ii)
                     indices.append(ind)
-        elif self.config['plot_comb'] == 'auto':
+        elif plot_comb == 'auto':
             for i in range(ntracers):
                 ind = (i, i)
                 indices.append(ind)
-        elif self.config['plot_comb'] == 'cross':
+        elif plot_comb == 'cross':
             assert ntracers.shape[0] == 2, 'ntracers required for cross-correlation needs to be 2D. Aborting.'
             for i in range(ntracers[0]):
                 for ii in range(ntracers[1]):
@@ -82,22 +102,22 @@ class PSpecPlotter(PipelineStage) :
 
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
 
-            if self.config['plot_errors']:
-                ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=True)
+            if plot_errors:
+                ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=True)
                 err_curr = np.sqrt(np.diag(cov_curr))
                 if np.any(np.isnan(err_curr)):
                     logger.info('Found negative diagonal elements of covariance matrix. Setting to zero.')
                     err_curr[np.isnan(err_curr)] = 0
             else:
-                ell_curr, cl_curr = saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
+                ell_curr, cl_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
 
             if noise_saccfile is not None:
                 if tr_i == tr_j:
-                    ell_curr, cl_noise_curr = noise_saccfile.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
+                    ell_curr, cl_noise_curr = noise_saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
                     cl_curr -= cl_noise_curr
 
             # Plot the mean
-            if self.config['plot_errors']:
+            if plot_errors:
                 if weightpow != -1:
                     ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=err_curr * np.power(ell_curr, weightpow),
                                 color='k', linestyle='--', marker='o', markeredgecolor='k', linewidth=2, markersize=9,
@@ -118,9 +138,9 @@ class PSpecPlotter(PipelineStage) :
             # Now plot the individual fields
             if fieldsaccs is not None:
                 for ii, fieldsacc in enumerate(fieldsaccs):
-                    ell_field, cl_field = fieldsacc.get_ell_cl(self.config['cl_type'], tr_i, tr_j, return_cov=False)
+                    ell_field, cl_field = fieldsacc.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
                     if field_noisesaccs is not None:
-                        _, cl_noise_field = field_noisesaccs[ii].get_ell_cl(self.config['cl_type'], tr_i, tr_j,
+                        _, cl_noise_field = field_noisesaccs[ii].get_ell_cl(cl_type, tr_i, tr_j,
                                                                    return_cov=False)
                         cl_field -= cl_noise_field
                     if indices[i][0] == 0 and indices[i][1] == 0:
@@ -141,26 +161,26 @@ class PSpecPlotter(PipelineStage) :
                             ax.plot(ell_field, cl_field * ell_field*(ell_field+1)/2./np.pi, linestyle='--',
                                     marker='o', zorder=-1, alpha=0.8,
                                     markeredgecolor=colors[ii], color=colors[ii])
-            if self.config['plot_theory']:
-                indx_curr = saccfile.indices(self.config['cl_type'], (tr_i, tr_j))
+            if plot_theory:
+                indx_curr = saccfile.indices(cl_type, (tr_i, tr_j))
                 cl_theor_curr = cl_theor[indx_curr]
-                if self.config['ell_theor'] == 'NONE':
-                    ell_theor = ell_curr
+                if ell_theor == 'NONE':
+                    ell = ell_curr
                 else:
-                    ell_theor = self.config['ell_theor']
+                    ell = ell_theor
                 if indices[i][0] == 0 and indices[i][1] == 0:
                     if weightpow != -1:
-                        ax.plot(ell_theor, cl_theor_curr * np.power(ell_theor, weightpow), color=colors[-1], \
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[-1], \
                                 label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
                     else:
-                        ax.plot(ell_theor, cl_theor_curr * ell_theor*(ell_theor+1)/2./np.pi, color=colors[-1], \
+                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], \
                                 label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
 
                 else:
                     if weightpow != -1:
-                        ax.plot(ell_theor, cl_theor_curr * np.power(ell_theor, weightpow), color=colors[-1], lw=2.4, zorder=-32)
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[-1], lw=2.4, zorder=-32)
                     else:
-                        ax.plot(ell_theor, cl_theor_curr * ell_theor*(ell_theor+1)/2./np.pi, color=colors[-1], lw=2.4,
+                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], lw=2.4,
                                 zorder=-32)
 
             ax.set_xlabel(r'$\ell$')
@@ -186,14 +206,14 @@ class PSpecPlotter(PipelineStage) :
                 ax.legend(loc='best', prop={'size': 16}, frameon=False)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
 
-            if self.config['logscale_x']:
+            if logscale_x:
                 ax.set_xscale('log')
-            if self.config['logscale_y']:
+            if logscale_y:
                 ax.set_yscale('log')
 
-        if self.config['fig_name'] != 'NONE':
-            logger.info('Saving figure to {}.'.format(os.path.join(self.output_plot_dir, self.config['fig_name'])))
-            plt.savefig(os.path.join(self.output_plot_dir, self.config['fig_name']), bbox_inches="tight")
+        if fig_name != 'NONE':
+            logger.info('Saving figure to {}.'.format(os.path.join(self.output_plot_dir, fig_name)))
+            plt.savefig(os.path.join(self.output_plot_dir, fig_name), bbox_inches="tight")
 
             return
 
@@ -424,52 +444,107 @@ class PSpecPlotter(PipelineStage) :
             noise_saccfile_coadd = None
             noise_saccfiles = None
 
-        plot_tracer_list = self.config['plot_tracers']
-        ntracers = len(plot_tracer_list)
+        if type(self.config['cl_type']) is list:
+            logger.info('Generating list of plots.')
 
-        plot_pairs = []
-        if self.config['plot_comb'] == 'all':
-            logger.info('Plotting auto- and cross-correlations of tracers.')
-            i = 0
-            for tr_i in plot_tracer_list:
-                for tr_j in plot_tracer_list[:i+1]:
-                    # Generate the appropriate list of tracer combinations to plot
-                    plot_pairs.append([tr_j, tr_i])
-                i += 1
-        elif self.config['plot_comb'] == 'auto':
-            logger.info('Plotting auto-correlations of tracers.')
-            for tr_i in plot_tracer_list:
-                plot_pairs.append([tr_i, tr_i])
-        elif self.config['plot_comb'] == 'cross':
-            tracer_type_list = [tr.split('_')[0] for tr in plot_tracer_list]
-            # Get unique tracers and keep ordering
-            unique_trcs = []
-            [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
-            ntracers0 = tracer_type_list.count(unique_trcs[0])
-            ntracers1 = tracer_type_list.count(unique_trcs[1])
-            ntracers = np.array([ntracers0, ntracers1])
-            logger.info('Plotting cross-correlations of tracers.')
-            i = 0
-            for tr_i in plot_tracer_list[:ntracers0]:
-                for tr_j in plot_tracer_list[ntracers0:]:
-                    if tr_i.split('_')[0] != tr_j.split('_')[0]:
+            for pl_indx in range(len(self.config['cl_type'])):
+                plot_tracer_list = self.config['plot_tracers'][pl_indx]
+                ntracers = len(plot_tracer_list)
+
+                plot_pairs = []
+                if self.config['plot_comb'][pl_indx] == 'all':
+                    logger.info('Plotting auto- and cross-correlations of tracers.')
+                    i = 0
+                    for tr_i in plot_tracer_list:
+                        for tr_j in plot_tracer_list[:i+1]:
+                            # Generate the appropriate list of tracer combinations to plot
+                            plot_pairs.append([tr_j, tr_i])
+                        i += 1
+                elif self.config['plot_comb'][pl_indx] == 'auto':
+                    logger.info('Plotting auto-correlations of tracers.')
+                    for tr_i in plot_tracer_list:
+                        plot_pairs.append([tr_i, tr_i])
+                elif self.config['plot_comb'][pl_indx] == 'cross':
+                    tracer_type_list = [tr.split('_')[0] for tr in plot_tracer_list]
+                    # Get unique tracers and keep ordering
+                    unique_trcs = []
+                    [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
+                    ntracers0 = tracer_type_list.count(unique_trcs[0])
+                    ntracers1 = tracer_type_list.count(unique_trcs[1])
+                    ntracers = np.array([ntracers0, ntracers1])
+                    logger.info('Plotting cross-correlations of tracers.')
+                    i = 0
+                    for tr_i in plot_tracer_list[:ntracers0]:
+                        for tr_j in plot_tracer_list[ntracers0:]:
+                            if tr_i.split('_')[0] != tr_j.split('_')[0]:
+                                # Generate the appropriate list of tracer combinations to plot
+                                plot_pairs.append([tr_i, tr_j])
+                        i += 1
+                else:
+                    raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
+
+                if not self.config['plot_fields']:
+                    logger.info('Not plotting single fields.')
+                    saccfiles = None
+                    noise_saccfiles = None
+                else:
+                    logger.info('Plotting single fields.')
+
+                logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
+
+                self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles,
+                                  field_noisesaccs=noise_saccfiles, params=theory_params, plot_indx=pl_indx)
+
+        else:
+            logger.info('Generating only single plot.')
+
+            plot_tracer_list = self.config['plot_tracers']
+            ntracers = len(plot_tracer_list)
+
+            plot_pairs = []
+            if self.config['plot_comb'] == 'all':
+                logger.info('Plotting auto- and cross-correlations of tracers.')
+                i = 0
+                for tr_i in plot_tracer_list:
+                    for tr_j in plot_tracer_list[:i + 1]:
                         # Generate the appropriate list of tracer combinations to plot
-                        plot_pairs.append([tr_i, tr_j])
-                i += 1
-        else:
-            raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
+                        plot_pairs.append([tr_j, tr_i])
+                    i += 1
+            elif self.config['plot_comb'] == 'auto':
+                logger.info('Plotting auto-correlations of tracers.')
+                for tr_i in plot_tracer_list:
+                    plot_pairs.append([tr_i, tr_i])
+            elif self.config['plot_comb'] == 'cross':
+                tracer_type_list = [tr.split('_')[0] for tr in plot_tracer_list]
+                # Get unique tracers and keep ordering
+                unique_trcs = []
+                [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
+                ntracers0 = tracer_type_list.count(unique_trcs[0])
+                ntracers1 = tracer_type_list.count(unique_trcs[1])
+                ntracers = np.array([ntracers0, ntracers1])
+                logger.info('Plotting cross-correlations of tracers.')
+                i = 0
+                for tr_i in plot_tracer_list[:ntracers0]:
+                    for tr_j in plot_tracer_list[ntracers0:]:
+                        if tr_i.split('_')[0] != tr_j.split('_')[0]:
+                            # Generate the appropriate list of tracer combinations to plot
+                            plot_pairs.append([tr_i, tr_j])
+                    i += 1
+            else:
+                raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
 
-        if not self.config['plot_fields']:
-            logger.info('Not plotting single fields.')
-            saccfiles = None
-            noise_saccfiles = None
-        else:
-            logger.info('Plotting single fields.')
+            if not self.config['plot_fields']:
+                logger.info('Not plotting single fields.')
+                saccfiles = None
+                noise_saccfiles = None
+            else:
+                logger.info('Plotting single fields.')
 
-        logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
+            logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
-        self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd, fieldsaccs=saccfiles,
-                          field_noisesaccs=noise_saccfiles, params=theory_params)
+            self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd,
+                              fieldsaccs=saccfiles,
+                              field_noisesaccs=noise_saccfiles, params=theory_params)
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
