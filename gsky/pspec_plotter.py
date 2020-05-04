@@ -220,7 +220,7 @@ class PSpecPlotter(PipelineStage) :
     def coadd_saccs(self, saccfiles, is_noisesacc=False):
 
         if self.config['coadd_mode'] == 'invvar':
-            saccfile_coadd = self.coadd_saccs_invvar(saccfiles, is_noisesacc)
+            saccfile_coadd = self.coadd_saccs_invvar(saccfiles)
         elif self.config['coadd_mode'] == 'separate':
             saccfile_coadd = self.coadd_saccs_separate(saccfiles, is_noisesacc)
         else:
@@ -228,7 +228,7 @@ class PSpecPlotter(PipelineStage) :
 
         return saccfile_coadd
 
-    def coadd_saccs_invvar(self, saccfiles, is_noisesacc=False):
+    def coadd_saccs_invvar(self, saccfiles):
 
         logger.info('Coadding all saccfiles weighted by inverse variance.')
 
@@ -272,23 +272,19 @@ class PSpecPlotter(PipelineStage) :
             for j, saccfile in enumerate(saccs_list[i]):
                 if j == 0:
                     coadd_mean = saccfile.mean
-                    if not is_noisesacc:
-                        coadd_cov = saccfile.covariance.covmat
+                    coadd_cov = saccfile.covariance.covmat
                 else:
                     coadd_mean += saccfile.mean
-                    if not is_noisesacc:
-                        coadd_cov += saccfile.covariance.covmat
+                    coadd_cov += saccfile.covariance.covmat
 
             coadd_mean /= nsacc_curr
-            if not is_noisesacc:
-                coadd_cov /= nsacc_curr ** 2
+            coadd_cov /= nsacc_curr ** 2
 
             # Copy sacc
             saccfile_coadd = saccfile.copy()
             # Set mean of new saccfile to coadded mean
             saccfile_coadd.mean = coadd_mean
-            if not is_noisesacc:
-                saccfile_coadd.add_covariance(coadd_cov)
+            saccfile_coadd.add_covariance(coadd_cov)
             sacc_coadds[i] = saccfile_coadd
 
         tempsacc = sacc_coadds[0]
@@ -339,8 +335,7 @@ class PSpecPlotter(PipelineStage) :
         # Set mean of new saccfile to coadded mean
         cov_coadd = np.linalg.inv(invcov_coadd)
         saccfile_coadd.mean = np.dot(cov_coadd, mean_coadd)
-        if not is_noisesacc:
-            saccfile_coadd.add_covariance(cov_coadd)
+        saccfile_coadd.add_covariance(cov_coadd)
 
         return saccfile_coadd
 
@@ -429,7 +424,7 @@ class PSpecPlotter(PipelineStage) :
         if self.config['noisesacc_filename'] != 'NONE':
             logger.info('Reading provided noise saccfile.')
             noise_saccfiles = []
-            for saccdir in self.config['saccdirs']:
+            for i, saccdir in enumerate(self.config['saccdirs']):
                 if self.config['output_run_dir'] != 'NONE':
                     path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
                 noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
@@ -437,6 +432,10 @@ class PSpecPlotter(PipelineStage) :
                     if self.config['coadd_noise']:
                         assert noise_sacc_curr.covariance is not None, \
                             'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
+                    else:
+                        if self.config['coadd_mode'] == 'invvar':
+                            logger.info('coadd_mode = invvar. Adding covariance matrix to noise sacc.')
+                            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
                 noise_saccfiles.append(noise_sacc_curr)
             noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True)
         else:
