@@ -153,6 +153,7 @@ class LikeMinimizer(PipelineStage) :
 
         if self.bounds is not None:
             if not self.bounds_ok(params):
+                logger.info('Parameter out of bounds.')
                 like = 1e6
                 return like
 
@@ -177,8 +178,10 @@ class LikeMinimizer(PipelineStage) :
     def minimize(self, minimizer_params):
 
         if minimizer_params['bounds'] == 'NONE':
+            logger.info('No parameter bounds provided.')
             self.bounds = None
         else:
+            logger.info('Parameter bounds provided.')
             self.bounds = np.array(minimizer_params['bounds'])
             self.bounds_min = self.bounds[:, 0]
             self.bounds_max = self.bounds[:, 1]
