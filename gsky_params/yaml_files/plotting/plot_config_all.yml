@@ -33,7 +33,7 @@ PSpecPlotter:
     plot_comb: ['all', 'all', 'all', 'cross', 'cross', 'cross', 'cross', 'cross', 'cross', 'cross', 'cross']
     cl_type: ['cl_ee', 'cl_bb', 'cl_00', 'cl_0e', 'cl_0b', 'cl_00', 'cl_00', 'cl_0e', 'cl_0b', 'cl_0e', 'cl_0b']
     plot_errors: True
-    plot_theory: True
+    plot_theory: [True, False, True, True, False, True, True, True, False, True, False]
     weightpow: [-1, -1, 1.3, 1, 1, 1, 1, 1, 1, 1, 1]
     logscale_x: [True, True, True, True, True, True, True, True, True, True, True]
     logscale_y: [True, True, False, False, False, False, False, False, False, False, False]
