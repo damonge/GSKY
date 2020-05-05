@@ -16,7 +16,7 @@ class GSKYPrediction(object):
 
         self.setup(saccfile, ells, param_keys, hmparams, cosmo)
 
-    def get_prediction(self, params, trc_combs=None):
+    def get_prediction(self, params, trc_combs=None, datatype=None):
 
         if trc_combs is None:
             logger.info('Computing theory predictions for all tracer combinations in sacc.')
@@ -62,7 +62,7 @@ class GSKYPrediction(object):
             if self.ells != 'NONE':
                 cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
             else:
-                ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j)))
+                ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
                 cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 logger.info('No shear tracers in combination. Returning scalar cls.')

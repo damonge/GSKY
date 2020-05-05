@@ -50,7 +50,7 @@ class PSpecPlotter(PipelineStage) :
 
         if plot_indx is not None:
             weightpow = self.config['weightpow'][plot_indx]
-            plot_theory = self.config['plot_theory']
+            plot_theory = self.config['plot_theory'][plot_indx]
             plot_comb = self.config['plot_comb'][plot_indx]
             plot_errors = self.config['plot_errors']
             cl_type = self.config['cl_type'][plot_indx]
@@ -72,7 +72,7 @@ class PSpecPlotter(PipelineStage) :
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
             theor = GSKYPrediction(saccfile, ell_theor)
-            cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
+            cl_theor = theor.get_prediction(params, trc_combs=plot_pairs, datatype=cl_type)
 
         indices = []
         if plot_comb == 'all':
