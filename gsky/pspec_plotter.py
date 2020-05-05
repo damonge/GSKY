@@ -234,11 +234,11 @@ class PSpecPlotter(PipelineStage) :
 
         for saccfile in saccfiles:
             logger.info('Initial size of saccfile = {}.'.format(saccfile.mean.size))
-            logger.info('Removing B-modes.')
-            saccfile.remove_selection(data_type='cl_eb')
-            saccfile.remove_selection(data_type='cl_be')
-            saccfile.remove_selection(data_type='cl_bb')
-            saccfile.remove_selection(data_type='cl_0b')
+            # logger.info('Removing B-modes.')
+            # saccfile.remove_selection(data_type='cl_eb')
+            # saccfile.remove_selection(data_type='cl_be')
+            # saccfile.remove_selection(data_type='cl_bb')
+            # saccfile.remove_selection(data_type='cl_0b')
             logger.info('Removing yxy.')
             saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
             logger.info('Removing kappaxkappa.')
