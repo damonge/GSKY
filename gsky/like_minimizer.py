@@ -151,25 +151,39 @@ class LikeMinimizer(PipelineStage) :
 
     def like_func(self, params):
 
+        if self.bounds is not None:
+            if not self.bounds_ok(params):
+                like = 1e6
+                return like
+
         try:
             obs_theory = self.gskypred.get_prediction(params)
             like = self.like.computeLike(obs_theory)
             like *= (-1.)
         except BaseException as e:
             logger.error('{} for parameter set {}.'.format(e, params))
-            like = 1e10
+            like = 1e6
 
         return like
+
+    def bounds_ok(self, params):
+
+        if np.any(params < self.bounds_min) or np.any(params > self.bounds_max):
+            return False
+
+        else:
+            return True
 
     def minimize(self, minimizer_params):
 
         if minimizer_params['bounds'] == 'NONE':
-            bounds = None
+            self.bounds = None
         else:
-            bounds = minimizer_params['bounds']
+            self.bounds = np.array(minimizer_params['bounds'])
+            self.bounds_min = self.bounds[:, 0]
+            self.bounds_max = self.bounds[:, 1]
 
         res = scipy.optimize.minimize(self.like_func, np.array(minimizer_params['x0']), method=minimizer_params['method'],
-                                      bounds=bounds,
                                       options={'disp': True, 'ftol': float(minimizer_params['ftol']), 'maxiter':minimizer_params['maxiter']})
 
         if res.success:
