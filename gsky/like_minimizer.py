@@ -40,7 +40,7 @@ class LikeMinimizer(PipelineStage) :
 
     def coadd_saccs(self, saccfiles, is_noisesacc=False):
 
-        logger.info('Coadding saccfiles.')
+        logger.info('Coadding all saccfiles weighted by inverse variance.')
 
         for saccfile in saccfiles:
             logger.info('Initial size of saccfile = {}.'.format(saccfile.mean.size))
@@ -82,29 +82,29 @@ class LikeMinimizer(PipelineStage) :
             for j, saccfile in enumerate(saccs_list[i]):
                 if j == 0:
                     coadd_mean = saccfile.mean
-                    if not is_noisesacc:
-                        coadd_cov = saccfile.covariance.covmat
+                    coadd_cov = saccfile.covariance.covmat
                 else:
                     coadd_mean += saccfile.mean
-                    if not is_noisesacc:
-                        coadd_cov += saccfile.covariance.covmat
+                    coadd_cov += saccfile.covariance.covmat
 
             coadd_mean /= nsacc_curr
-            if not is_noisesacc:
-                coadd_cov /= nsacc_curr ** 2
+            coadd_cov /= nsacc_curr ** 2
 
             # Copy sacc
             saccfile_coadd = saccfile.copy()
             # Set mean of new saccfile to coadded mean
             saccfile_coadd.mean = coadd_mean
-            if not is_noisesacc:
-                saccfile_coadd.add_covariance(coadd_cov)
+            saccfile_coadd.add_covariance(coadd_cov)
             sacc_coadds[i] = saccfile_coadd
 
         tempsacc = sacc_coadds[0]
+        tempsacc_tracers = tempsacc.tracers.keys()
         datatypes = tempsacc.get_data_types()
         invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
         mean_coadd = np.dot(invcov_coadd, tempsacc.mean)
+
+        assert set(tempsacc_tracers) == set(self.config['tracers']), 'Different tracers requested than present in largest ' \
+                                                                     'saccfile. Aborting.'
 
         for i, saccfile in enumerate(sacc_coadds[1:]):
             sacc_tracers = saccfile.tracers.keys()
@@ -145,8 +145,7 @@ class LikeMinimizer(PipelineStage) :
         # Set mean of new saccfile to coadded mean
         cov_coadd = np.linalg.inv(invcov_coadd)
         saccfile_coadd.mean = np.dot(cov_coadd, mean_coadd)
-        if not is_noisesacc:
-            saccfile_coadd.add_covariance(cov_coadd)
+        saccfile_coadd.add_covariance(cov_coadd)
 
         return saccfile_coadd
 
@@ -198,22 +197,27 @@ class LikeMinimizer(PipelineStage) :
             logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
             assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
             saccfiles.append(sacc_curr)
-        saccfile_coadd = self.coadd_saccs(saccfiles)
 
         if self.config['noisesacc_filename'] != 'NONE':
             logger.info('Reading provided noise saccfile.')
             noise_saccfiles = []
-            for saccdir in self.config['saccdirs']:
+            for i, saccdir in enumerate(self.config['saccdirs']):
                 if self.config['output_run_dir'] != 'NONE':
                     path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
                 noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
                 logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
+                if noise_sacc_curr.covariance is None:
+                    logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
+                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
                 noise_saccfiles.append(noise_sacc_curr)
             noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True)
         else:
             logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
             noise_saccfiles = None
+
+        # Need to coadd saccfiles after adding covariance to noise saccfiles
+        saccfile_coadd = self.coadd_saccs(saccfiles)
 
         if 'theory' in self.config.keys():
             if 'cosmo' in self.config['theory'].keys():
