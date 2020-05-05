@@ -54,7 +54,7 @@ class PSpecPlotter(PipelineStage) :
             plot_comb = self.config['plot_comb'][plot_indx]
             plot_errors = self.config['plot_errors']
             cl_type = self.config['cl_type'][plot_indx]
-            ell_theor = self.config['ell_theor'][plot_indx]
+            ell_theor = self.config['ell_theor']
             logscale_x = self.config['logscale_x'][plot_indx]
             logscale_y = self.config['logscale_y'][plot_indx]
             fig_name = self.config['fig_name'][plot_indx]
