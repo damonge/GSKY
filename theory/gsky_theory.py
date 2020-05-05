@@ -53,6 +53,7 @@ class GSKYTheory(object):
             self.cosmo = ccl.Cosmology(Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96)
         else:
             logger.info('CCL cosmology object provided.')
+            logger.info('Cosmology = {}.'.format(cosmo))
             self.cosmo = cosmo
 
         # Setup tracers
