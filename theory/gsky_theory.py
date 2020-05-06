@@ -385,7 +385,7 @@ class GSKYTheory(object):
                                     normprof1=True, normprof2=True)
                         Pk_arr *= self.rk_hm
 
-                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=GSKYTheory.k_arr, pk_arr=Pk_arr,
+                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
                                     cosmo=self.cosmo, is_logp=False)
 
                     self.pk_ggf = Pk
