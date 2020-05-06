@@ -11,6 +11,9 @@ from theory.predict_theory import GSKYPrediction
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DEFAULT_HMPARAMS_KEYS = ['HODmod', 'mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'massdef', 'pprof']
+DEFAULT_COSMO_KEYS = ['Omega_b', 'Omega_k', 'A_s', 'h', 'n_s', 'Omega_c', 'w0', 'wa']
+
 class LikeMinimizer(PipelineStage) :
     name="LikeMinimizer"
     inputs=[]
@@ -36,9 +39,23 @@ class LikeMinimizer(PipelineStage) :
 
         self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
 
+        self.param_keys = self.config['param_keys']
+
+        default_params = self.config['default_params']
+        self.cosmo_defaults = {}
+        for key in DEFAULT_COSMO_KEYS:
+            if key in default_params:
+                logger.info('Setting {} to default value {}.'.format((key, default_params[key])))
+                self.cosmo_defaults[key] = default_params[key]
+        self.hmparams_defaults = {}
+        for key in DEFAULT_HMPARAMS_KEYS:
+            if key in default_params:
+                logger.info('Setting {} to default value {}.'.format((key, default_params[key])))
+                self.hmparams_defaults[key] = default_params[key]
+
         return
 
-    def coadd_saccs(self, saccfiles, is_noisesacc=False):
+    def coadd_saccs(self, saccfiles):
 
         logger.info('Coadding all saccfiles weighted by inverse variance.')
 
@@ -150,6 +167,17 @@ class LikeMinimizer(PipelineStage) :
         return saccfile_coadd
 
     def like_func(self, params):
+
+        param_dict = {'hmparams': self.hmparams_defaults,
+                      'cosmo': self.cosmo_defaults}
+
+        for i, key in enumerate(self.param_keys):
+            if key in DEFAULT_COSMO_KEYS:
+                param_dict['cosmo'][key] = params[i]
+            elif key in DEFAULT_HMPARAMS_KEYS:
+                param_dict['hmparams'][key] = params[i]
+            else:
+                raise RuntimeError('Parameter {} not recognized. Aborting.'.format(key))
 
         if self.bounds is not None:
             if not self.bounds_ok(params):

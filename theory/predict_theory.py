@@ -7,14 +7,11 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEFAULT_HMPARAMS_KEYS = ['HODmod', 'mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'massdef', 'pprof']
-DEFAULT_COSMO_KEYS = ['Omega_b', 'Omega_k', 'A_s', 'h', 'n_s', 'Omega_c', 'w0', 'wa']
-
 class GSKYPrediction(object):
 
-    def __init__ (self, saccfile, ells='NONE', param_keys=None, hmparams=None, cosmo=None):
+    def __init__ (self, saccfile, ells='NONE', hmparams=None, cosmo=None):
 
-        self.setup(saccfile, ells, param_keys, hmparams, cosmo)
+        self.setup(saccfile, ells, hmparams, cosmo)
 
     def get_prediction(self, params, trc_combs=None, datatype=None):
 
@@ -24,25 +21,14 @@ class GSKYPrediction(object):
         else:
             logger.info('Computing theory predictions for tracer combinations {}.'.format(trc_combs))
 
-        if type(params) is dict:
-            if 'cosmo' in params.keys():
-                cosmo_params = params['cosmo']
-            else:
-                cosmo_params = {}
-            if 'hmparams' in params.keys():
-                hmparams = params['hmparams']
-            else:
-                hmparams = {}
+        if 'cosmo' in params.keys():
+            cosmo_params = params['cosmo']
         else:
             cosmo_params = {}
+        if 'hmparams' in params.keys():
+            hmparams = params['hmparams']
+        else:
             hmparams = {}
-            for i, key in enumerate(self.param_keys):
-                if key in DEFAULT_COSMO_KEYS:
-                    cosmo_params[key] = params[i]
-                elif key in DEFAULT_HMPARAMS_KEYS:
-                    hmparams[key] = params[i]
-                else:
-                    raise RuntimeError('Parameter {} not recognized. Aborting.'.format(key))
 
         if cosmo_params != {} and hmparams != {}:
             cosmo = ccl.Cosmology(**cosmo_params)
@@ -78,7 +64,7 @@ class GSKYPrediction(object):
 
         return cls
 
-    def setup(self, saccfile, ells, param_keys, hmparams, cosmo):
+    def setup(self, saccfile, ells, hmparams, cosmo):
 
         logger.info('Setting up GSKYPrediction.')
         if not type(saccfile) == sacc.sacc.Sacc:
@@ -87,7 +73,6 @@ class GSKYPrediction(object):
         self.ells = ells
         if self.ells == 'NONE':
             logger.info('No ell array provided using probe-specific ells from sacc.')
-        self.param_keys = param_keys
         self.fid_cosmo = cosmo
 
         self.gskytheor = GSKYTheory(self.saccfile, hmparams, cosmo)

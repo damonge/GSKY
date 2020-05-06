@@ -10,7 +10,14 @@ LikeMinimizer:
 #             14200.]
     ells: NONE
     ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000, 2000, 2000]
-    param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro']
+    param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'sigma8', 'Omega_c']
+    default_params:
+        Omega_b: 0.0493
+        Omega_k: 0.0
+        h: 0.6736
+        n_s: 0.9649
+        w0: -1.
+        wa: 0.
     theory:
         hmparams:
             corr_halo_mod: True
@@ -31,6 +38,6 @@ LikeMinimizer:
         method: 'Powell'
         maxiter: 5000
         ftol: 1e-4
-        x0: [12.02, -1.34, 6.6, -1.43, 13.27, -0.323, 0.2]
-        bounds: [[10., 14.], [-4., 2.], [4., 8.], [-4., 2.], [11., 15.], [-4., 2.], [0.1, 0.5]]
+        x0: [12.02, -1.34, 6.6, -1.43, 13.27, -0.323, 0.2, 0.8, 0.26]
+        bounds: [[10., 14.], [-4., 2.], [4., 8.], [-4., 2.], [11., 15.], [-4., 2.], [0.1, 0.5], [0.6, 1.0], [0.1, 0.4]]
 #        bounds: None
