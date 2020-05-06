@@ -45,12 +45,12 @@ class LikeMinimizer(PipelineStage) :
         self.cosmo_defaults = {}
         for key in DEFAULT_COSMO_KEYS:
             if key in default_params:
-                logger.info('Setting {} to default value {}.'.format((key, default_params[key])))
+                logger.info('Setting {} to default value {}.'.format(key, default_params[key]))
                 self.cosmo_defaults[key] = default_params[key]
         self.hmparams_defaults = {}
         for key in DEFAULT_HMPARAMS_KEYS:
             if key in default_params:
-                logger.info('Setting {} to default value {}.'.format((key, default_params[key])))
+                logger.info('Setting {} to default value {}.'.format(key, default_params[key]))
                 self.hmparams_defaults[key] = default_params[key]
 
         return
