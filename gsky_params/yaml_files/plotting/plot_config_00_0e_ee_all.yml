@@ -33,4 +33,10 @@ PSpecPlotter:
         hmparams:
             massdef: 'M200c'
             pprof: 'Battaglia'
-            bhydro: 0.2
+            bhydro: 0.41
+            mmin: 12.16
+            mminp: 0.89
+            m0: 8.
+            m0p: 2.
+            m1: 13.55
+            m1p: 1.99
