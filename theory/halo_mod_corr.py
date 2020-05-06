@@ -21,4 +21,6 @@ class HaloModCorrection(object):
 
     def rk_interp(self, k, a):
 
-        return self.rk_func(np.log10(k), a)
+        z = 1./a - 1.
+
+        return self.rk_func(np.log10(k), z)
