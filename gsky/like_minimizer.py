@@ -276,8 +276,7 @@ class LikeMinimizer(PipelineStage) :
                 hmparams = None
         else:
             cosmo = hmparams = None
-        self.gskypred = GSKYPrediction(saccfile_coadd, self.config['ells'], self.config['param_keys'], hmparams=hmparams,
-                                       cosmo=cosmo)
+        self.gskypred = GSKYPrediction(saccfile_coadd, self.config['ells'], hmparams=hmparams, cosmo=cosmo)
         self.like = GSKYLike(saccfile_coadd, noise_saccfile_coadd)
 
         minimizer_params = self.config['minimizer']
