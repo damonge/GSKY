@@ -81,12 +81,6 @@ class GSKYTheory(object):
         else:
             raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
-        if self.params['corr_halo_mod']:
-            logger.info('Correcting halo model Pk with HALOFIT ratio.')
-            # Provide a, k grids
-            HMCorr = HaloModCorrection(cosmo, k_range=[1e-4, 1e2], nlk=256, z_range=[0., 3.], nz=50)
-            self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
-
         self._setup_Cosmo()
         self._setup_HM()
 
@@ -379,6 +373,13 @@ class GSKYTheory(object):
                                                prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                     else:
+                        if self.params['corr_halo_mod']:
+                            logger.info('Correcting halo model Pk with HALOFIT ratio.')
+                            # Provide a, k grids
+                            HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                                                       z_range=[0., 3.], nz=50)
+                            self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
+
                         Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
                                     self.pg, prof_2pt=self.HOD2pt, prof2=self.pg,
                                     normprof1=True, normprof2=True)
