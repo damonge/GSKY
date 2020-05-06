@@ -186,7 +186,7 @@ class LikeMinimizer(PipelineStage) :
                 return like
 
         try:
-            obs_theory = self.gskypred.get_prediction(params)
+            obs_theory = self.gskypred.get_prediction(param_dict)
             like = self.like.computeLike(obs_theory)
             like *= (-1.)
         except BaseException as e:
