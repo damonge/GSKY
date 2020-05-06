@@ -16,6 +16,7 @@ if not logger.handlers:
 logger.propagate = False
 
 DEFAULT_PARAMS = {
+                'corr_halo_mod': True,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
