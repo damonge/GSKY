@@ -132,7 +132,7 @@ class GSKYTheory(object):
 
     def _delete_attrs(self):
 
-        for attr in ['pk_MMf', 'pk_yMf', 'pk_gMf', 'pk_ygf', 'pk_ggf']:
+        for attr in ['pk_MMf', 'pk_yMf', 'pk_gMf', 'pk_ygf', 'pk_ggf', 'rk_hm']:
             if hasattr(self, attr):
                 delattr(self, attr)
 
@@ -312,32 +312,62 @@ class GSKYTheory(object):
         """ typ - is a two character string gg, gs,ss, sy, sk etc...
             i,j are indices for g and s"""
 
+        if self.params['corr_halo_mod']:
+            logger.info('Correcting halo model Pk with HALOFIT ratio.')
+            if not hasattr(self, 'rk_hm'):
+                logger.info('Computing halo model correction.')
+                HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                                           z_range=[0., 3.], nz=50)
+                self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
+
         if 'wl' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'kappa' in tr_j_name or \
                 'kappa' in tr_i_name and 'wl' in tr_j_name or 'kappa' in tr_i_name and 'kappa' in tr_j_name:
             if not hasattr(self, 'pk_MMf'):
-                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM,
-                                        normprof1=True,
-                                        lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                if not self.params['corr_halo_mod']:
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
+                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                else:
+                    Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                              self.pM, normprof1=True)
+                    Pk_arr *= self.rk_hm
+                    Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                  cosmo=self.cosmo, is_logp=False)
                 self.pk_MMf = Pk
+
             else:
                 Pk = self.pk_MMf
         elif 'wl' in tr_i_name and 'y' in tr_j_name or 'y' in tr_i_name and 'wl' in tr_j_name or \
                 'kappa' in tr_i_name and 'y' in tr_j_name or 'y' in tr_i_name and 'kappa' in tr_j_name:
             if not hasattr(self, 'pk_yMf'):
-                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.py, prof2=self.pM,
-                                                         normprof1=False, normprof2=True,
-                                                         lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                if not self.params['corr_halo_mod']:
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.py, prof2=self.pM,
+                                                             normprof1=False, normprof2=True,
+                                                             lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                else:
+                    Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                              self.py, prof2=self.pM, normprof1=False, normprof2=True)
+                    Pk_arr *= self.rk_hm
+                    Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                  cosmo=self.cosmo, is_logp=False)
                 self.pk_yMf = Pk
+
             else:
                 Pk = self.pk_yMf
         elif 'g' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'g' in tr_j_name or \
                 'kappa' in tr_i_name and 'g' in tr_j_name or 'g' in tr_i_name and 'kappa' in tr_j_name:
             if self.params['HODmod'] == 'zevol':
                 if not hasattr(self, 'pk_gMf'):
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pM,
-                                                         normprof1=True, normprof2=True,
-                                                         lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    if not self.params['corr_halo_mod']:
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pM, normprof1=True,
+                                                    normprof2=True, lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    else:
+                        Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                                  self.pg, prof2=self.pM, normprof1=True, normprof2=True)
+                        Pk_arr *= self.rk_hm
+                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                      cosmo=self.cosmo, is_logp=False)
                     self.pk_gMf = Pk
+
                 else:
                     Pk = self.pk_gMf
             else:
@@ -345,16 +375,30 @@ class GSKYTheory(object):
                     tr_g_name = tr_i_name
                 else:
                     tr_g_name = tr_j_name
-                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.pM,
-                                            normprof1=True, normprof2=True,
-                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                if not self.params['corr_halo_mod']:
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.pM,
+                                            normprof1=True, normprof2=True, lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                else:
+                    Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                              self.ccl_tracers[tr_g_name][1], prof2=self.pM,
+                                                              normprof1=True, normprof2=True)
+                    Pk_arr *= self.rk_hm
+                    Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                  cosmo=self.cosmo, is_logp=False)
         elif 'g' in tr_i_name and 'y' in tr_j_name or 'y' in tr_i_name and 'g' in tr_j_name:
             if self.params['HODmod'] == 'zevol':
                 if not hasattr(self, 'pk_ygf'):
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.py,
-                                                normprof1=True, normprof2=False,
-                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    if not self.params['corr_halo_mod']:
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.py, normprof1=True,
+                                                    normprof2=False, lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    else:
+                        Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                                  self.pg, prof2=self.py, normprof1=True, normprof2=False)
+                        Pk_arr *= self.rk_hm
+                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                      cosmo=self.cosmo, is_logp=False)
                     self.pk_ygf = Pk
+
                 else:
                     Pk = self.pk_ygf
             else:
@@ -373,18 +417,9 @@ class GSKYTheory(object):
                                                prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                     else:
-                        if self.params['corr_halo_mod']:
-                            logger.info('Correcting halo model Pk with HALOFIT ratio.')
-                            # Provide a, k grids
-                            HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
-                                                       z_range=[0., 3.], nz=50)
-                            self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
-
                         Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                    self.pg, prof_2pt=self.HOD2pt, prof2=self.pg,
-                                    normprof1=True, normprof2=True)
+                                    self.pg, prof_2pt=self.HOD2pt, prof2=self.pg, normprof1=True, normprof2=True)
                         Pk_arr *= self.rk_hm
-
                         Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
                                     cosmo=self.cosmo, is_logp=False)
 
@@ -392,10 +427,19 @@ class GSKYTheory(object):
                 else:
                     Pk = self.pk_ggf
             else:
-                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name][1],
-                                            prof2=self.ccl_tracers[tr_j_name][1],
-                                            prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
-                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                if not self.params['corr_halo_mod']:
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name][1],
+                                                prof2=self.ccl_tracers[tr_j_name][1],
+                                                prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
+                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                else:
+                    Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                              self.ccl_tracers[tr_i_name][1], prof_2pt=self.HOD2pt,
+                                                              prof2=self.ccl_tracers[tr_j_name][1],
+                                                              normprof1=True, normprof2=True)
+                    Pk_arr *= self.rk_hm
+                    Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                  cosmo=self.cosmo, is_logp=False)
         else: ## eg yy
             logger.warning('Tracer combination {}, {} not implemented. Returning zero.'.format(tr_i_name, tr_j_name))
             return np.zeros_like(l_arr)
