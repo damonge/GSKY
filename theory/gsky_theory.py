@@ -3,6 +3,7 @@ import pyccl as ccl
 import theory.HOD_theory as hod
 import theory.SZ_theory as sz
 from theory.concentration import ConcentrationDuffy08M500c
+from theory.halo_mod_corr import HaloModCorrection
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -78,6 +79,12 @@ class GSKYTheory(object):
             self.cM = ConcentrationDuffy08M500c(self.hm_def)
         else:
             raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
+
+        if self.params['corr_halo_mod']:
+            logger.info('Correcting halo model Pk with HALOFIT ratio.')
+            # Provide a, k grids
+            HMCorr = HaloModCorrection(cosmo, k_range=[1e-4, 1e2], nlk=256, z_range=[0., 3.], nz=50)
+            self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
 
         self._setup_Cosmo()
         self._setup_HM()
@@ -366,9 +373,19 @@ class GSKYTheory(object):
         elif 'g' in tr_i_name and 'g' in tr_j_name:
             if self.params['HODmod'] == 'zevol':
                 if not hasattr(self, 'pk_ggf'):
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pg,
-                                           prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
-                                           lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    if not self.params['corr_halo_mod']:
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pg,
+                                               prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
+                                               lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    else:
+                        Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                    self.pg, prof_2pt=self.HOD2pt, prof2=self.pg,
+                                    normprof1=True, normprof2=True)
+                        Pk_arr *= self.rk_hm
+
+                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=GSKYTheory.k_arr, pk_arr=Pk_arr,
+                                    cosmo=self.cosmo, is_logp=False)
+
                     self.pk_ggf = Pk
                 else:
                     Pk = self.pk_ggf
