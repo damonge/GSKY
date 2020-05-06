@@ -255,7 +255,7 @@ class LikeMinimizer(PipelineStage) :
                     logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
                     noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
                 noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True)
+            noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles)
         else:
             logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
