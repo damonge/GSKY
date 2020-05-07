@@ -30,7 +30,8 @@ DEFAULT_PARAMS = {
                 }
 
 DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof', 'massdef', 'corr_halo_mod', 'HODmod',
-                         'z_shift0', 'z_shift1', 'z_shift2', 'z_shift3', 'z_width0', 'z_width1', 'z_width2', 'z_width3']
+                         'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
+                         'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3']
 
 class GSKYTheory(object):
 

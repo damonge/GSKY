@@ -12,8 +12,8 @@ LikeMinimizer:
     ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000, 2000, 2000]
 #    param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'sigma8', 'Omega_c']
     param_keys: ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'sigma8', 'Omega_c',
-                 'z_shift0', 'z_shift1', 'z_shift2', 'z_shift3',
-                 'z_width0', 'z_width1', 'z_width2', 'z_width3']
+                 'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bint3',
+                 'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3']
     default_params:
         Omega_b: 0.0493
         Omega_k: 0.0
