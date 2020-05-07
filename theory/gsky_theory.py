@@ -144,7 +144,6 @@ class GSKYTheory(object):
 
         logger.info('Setting up systematics parameters.')
 
-        logger.info('Setting up z_c.')
         self.z_c = {}
         for (tr_index, thistracer) in enumerate(self.tracer_list):
             if 'zwidth_bin{}'.format(tr_index) in self.params.keys():
@@ -154,6 +153,8 @@ class GSKYTheory(object):
 
         if self.z_c == {}:
             logger.info('Nothing to be done.')
+        else:
+            logger.info('Set up z_c.')
 
     def _setup_HM(self):
 
@@ -191,6 +192,8 @@ class GSKYTheory(object):
         logger.info('Setting up tracers.')
 
         p = self.params
+
+        self._setup_systematics()
 
         ccl_tracer_dict = {}
 
