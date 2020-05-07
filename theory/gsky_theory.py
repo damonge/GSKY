@@ -29,6 +29,9 @@ DEFAULT_PARAMS = {
                 'pprof': 'Battaglia'
                 }
 
+DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof', 'massdef', 'corr_halo_mod', 'HODmod',
+                         'z_shift0', 'z_shift1', 'z_shift2', 'z_shift3', 'z_width0', 'z_width1', 'z_width2', 'z_width3']
+
 class GSKYTheory(object):
 
     # Wavenumbers and scale factors
@@ -48,7 +51,7 @@ class GSKYTheory(object):
         else:
             self.params = DEFAULT_PARAMS
 
-        self.paramnames = self.params.keys()
+        self.paramnames = DEFAULT_HMPARAMS_KEYS
         if cosmo is None:
             logger.info('No CCL cosmology object provided. Setting up default parameters.')
             logger.info('Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96')

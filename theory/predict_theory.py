@@ -2,6 +2,8 @@ import numpy as np
 from .gsky_theory import GSKYTheory
 import sacc
 import pyccl as ccl
+import theory.theory_util as tutil
+from theory.theory_util import ClInterpolator
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -9,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 class GSKYPrediction(object):
 
-    def __init__ (self, saccfile, ells='NONE', hmparams=None, cosmo=None):
+    def __init__ (self, saccfile, ells='NONE', hmparams=None, cosmo=None, conv_win=False):
 
-        self.setup(saccfile, ells, hmparams, cosmo)
+        self.setup(saccfile, ells, hmparams, cosmo, conv_win)
 
     def get_prediction(self, params, trc_combs=None, datatype=None):
 
@@ -46,10 +48,28 @@ class GSKYPrediction(object):
         for tr_i, tr_j in trc_combs:
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
             if self.ells != 'NONE':
-                cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+                if self.conv_win:
+                    # Get window
+                    win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
+                    if type(win) is list:
+                        win = win[0]
+                    ell_max = win.values.shape[0]
+                    itp = ClInterpolator(self.ells, np.amax(ell_max))
+                    cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                else:
+                    cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
             else:
                 ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
-                cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
+                if self.conv_win:
+                    # Get window
+                    win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
+                    if type(win) is list:
+                        win = win[0]
+                    ell_max = win.values.shape[0]
+                    itp = ClInterpolator(self.ells, np.amax(ell_max))
+                    cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                else:
+                    cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 logger.info('No shear tracers in combination. Returning scalar cls.')
                 indx = self.saccfile.indices('cl_00', (tr_i, tr_j))
@@ -60,11 +80,14 @@ class GSKYPrediction(object):
                 logger.info('Two shear tracers in combination. Returning spin2 cls.')
                 indx = self.saccfile.indices('cl_ee', (tr_i, tr_j))
 
+            if self.conv_win:
+                cl_temp = tutil.convolve(cl_temp, win, itp)
+
             cls[indx] = cl_temp
 
         return cls
 
-    def setup(self, saccfile, ells, hmparams, cosmo):
+    def setup(self, saccfile, ells, hmparams, cosmo, conv_win):
 
         logger.info('Setting up GSKYPrediction.')
         if not type(saccfile) == sacc.sacc.Sacc:
@@ -73,6 +96,11 @@ class GSKYPrediction(object):
         self.ells = ells
         if self.ells == 'NONE':
             logger.info('No ell array provided using probe-specific ells from sacc.')
+        self.conv_win = conv_win
+        if self.conv_win:
+            logger.info('Convolving theory prediction with namaster window functions.')
+        else:
+            logger.info('Not convolving theory prediction with namaster window functions.')
         self.fid_cosmo = cosmo
 
         self.gskytheor = GSKYTheory(self.saccfile, hmparams, cosmo)

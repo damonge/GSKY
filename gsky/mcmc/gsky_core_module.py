@@ -73,8 +73,8 @@ class GSKYCore(object):
 
                 cls[indx] = cl_temp
 
-                # Add the theoretical cls to the context
-                ctx.add('obs_theory', cls)
+            # Add the theoretical cls to the context
+            ctx.add('obs_theory', cls)
 
         except BaseException as e:
             logger.error('{} for parameter set {}.'.format(e, p))
