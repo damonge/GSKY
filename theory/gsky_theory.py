@@ -145,11 +145,23 @@ class GSKYTheory(object):
         logger.info('Setting up systematics parameters.')
 
         self.z_c = {}
-        for (tr_index, thistracer) in enumerate(self.tracer_list):
-            if 'zwidth_bin{}'.format(tr_index) in self.params.keys():
-                bin_max = thistracer.nz.max()
-                imax = np.where(thistracer.nz == bin_max)
-                self.z_c['zwidth_bin{}'.format(tr_index)] = thistracer.z[imax[0][0]]
+        for thistracer in self.tracer_list:
+            split_name = thistracer.name.split('_')
+            if len(split_name) == 2:
+                tracer_name = split_name[0]
+                tracer_no = split_name[1]
+                if tracer_name == 'gc' or tracer_name == 'wl':
+                    if 'zwidth_bin{}'.format(tracer_no) in self.params.keys():
+                        bin_max = thistracer.nz.max()
+                        imax = np.where(thistracer.nz == bin_max)
+                        self.z_c['zwidth_bin{}'.format(tracer_no)] = thistracer.z[imax[0][0]]
+            else:
+                tracer_name = split_name[0]
+                if tracer_name == 'gc' or tracer_name == 'wl':
+                    if 'zwidth_bin' in self.params.keys():
+                        bin_max = thistracer.nz.max()
+                        imax = np.where(thistracer.nz == bin_max)
+                        self.z_c['zwidth_bin'] = thistracer.z[imax[0][0]]
 
         if self.z_c == {}:
             logger.info('Nothing to be done.')
