@@ -1,0 +1,64 @@
+output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
+output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClTh_NoDpj'
+saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci']
+#    noisesacc_filename: NONE
+noisesacc_filename: 'noi_bias_comb'
+tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3', 'kappa_0', 'y_0']
+#    ells: [  150.,   250.,   350.,   500.,   700.,   900.,  1200.,  1600.,
+#             2000.,  2600.,  3400.,  4200.,  5400.,  7000.,  8600., 11000.,
+#             14200.]
+ells: NONE
+ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000, 2000, 2000]
+fit_params:
+    mmin: [0, 10., 0., 15., 0.5]
+    minp: [1, 4., -10., 10., 0.5]
+    m0: [2, 10., 0., 15., 0.5]
+    m0p: [3, 4., -5., 10., 0.5]
+    m1: [4, 10., 0., 17., 0.5]
+    m1p: [5, 7., -12., 15., 0.5]
+    bhydro: [6, 0.1, 0.5., 0.2., 0.02]
+    sigma8: [7, 0.6, 1.0., 0.0., 0.05]
+    Omega_c: [8, 0.1, 0.5., 0.2., 0.02]
+    zshift_bin0: [9, 0.0, -0.2, 0.2, 0.01]
+    zshift_bin1: [10, 0.0, -0.2, 0.2, 0.01]
+    zshift_bin2: [11, 0.0, -0.2, 0.2, 0.01]
+    zshift_bint3: [12, 0.0, -0.2, 0.2, 0.01]
+    zwidth_bin0: [3, 0.0, -0.2, 0.2, 0.01]
+    zwidth_bin1: [4, 0.0, -0.2, 0.2, 0.01]
+    zwidth_bin2: [0, 0.0, -0.2, 0.2, 0.01]
+    zwidth_bin3: [0, 0.0, -0.2, 0.2, 0.01]
+constants:
+    Omega_b: 0.0493
+    Omega_k: 0.0
+    h: 0.6736
+    n_s: 0.9649
+    w0: -1.
+    wa: 0.
+    corr_halo_mod: True
+    massdef: 'M500c'
+    pprof: 'Arnaud'
+    HODmod: 'zevol'
+theory:
+    hmparams:
+        corr_halo_mod: True
+        massdef: 'M500c'
+        pprof: 'Arnaud'
+        bhydro: 0.2
+        HODmod: 'zevol'
+    cosmo:
+        Omega_b: 0.0493
+        Omega_k: 0.0
+        sigma8: 0.8111
+        h: 0.6736
+        n_s: 0.9649
+        Omega_c: 0.264
+        w0: -1.
+        wa: 0.
+ch_params:
+    chainsPrefix: 'test'
+    walkersRatio: 8
+    burninIterations: 500
+    sampleIterations: 5000
+    use_mpi: 0
+    rerun: 0
+

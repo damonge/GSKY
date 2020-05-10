@@ -8,9 +8,9 @@ class GSKYLike(object):
 
     def __init__ (self, saccfile, noise_saccfile=None):
 
-        self.obs_data = saccfile.get_mean()
+        self.obs_data = saccfile.mean
         if noise_saccfile is not None:
-            self.obs_data -= noise_saccfile.get_mean()
+            self.obs_data -= noise_saccfile.mean
 
         self.invcov = np.linalg.inv(saccfile.covariance.covmat)
 
