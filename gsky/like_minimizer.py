@@ -145,14 +145,14 @@ class LikeMinimizer(PipelineStage) :
                     logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
                     noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
                 noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles)
+            noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, self.ell_max_dict)
         else:
             logger.info('No noise saccfile provided.')
             noise_saccfile_coadd = None
             noise_saccfiles = None
 
         # Need to coadd saccfiles after adding covariance to noise saccfiles
-        saccfile_coadd = sutils.coadd_saccs(saccfiles)
+        saccfile_coadd = sutils.coadd_saccs(saccfiles, self.ell_max_dict)
 
         if 'theory' in self.config.keys():
             if 'cosmo' in self.config['theory'].keys():

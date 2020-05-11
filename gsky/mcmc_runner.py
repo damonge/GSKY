@@ -49,16 +49,17 @@ logger.info('Read config from {}.'.format(args.path2config))
 
 parse_input(config)
 
-ch_config_params = config['ch_config_params']
-
-logger.info('Called hsc_driver with saccfiles = {}.'.format(config['saccfiles']))
-saccs = [sacc.SACC.loadFromHDF(fn) for fn in config['saccfiles']]
-logger.info("Loaded {} sacc files.".format(len(saccs)))
+ch_config_params = config['ch_params']
 
 if ch_config_params['use_mpi'] == 0:
     from cosmoHammer import CosmoHammerSampler
 else:
     from cosmoHammer import MpiCosmoHammerSampler
+
+if 'ell_max_trc' in config.keys():
+    ell_max_dict = dict(zip(config['tracers'], config['ell_max_trc']))
+else:
+    ell_max_dict = None
 
 saccfiles = []
 for saccdir in config['saccdirs']:
@@ -76,20 +77,20 @@ if config['noisesacc_filename'] != 'NONE':
     for i, saccdir in enumerate(config['saccdirs']):
         if config['output_run_dir'] != 'NONE':
             path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
-        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(path2sacc, 'sacc'))
-        logger.info('Read {}.'.format(get_output_fname(path2sacc, 'sacc')))
+        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+        logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
         if noise_sacc_curr.covariance is None:
             logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
             noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
         noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles)
+    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, ell_max_dict)
 else:
     logger.info('No noise saccfile provided.')
     noise_saccfile_coadd = None
     noise_saccfiles = None
 
 # Need to coadd saccfiles after adding covariance to noise saccfiles
-saccfile_coadd = sutils.coadd_saccs(saccfiles)
+saccfile_coadd = sutils.coadd_saccs(saccfiles, ell_max_dict)
 
 fit_params = config['fit_params']
 if 'theory' in config.keys():
