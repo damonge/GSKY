@@ -208,7 +208,7 @@ else:
         sampler = MpiCosmoHammerSampler(
             params=params,
             likelihoodComputationChain=chain,
-            filePrefix=os.path.join(ch_config_params['path2output'], ch_config_params['chainsPrefix']),
+            filePrefix=get_output_fname(config, path2chain),
             walkersRatio=ch_config_params['walkersRatio'],
             burninIterations=ch_config_params['burninIterations'],
             sampleIterations=ch_config_params['sampleIterations'])
@@ -219,11 +219,11 @@ else:
         sampler = MpiCosmoHammerSampler(
             params=params,
             likelihoodComputationChain=chain,
-            filePrefix=os.path.join(ch_config_params['path2output'], ch_config_params['chainsPrefix']),
+            filePrefix=get_output_fname(config, path2chain),
             walkersRatio=ch_config_params['walkersRatio'],
             burninIterations=ch_config_params['burninIterations'],
             sampleIterations=ch_config_params['sampleIterations'],
             initPositionGenerator=InitializeFromChain(ch_config_params['path2rerunchain'], fraction=0.8))
 
-    sampler.startSampling()
+sampler.startSampling()
 
