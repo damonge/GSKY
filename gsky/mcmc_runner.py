@@ -174,6 +174,10 @@ chain.addLikelihoodModule(GSKYLike(saccfile_coadd, noise_saccfile_coadd))
 
 chain.setup()
 
+chaindir = os.path.join('chains', config['output_run_dir'])
+if not os.path.isdir(get_output_fname(config, chaindir)):
+    os.makedirs(get_output_fname(config, chaindir))
+
 path2chain = os.path.join('chains', config['output_run_dir'] + '/' + ch_config_params['chainsPrefix'])
 
 if ch_config_params['use_mpi'] == 0:
