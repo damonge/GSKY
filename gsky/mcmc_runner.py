@@ -97,8 +97,8 @@ if 'theory' in config.keys():
     if 'cosmo' in config['theory'].keys():
         cosmo_params = config['theory']['cosmo']
         cosmo_fit_params = get_params(fit_params, 'cosmo')
-        cosmo_default_params = get_params(config['defaults'], 'cosmo')
-        assert cosmo_params.keys() <= list(cosmo_fit_params.keys()) + list(cosmo_default_params.keys()), \
+        cosmo_default_params = get_params(config['constants'], 'cosmo')
+        assert cosmo_params.keys() <= set(list(cosmo_fit_params.keys()) + list(cosmo_default_params.keys())), \
             'Provided cosmology params contain keys not specified in fit_params and constants. Aborting.'
         cosmo = ccl.Cosmology(**cosmo_params)
     else:
@@ -106,8 +106,8 @@ if 'theory' in config.keys():
     if 'hmparams' in config['theory'].keys():
         hmparams = config['theory']['hmparams']
         hmparams_fit = get_params(fit_params, 'hmparams')
-        hmparams_default = get_params(config['defaults'], 'hmparams')
-        assert hmparams.keys() <= list(hmparams_fit.keys()) + list(hmparams_default.keys()), \
+        hmparams_default = get_params(config['constants'], 'hmparams')
+        assert hmparams.keys() <= set(list(hmparams_fit.keys()) + list(hmparams_default.keys())), \
             'Provided HM params contain keys not specified in fit_params and constants. Aborting.'
     else:
         hmparams = None
@@ -159,7 +159,7 @@ elif config['fit_comb'] == 'cross':
                 trc_combs.append([tr_i, tr_j])
         i += 1
 else:
-    raise NotImplementedError('Only plot_comb = all, auto and cross supported. Aborting.')
+    raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
 
 logger.info('Fitting tracer combination = {}.'.format(trc_combs))
 
