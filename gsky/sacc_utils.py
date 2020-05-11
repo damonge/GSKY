@@ -4,7 +4,7 @@ import numpy as np
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def coadd_saccs(saccfiles, ell_max_dict=None):
+def coadd_saccs(saccfiles, tracers, ell_max_dict=None):
     logger.info('Coadding all saccfiles weighted by inverse variance.')
 
     for saccfile in saccfiles:
@@ -69,12 +69,12 @@ def coadd_saccs(saccfiles, ell_max_dict=None):
     invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
     mean_coadd = np.dot(invcov_coadd, tempsacc.mean)
 
-    assert set(tempsacc_tracers) == set(self.config['tracers']), 'Different tracers requested than present in largest ' \
+    assert set(tempsacc_tracers) == set(tracers), 'Different tracers requested than present in largest ' \
                                                                  'saccfile. Aborting.'
 
     for i, saccfile in enumerate(sacc_coadds[1:]):
         sacc_tracers = saccfile.tracers.keys()
-        missing_tracers = list(set(self.config['tracers']) - set(sacc_tracers))
+        missing_tracers = list(set(tracers) - set(sacc_tracers))
         logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
 
         invcov_small_curr = np.linalg.inv(saccfile.covariance.covmat)

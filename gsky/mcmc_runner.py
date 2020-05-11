@@ -83,14 +83,14 @@ if config['noisesacc_filename'] != 'NONE':
             logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
             noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
         noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, ell_max_dict)
+    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict)
 else:
     logger.info('No noise saccfile provided.')
     noise_saccfile_coadd = None
     noise_saccfiles = None
 
 # Need to coadd saccfiles after adding covariance to noise saccfiles
-saccfile_coadd = sutils.coadd_saccs(saccfiles, ell_max_dict)
+saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict)
 
 fit_params = config['fit_params']
 if 'theory' in config.keys():
