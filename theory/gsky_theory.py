@@ -264,11 +264,13 @@ class GSKYTheory(object):
                     nz = tracer.nz
 
                 if p['HODmod'] == 'zevol':
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (zbins, nz),
+                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False,
+                                            (zbins[zbins>=0.], nz[zbins>=0.]),
                                             bias=bias_tup),
                                             self.pg)
                 else:
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False, (zbins, nz),
+                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False,
+                                                                           (zbins[zbins>=0.], nz[zbins>=0.]),
                                                                            bias=bias_tup),
                                                     hod.HaloProfileHOD(c_M_relation=self.cM,
                                                                        lMmin=p['mmin'], lMminp=p['mminp'],
@@ -320,7 +322,8 @@ class GSKYTheory(object):
                 else:
                     nz = tracer.nz
 
-                ccl_tracer_dict[tracer.name] = (ccl.WeakLensingTracer(self.cosmo, (zbins, nz)),
+                ccl_tracer_dict[tracer.name] = (ccl.WeakLensingTracer(self.cosmo,
+                                      (zbins[zbins>=0.], nz[zbins>=0.])),
                                       self.pM)
             else:
                 raise NotImplementedError('Only tracers delta_g, Compton_y, kappa and cosmic_shear supported. Aborting.')

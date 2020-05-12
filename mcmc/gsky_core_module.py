@@ -64,7 +64,7 @@ class GSKYCore(object):
             self.conv_win = None
         self.trc_combs = config['trc_combs']
 
-        self.gskytheor = GSKYTheory(self.saccfile, self.fid_HMparams, self.fid_cosmo)
+        # self.gskytheor = GSKYTheory(self.saccfile, self.fid_HMparams, self.fid_cosmo)
 
     def __call__(self, ctx):
 
@@ -86,7 +86,7 @@ class GSKYCore(object):
             if (HMparams.keys() & self.mapping.keys()) == set([]):
                 HMparams = self.fid_HMparams
 
-            self.gskytheor.update_params(cosmo, HMparams)
+            gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
 
             cls = np.zeros_like(self.saccfile.mean)
 
@@ -108,9 +108,9 @@ class GSKYCore(object):
                             win = win[0]
                         ell_max = win.values.shape[0]
                         itp = ClInterpolator(self.ells, np.amax(ell_max))
-                        cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                     else:
-                        cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
                 else:
                     ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
                     if self.conv_win:
@@ -120,9 +120,9 @@ class GSKYCore(object):
                             win = win[0]
                         ell_max = win.values.shape[0]
                         itp = ClInterpolator(self.ells, np.amax(ell_max))
-                        cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                     else:
-                        cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, ells_curr)
 
                 indx = self.saccfile.indices(datatype, (tr_i, tr_j))
 
