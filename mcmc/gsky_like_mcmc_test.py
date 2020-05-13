@@ -20,8 +20,9 @@ class GSKYLike(object):
 
     def computeLikelihood(self, ctx):
 
-        invcov = np.load('/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/invcov.npy')
-        obs_data = np.load('/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/mean.npy')
+        invcov = np.load('/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/invcov.npy')
+        obs_data = np.load('/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/mean.npy')
+        print('reading')
 
         # Calculate a likelihood up to normalization
         obs_theory = ctx.get('obs_theory')

@@ -70,7 +70,8 @@ class GSKYCore(object):
 
     def __call__(self, ctx):
 
-        saccfile = sacc.Sacc.load_fits('/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/saccfile_coadd.sacc')
+        saccfile = sacc.Sacc.load_fits('/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/saccfile_coadd.sacc')
+        print('reading')
 
         # Get the parameters from the context
         p = ctx.getParams()
