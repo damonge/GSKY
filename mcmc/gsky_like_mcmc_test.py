@@ -8,9 +8,9 @@ class GSKYLike(object):
 
     def __init__ (self, saccfile, noise_saccfile=None):
 
-        self.obs_data = saccfile.mean
-        if noise_saccfile is not None:
-            self.obs_data -= noise_saccfile.mean
+        # self.obs_data = saccfile.mean
+        # if noise_saccfile is not None:
+        #     self.obs_data -= noise_saccfile.mean
 
         # self.invcov = np.linalg.inv(saccfile.covariance.covmat)
 
@@ -21,10 +21,11 @@ class GSKYLike(object):
     def computeLikelihood(self, ctx):
 
         invcov = np.load('/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/invcov.npy')
+        obs_data = np.load('/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/mean.npy')
 
         # Calculate a likelihood up to normalization
         obs_theory = ctx.get('obs_theory')
-        delta = self.obs_data - obs_theory
+        delta = obs_data - obs_theory
         lnprob = np.einsum('i,ij,j', delta, invcov, delta)
         lnprob *= -0.5
 
