@@ -131,6 +131,7 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
 
                 saccfile_coadd_trimmed.add_ell_cl(datatype, tr_i1, tr_j1, ell, cl)
         assert np.all(saccfile_coadd.mean == saccfile_coadd_trimmed.mean), 'Error while trimming sacc, means not equal. Aborting.'
+        saccfile_coadd_trimmed.add_covariance(cov_coadd)
         saccfile_coadd = saccfile_coadd_trimmed
 
     return saccfile_coadd
