@@ -70,7 +70,7 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None):
     invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
     mean_coadd = np.dot(invcov_coadd, tempsacc.mean)
 
-    assert set(tempsacc_tracers) == set(tracers), 'Different tracers requested than present in largest ' \
+    assert set(tempsacc_tracers) <= set(tracers), 'Larger tracer set requested than present in largest ' \
                                                                  'saccfile. Aborting.'
 
     for i, saccfile in enumerate(sacc_coadds[1:]):
