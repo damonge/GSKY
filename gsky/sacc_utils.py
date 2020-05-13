@@ -26,9 +26,10 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None):
         if ell_max_dict is not None:
             logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
             for tr_i, tr_j in saccfile.get_tracer_combinations():
-                ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
-                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                if tr_i in tracers and tr_j in tracers:
+                    ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                    logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                    saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
             logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
     ntracers_arr = np.array([len(saccfile.tracers) for saccfile in saccfiles])

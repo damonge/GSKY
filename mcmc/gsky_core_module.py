@@ -134,8 +134,11 @@ class GSKYCore(object):
             # Add the theoretical cls to the context
             ctx.add('obs_theory', cls)
 
+            del gskytheor
+
         except BaseException as e:
             logger.error('{} for parameter set {}.'.format(e, p))
+            del gskytheor
             raise LikelihoodComputationException()
 
     def setup(self):
