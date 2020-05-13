@@ -14,6 +14,10 @@ class GSKYLike(object):
 
         self.invcov = np.linalg.inv(saccfile.covariance.covmat)
 
+        del saccfile
+        if noise_saccfile is not None:
+            del noise_saccfile
+
     def computeLikelihood(self, ctx):
 
         # Calculate a likelihood up to normalization

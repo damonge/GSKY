@@ -66,6 +66,8 @@ class GSKYTheory(object):
         tracer_list = list(saccfile.tracers.values())
         self.tracer_list = tracer_list
 
+        del saccfile
+
         if self.params['massdef'] == 'M200m':
             logger.info('Using M200m.')
             # We will use a mass definition with Delta = 200 times the matter density
@@ -86,6 +88,7 @@ class GSKYTheory(object):
             raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
         self._setup_Cosmo()
+        self.check_params()
         self._setup_HM()
 
     def update_params(self, cosmo, hmparams):
