@@ -1,10 +1,11 @@
 import logging
 import numpy as np
+import sacc
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def coadd_saccs(saccfiles, tracers, ell_max_dict=None):
+def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
     logger.info('Coadding all saccfiles weighted by inverse variance.')
 
     for saccfile in saccfiles:
@@ -115,5 +116,21 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None):
     cov_coadd = np.linalg.inv(invcov_coadd)
     saccfile_coadd.mean = np.dot(cov_coadd, mean_coadd)
     saccfile_coadd.add_covariance(cov_coadd)
+
+    if trim_sacc:
+        logger.info('Trimming sacc - removing windows and covariance.')
+        saccfile_coadd_trimmed = sacc.Sacc()
+        for trc_name in saccfile_coadd.tracers.keys():
+            print(trc_name)
+            saccfile_coadd_trimmed.add_tracer_object(saccfile_coadd.tracers[trc_name])
+        datatypes = saccfile_coadd.get_data_types()
+        for datatype in datatypes:
+            tracer_combs = saccfile_coadd.get_tracer_combinations(data_type=datatype)
+            for tr_i1, tr_j1 in tracer_combs:
+                ell, cl = saccfile_coadd.get_ell_cl(datatype, tr_i1, tr_j1, return_cov=False)
+
+                saccfile_coadd_trimmed.add_ell_cl(datatype, tr_i1, tr_j1, ell, cl)
+        assert np.all(saccfile_coadd.mean == saccfile_coadd_trimmed.mean), 'Error while trimming sacc, means not equal. Aborting.'
+        saccfile_coadd = saccfile_coadd_trimmed
 
     return saccfile_coadd
