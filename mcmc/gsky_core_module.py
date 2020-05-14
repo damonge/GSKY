@@ -113,6 +113,8 @@ class GSKYCore(object):
                         cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
                 else:
                     ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
+                    if ells_curr == np.array([]):
+                        logger.warning('Empty tracer combination. Check tracer order.')
                     if self.conv_win:
                         # Get window
                         win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
