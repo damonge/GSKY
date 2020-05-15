@@ -20,7 +20,7 @@ import logging
 
 
 def get_output_fname(config, name, ext=None):
-    fname = config['output_dir'] + name
+    fname = config['output_dir'] + '/' + name
     if ext is not None:
         fname += '.' + ext
     return fname
@@ -203,7 +203,8 @@ if ch_config_params['rerun']:
 
     p_initial = chain_initializer.generate()
 else:
-    chain_initializer = SampleBallPositionGenerator(params, nwalkers)
+    chain_initializer = SampleBallPositionGenerator()
+    chain_initializer.setup(params, nwalkers)
     p_initial = chain_initializer.generate()
 
 if ch_config_params['use_mpi'] == 0:
