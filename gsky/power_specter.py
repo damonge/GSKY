@@ -68,6 +68,16 @@ class PowerSpecter(PipelineStage) :
         logger.info("Computing window functions.")
         l_arr = np.arange(self.lmax + 1)
 
+        if self.config['subsamp_winds']:
+            logger.info('Subsampling window functions.')
+            if self.config['subsamp_winds_band'] is not None:
+                subsamp_winds_band = self.config['subsamp_winds_band']
+                logger.info('Window sunbsampling deltal provided = {}.'.format(subsamp_winds_band))
+            else:
+                subsamp_winds_band = 14
+                logger.info('Window sunbsampling deltal not provided. Setting to 14')
+            n_subsamp = (self.lmax + 1) // subsamp_winds_band
+
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
         zero_arr = np.zeros(self.lmax + 1)
@@ -92,6 +102,9 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     self.windows_counts[:, il] = wsp[counts_indx][counts_indx].decouple_cell(wsp[counts_indx][counts_indx].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
+                                if self.config['subsampl_winds']:
+                                    self.windows_counts = self.windows_counts.reshape((self.nbands, n_subsamp, subsamp_winds_band))
+                                    self.windows_counts = np.mean(self.windows_counts, axis=-1)
                                 np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz', windows=self.windows_counts)
                                 logger.info('Written window function to {}.'.format(
                                     self.get_output_fname('windows_l') + '_{}{}'.format(counts_indx, counts_indx) + '.npz'))
@@ -127,6 +140,10 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
+                            if self.config['subsampl_winds']:
+                                windows_curr = windows_curr.reshape(
+                                    (self.nbands, n_subsamp, subsamp_winds_band))
+                                windows_curr = np.mean(windows_curr, axis=-1)
                             np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz', windows=windows_curr)
                             logger.info('Written window function to {}.'.format(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'))
                         else:
@@ -157,6 +174,10 @@ class PowerSpecter(PipelineStage) :
                                 t_hat[il] = 1.
                                 windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
                                 t_hat[il] = 0.
+                        if self.config['subsampl_winds']:
+                            windows_curr = windows_curr.reshape(
+                                (self.nbands, n_subsamp, subsamp_winds_band))
+                            windows_curr = np.mean(windows_curr, axis=-1)
                         np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows_curr)
 
                 # File exists
