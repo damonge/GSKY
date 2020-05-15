@@ -18,7 +18,7 @@ class SampleBallPositionGenerator(object):
             generates the positions
         """
 
-        p0 = self.params[:, 0] + np.random.normal(size=(self.nwalkers, self.params)) * self.params[:, 3][None, :]
+        p0 = self.params[:, 0] + np.random.normal(size=(self.nwalkers, self.params.shape[0])) * self.params[:, 3][None, :]
 
         return p0
 
