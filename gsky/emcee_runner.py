@@ -238,7 +238,7 @@ storageUtil = SampleFileUtil(get_output_fname(config, path2chain))
 sampler = emcee.EnsembleSampler(nwalkers, nparams, lnprob, pool=pool_use)
 
 counter = 1
-for pos, prob, _, _ in sampler.sample(p_initial, iterations=nsteps):
+for pos, prob, _ in sampler.sample(p_initial, iterations=nsteps):
     if pool.is_master():
         logger.info('Iteration done. Persisting.', logging.DEBUG)
         storageUtil.persistSamplingValues(pos, prob)
