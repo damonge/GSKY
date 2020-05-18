@@ -70,5 +70,8 @@ def guess_spectra(params, config):
         logger.info(('Created {}.'.format(coadd_dir)))
 
     saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd.sacc'), overwrite=True)
+    logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
     noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc'), overwrite=True)
+    logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
     sacc_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra.sacc'), overwrite=True)
+    logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
