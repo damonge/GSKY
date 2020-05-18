@@ -68,6 +68,7 @@ class GSKYTheory(object):
 
         del saccfile
 
+        self._setup_conc()
         self._setup_Cosmo()
         self.check_params()
         self._setup_HM()
@@ -88,6 +89,7 @@ class GSKYTheory(object):
         self._delete_attrs()
         self.params.update(params)
         self.check_params()
+        self._setup_conc()
         self._setup_HM()
 
     def check_params(self):
@@ -103,6 +105,7 @@ class GSKYTheory(object):
 
         self._delete_attrs()
         self.cosmo = cosmo
+        self._setup_conc()
         self._setup_Cosmo()
         self._setup_HM()
         
@@ -156,7 +159,6 @@ class GSKYTheory(object):
 
         logger.info('Setting up halo model.')
 
-        self._setup_conc()
         self._setup_profiles()
         self._setup_tracers()
 
