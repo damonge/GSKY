@@ -15,7 +15,7 @@ class GSKYPrediction(object):
 
         self.setup(saccfile, ells, hmparams, cosmo, conv_win)
 
-    def get_prediction(self, params, trc_combs=None, datatype=None):
+    def get_prediction(self, params, trc_combs=None):
 
         if trc_combs is None:
             logger.info('Computing theory predictions for all tracer combinations in sacc.')
@@ -47,6 +47,17 @@ class GSKYPrediction(object):
 
         for tr_i, tr_j in trc_combs:
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
+            
+            if 'wl' not in tr_i and 'wl' not in tr_j:
+                logger.info('No shear tracers in combination. Returning scalar cls.')
+                datatype = 'cl_00'
+            elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
+                logger.info('One shear tracer in combination. Returning scalarxspin2 cls.')
+                datatype = 'cl_0e'
+            else:
+                logger.info('Two shear tracers in combination. Returning spin2 cls.')
+                datatype = 'cl_ee'
+
             if self.ells != 'NONE':
                 if self.conv_win:
                     # Get window
@@ -70,15 +81,8 @@ class GSKYPrediction(object):
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                 else:
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
-            if 'wl' not in tr_i and 'wl' not in tr_j:
-                logger.info('No shear tracers in combination. Returning scalar cls.')
-                indx = self.saccfile.indices('cl_00', (tr_i, tr_j))
-            elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
-                logger.info('One shear tracer in combination. Returning scalarxspin2 cls.')
-                indx = self.saccfile.indices('cl_0e', (tr_i, tr_j))
-            else:
-                logger.info('Two shear tracers in combination. Returning spin2 cls.')
-                indx = self.saccfile.indices('cl_ee', (tr_i, tr_j))
+
+            indx = self.saccfile.indices(datatype, (tr_i, tr_j))
 
             if self.conv_win:
                 cl_temp = tutil.convolve(cl_temp, win, itp)
