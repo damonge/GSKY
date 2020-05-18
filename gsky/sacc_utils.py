@@ -121,7 +121,6 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
         logger.info('Trimming sacc - removing windows and covariance.')
         saccfile_coadd_trimmed = sacc.Sacc()
         for trc_name in saccfile_coadd.tracers.keys():
-            print(trc_name)
             saccfile_coadd_trimmed.add_tracer_object(saccfile_coadd.tracers[trc_name])
         datatypes = saccfile_coadd.get_data_types()
         for datatype in datatypes:
@@ -133,5 +132,77 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
         assert np.all(saccfile_coadd.mean == saccfile_coadd_trimmed.mean), 'Error while trimming sacc, means not equal. Aborting.'
         saccfile_coadd_trimmed.add_covariance(cov_coadd)
         saccfile_coadd = saccfile_coadd_trimmed
+
+    return saccfile_coadd
+
+def coadd_sacc_means(saccfiles, config):
+
+    logger.info('Coadding means of saccfiles.')
+
+    # for saccfile in saccfiles:
+    #     logger.info('Initial size of saccfile = {}.'.format(saccfile.mean.size))
+        # logger.info('Removing B-modes.')
+        # saccfile.remove_selection(data_type='cl_eb')
+        # saccfile.remove_selection(data_type='cl_be')
+        # saccfile.remove_selection(data_type='cl_bb')
+        # saccfile.remove_selection(data_type='cl_0b')
+        # logger.info('Removing yxy.')
+        # saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
+        # logger.info('Removing kappaxkappa.')
+        # saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
+        # logger.info('Removing kappaxy.')
+        # saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'y_0'))
+        # saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
+        # logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
+
+        # logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+        # for tr_i, tr_j in saccfile.get_tracer_combinations():
+        #     ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+        #     logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+        #     saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+        # logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+
+    for i, saccfile in enumerate(saccfiles):
+        sacc_tracers = saccfile.tracers.keys()
+        if set(sacc_tracers) == set(config['tracers']):
+            tempsacc = saccfile
+            ind_tmp = i
+            logger.info('Found sacc with all requested tracers at {}.'.format(ind_tmp))
+            break
+
+    try:
+        coadd_mean = tempsacc.mean
+        datatypes = tempsacc.get_data_types()
+
+        nmeans = np.ones_like(coadd_mean)
+
+    except:
+        raise RuntimeError('More tracers requested than contained in any of the provided sacc files. Aborting.')
+
+    for i, saccfile in enumerate(saccfiles):
+        if i != ind_tmp:
+            sacc_tracers = saccfile.tracers.keys()
+            if set(sacc_tracers).issubset(config['tracers']) and len(sacc_tracers) < len(config['tracers']):
+                missing_tracers = list(set(config['tracers']) - set(sacc_tracers))
+                logger.info('Found missing tracers {} in saccfile {}.'.format(missing_tracers, i))
+
+            for datatype in datatypes:
+                tracer_combs = tempsacc.get_tracer_combinations(data_type=datatype)
+                for tr_i, tr_j in tracer_combs:
+                    _, cl = saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+
+                    ind_here = saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
+                    ind_tempsacc = tempsacc.indices(data_type=datatype, tracers=(tr_i, tr_j))
+                    if not ind_here.size == 0:
+                        coadd_mean[ind_tempsacc] += cl
+                        nmeans[ind_tempsacc] += 1
+
+    coadd_mean /= nmeans
+
+    # Copy sacc
+    saccfile_coadd = tempsacc.copy()
+    # Set mean of new saccfile to coadded mean
+    saccfile_coadd.mean = coadd_mean
+    saccfile_coadd.covariance.covmat = None
 
     return saccfile_coadd

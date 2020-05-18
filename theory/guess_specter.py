@@ -43,10 +43,10 @@ def guess_spectra(params, config):
             logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
             noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
         noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict)
+    noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, config)
 
     # Need to coadd saccfiles after adding covariance to noise saccfiles
-    saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict)
+    saccfile_coadd = sutils.coadd_sacc_means(saccfiles, config)
 
     theor = GSKYPrediction(noise_saccfile_coadd)
 
