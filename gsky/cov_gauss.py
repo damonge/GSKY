@@ -32,7 +32,8 @@ class CovGauss(PowerSpecter) :
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
                     'gaus_covar_type':'analytic','oc_all_bands':True,
                     'mask_systematics':False,'noise_bias_type':'analytic',
-                    'output_run_dir': 'NONE','sys_collapse_type':'average'}
+                    'output_run_dir': 'NONE','sys_collapse_type':'average',
+                    'subsamp_winds': False}
 
     def get_covar(self, lth, clth, bpws, tracers, wsp, temps, cl_dpj_all):
         """

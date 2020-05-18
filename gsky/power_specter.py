@@ -35,7 +35,8 @@ class PowerSpecter(PipelineStage) :
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
                     'gaus_covar_type':'analytic','oc_all_bands':True,
                     'mask_systematics':False,'noise_bias_type':'analytic',
-                    'output_run_dir': 'NONE','sys_collapse_type':'average'}
+                    'output_run_dir': 'NONE','sys_collapse_type':'average',
+                    'subsamp_winds': False}
 
     def read_map_bands(self,fname,read_bands,bandname,offset=0) :
         """
