@@ -47,7 +47,7 @@ class GSKYPrediction(object):
 
         for tr_i, tr_j in trc_combs:
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
-            
+
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 logger.info('No shear tracers in combination. Returning scalar cls.')
                 datatype = 'cl_00'

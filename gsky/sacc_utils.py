@@ -203,6 +203,6 @@ def coadd_sacc_means(saccfiles, config):
     saccfile_coadd = tempsacc.copy()
     # Set mean of new saccfile to coadded mean
     saccfile_coadd.mean = coadd_mean
-    saccfile_coadd.covariance.covmat = None
+    saccfile_coadd.covariance = None
 
     return saccfile_coadd
