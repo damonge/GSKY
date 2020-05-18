@@ -76,6 +76,7 @@ class GSKYTheory(object):
     def update_params(self, cosmo, hmparams):
 
         logger.info('Updating model parameters.')
+        self.params.update(hmparams)
         self.set_cosmology(cosmo)
         self.set_HMparams(hmparams)
 
