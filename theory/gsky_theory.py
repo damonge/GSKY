@@ -68,25 +68,6 @@ class GSKYTheory(object):
 
         del saccfile
 
-        if self.params['massdef'] == 'M200m':
-            logger.info('Using M200m.')
-            # We will use a mass definition with Delta = 200 times the matter density
-            self.hm_def = ccl.halos.MassDef200m()
-            # The Duffy 2008 concentration-mass relation
-            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
-        elif self.params['massdef'] == 'M200c':
-            logger.info('Using M200c.')
-            # We will use a mass definition with Delta = 200 times the critical density
-            self.hm_def = ccl.halos.MassDef200c()
-            # The Duffy 2008 concentration-mass relation
-            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
-        elif self.params['massdef'] == 'M500c':
-            logger.info('Using M500c.')
-            self.hm_def = ccl.halos.MassDef(500, 'critical')
-            self.cM = ConcentrationDuffy08M500c(self.hm_def)
-        else:
-            raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
-
         self._setup_Cosmo()
         self.check_params()
         self._setup_HM()
@@ -94,8 +75,8 @@ class GSKYTheory(object):
     def update_params(self, cosmo, hmparams):
 
         logger.info('Updating model parameters.')
-        self.set_HMparams(hmparams)
         self.set_cosmology(cosmo)
+        self.set_HMparams(hmparams)
 
     def set_HMparams(self, params):
 
@@ -175,8 +156,30 @@ class GSKYTheory(object):
 
         logger.info('Setting up halo model.')
 
+        self._setup_conc()
         self._setup_profiles()
         self._setup_tracers()
+
+    def _setup_conc(self):
+
+        if self.params['massdef'] == 'M200m':
+            logger.info('Using M200m.')
+            # We will use a mass definition with Delta = 200 times the matter density
+            self.hm_def = ccl.halos.MassDef200m()
+            # The Duffy 2008 concentration-mass relation
+            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
+        elif self.params['massdef'] == 'M200c':
+            logger.info('Using M200c.')
+            # We will use a mass definition with Delta = 200 times the critical density
+            self.hm_def = ccl.halos.MassDef200c()
+            # The Duffy 2008 concentration-mass relation
+            self.cM = ccl.halos.ConcentrationDuffy08(self.hm_def)
+        elif self.params['massdef'] == 'M500c':
+            logger.info('Using M500c.')
+            self.hm_def = ccl.halos.MassDef(500, 'critical')
+            self.cM = ConcentrationDuffy08M500c(self.hm_def)
+        else:
+            raise NotImplementedError('Only mass definitions M200m and M500c supported. Aborting.')
 
     def _setup_profiles(self):
 
