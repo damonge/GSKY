@@ -38,6 +38,8 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         # self.alpm_xc = -0.0833
         # self.alpz_xc = 0.853
 
+        self.xarr = np.logspace(-4, 5, 200)
+
         super(HaloProfileBattaglia, self).__init__()
 
     def _P0(self, M, a):
@@ -118,20 +120,20 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         :return:
         """
 
-        x = np.logspace(-4, 5, 200)
-
-        ff = self._form_factor(x, M, a)
+        ff = self._form_factor(self.xarr, M, a)
         if ff.ndim > 1:
-            x_use = x[np.newaxis, np.newaxis, :]
+            if not hasattr(self, 'xuse'):
+                self.xuse = self.xarr[np.newaxis, np.newaxis, :]
             kR_use = kR[:, :, np.newaxis]
             ff = ff[:, np.newaxis, :]
         else:
-            x_use = copy.deepcopy(x)
+            if not hasattr(self, 'xuse'):
+                self.xuse = copy.deepcopy(self.xarr)
             kR_use = copy.deepcopy(kR)
 
-        integ = x_use*np.sin(kR_use*x_use)/kR_use*ff
+        integ = self.xuse*np.sin(kR_use*self.xuse)/kR_use*ff
 
-        fourier_prof = np.trapz(integ, x_use, axis=-1)
+        fourier_prof = np.trapz(integ, self.xuse, axis=-1)
 
         return fourier_prof
 
