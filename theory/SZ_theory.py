@@ -113,7 +113,7 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
 
     def _sinc_interp(self, x):
 
-        if not hasattr(self, 'sinc_interp')
+        if not hasattr(self, 'sinc_interp'):
             x_interp = np.logspace(-9, 6, 1000)
             sinc = np.sin(x_interp)/x_interp
             self.sinc_interp = scipy.interpolate.UnivariateSpline(x_interp, sinc)
