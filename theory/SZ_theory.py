@@ -6,7 +6,9 @@ import scipy.interpolate
 G_MPC_MSUN = 4.5171e-48 # MPc^3/MSun/s^2 (6.67408e-11*(3.085677581491367399198952281E+22)**-3*1.9884754153381438E+30)
 
 class HaloProfileBattaglia(ccl.halos.HaloProfile):
+
     def __init__(self, use_fftlog=True):
+        super(HaloProfileBattaglia, self).__init__()
         self.M_PIV = 1e14 # MSun
         self.alpha = 1.
         self.gamma = -0.3
@@ -42,7 +44,7 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         self.use_fftlog = use_fftlog
 
         if self.use_fftlog:
-            #TODO: Note that these parameters are not ideal, i.e. I would like to increase the accuracy significantly, 
+            #TODO: Note that these parameters are not ideal, i.e. I would like to increase the accuracy significantly,
             # but I cannot do this as otherwise FFTLog becomes as slow as the brute force method
             self.update_precision_fftlog(padding_hi_fftlog=1E2,
                                          padding_lo_fftlog=1E-2,
@@ -50,8 +52,6 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
                                          plaw_fourier=-2.)
         else:
             self.xarr = np.logspace(-4, 5, 200)
-
-        super(HaloProfileBattaglia, self).__init__()
 
     def _P0(self, M, a):
         """
