@@ -141,7 +141,7 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
                 self.xuse = copy.deepcopy(self.xarr)
             kR_use = copy.deepcopy(kR)
 
-        integ = self.xuse**2*self.sinc_interp(kR_use*self.xuse)*ff
+        integ = self.xuse**2*self._sinc_interp(kR_use*self.xuse)*ff
 
         fourier_prof = np.trapz(integ, self.xuse, axis=-1)
 
