@@ -111,15 +111,6 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
 
         return f
 
-    def _sinc_interp(self, x):
-
-        if not hasattr(self, 'sinc_interp'):
-            x_interp = np.logspace(-9, 6, 1000)
-            sinc = np.sin(x_interp)/x_interp
-            self.sinc_interp = scipy.interpolate.UnivariateSpline(x_interp, sinc)
-
-        return self.sinc_interp(x)
-
     def _fourier_integ(self, kR, M, a):
         """
         u(k|M) = int_0^inf dx d sin(k_com R200c,com x)/(k_com R200c,com) P_e(x|M)
@@ -141,7 +132,7 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
                 self.xuse = copy.deepcopy(self.xarr)
             kR_use = copy.deepcopy(kR)
 
-        integ = self.xuse**2*self._sinc_interp(kR_use*self.xuse)*ff
+        integ = self.xuse*np.sin(kR_use*self.xuse)/kR_use*ff
 
         fourier_prof = np.trapz(integ, self.xuse, axis=-1)
 
