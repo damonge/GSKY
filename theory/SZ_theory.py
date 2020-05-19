@@ -6,7 +6,7 @@ import scipy.interpolate
 G_MPC_MSUN = 4.5171e-48 # MPc^3/MSun/s^2 (6.67408e-11*(3.085677581491367399198952281E+22)**-3*1.9884754153381438E+30)
 
 class HaloProfileBattaglia(ccl.halos.HaloProfile):
-    def __init__(self):
+    def __init__(self, use_fftlog=True):
         self.M_PIV = 1e14 # MSun
         self.alpha = 1.
         self.gamma = -0.3
@@ -39,7 +39,17 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         # self.alpm_xc = -0.0833
         # self.alpz_xc = 0.853
 
-        self.xarr = np.logspace(-4, 5, 200)
+        self.use_fftlog = use_fftlog
+
+        if self.use_fftlog:
+            #TODO: Note that these parameters are not ideal, i.e. I would like to increase the accuracy significantly, 
+            # but I cannot do this as otherwise FFTLog becomes as slow as the brute force method
+            self.update_precision_fftlog(padding_hi_fftlog=1E2,
+                                         padding_lo_fftlog=1E-2,
+                                         n_per_decade=100,
+                                         plaw_fourier=-2.)
+        else:
+            self.xarr = np.logspace(-4, 5, 200)
 
         super(HaloProfileBattaglia, self).__init__()
 
@@ -208,6 +218,25 @@ class HaloProfileBattaglia(ccl.halos.HaloProfile):
         return prof
 
     def _fourier(self, cosmo, k, M, a, mass_def):
+        """
+        2D Fourier transform of Battaglia profile
+        Units: eV/cm^3 Mpc^3 (comoving)
+        :param cosmo:
+        :param k: comoving
+        :param M:
+        :param a:
+        :param mass_def:
+        :return:
+        """
+
+        if self.use_fftlog:
+            prof = self._fftlog_wrap(cosmo, k, M, a, mass_def, fourier_out=True)
+        else:
+            prof = self._fourier_bf(cosmo, k, M, a, mass_def)
+
+        return prof
+
+    def _fourier_bf(self, cosmo, k, M, a, mass_def):
         """
         2D Fourier transform of Battaglia profile
         Units: eV/cm^3 Mpc^3 (comoving)
