@@ -273,24 +273,24 @@ class GSKYTheory(object):
                     nz = tracer.nz
 
                 if p['HODmod'] == 'zevol':
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False,
-                                            (zbins[zbins>=0.], nz[zbins>=0.]),
-                                            bias=bias_tup),
-                                            self.pg)
+                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.NumberCountsTracer(self.cosmo, False,
+                                                        (zbins[zbins>=0.], nz[zbins>=0.]),
+                                                        bias=bias_tup),
+                                                    'prof': self.pg}
                 else:
-                    ccl_tracer_dict[tracer.name] = (ccl.NumberCountsTracer(self.cosmo, False,
+                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.NumberCountsTracer(self.cosmo, False,
                                                                            (zbins[zbins>=0.], nz[zbins>=0.]),
                                                                            bias=bias_tup),
-                                                    hod.HaloProfileHOD(c_M_relation=self.cM,
+                                                    'prof': hod.HaloProfileHOD(c_M_relation=self.cM,
                                                                        lMmin=p['mmin'], lMminp=p['mminp'],
                                                                        lM0=p['m0'], lM0p=p['m0p'],
-                                                                       lM1=p['m1'], lM1p=p['m1p']))
+                                                                       lM1=p['m1'], lM1p=p['m1p'])}
             elif tracer.quantity == 'Compton_y':
-                ccl_tracer_dict[tracer.name] = (sz.SZTracer(self.cosmo),
-                                      self.py)
+                ccl_tracer_dict[tracer.name] = {'ccl_tracer': sz.SZTracer(self.cosmo),
+                                                'prof': self.py}
             elif tracer.quantity == 'kappa':
-                ccl_tracer_dict[tracer.name] = (ccl.CMBLensingTracer(self.cosmo,z_source=1150),
-                                      self.pM)
+                ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.CMBLensingTracer(self.cosmo,z_source=1150),
+                                                'prof': self.pM}
             elif tracer.quantity == 'cosmic_shear':
 
                 split_name = tracer.name.split('_')
@@ -331,9 +331,15 @@ class GSKYTheory(object):
                 else:
                     nz = tracer.nz
 
-                ccl_tracer_dict[tracer.name] = (ccl.WeakLensingTracer(self.cosmo,
-                                      (zbins[zbins>=0.], nz[zbins>=0.])),
-                                      self.pM)
+                if 'm_bin{}'.format(tracer_no) in p.keys():
+                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                        (zbins[zbins>=0.], nz[zbins>=0.])),
+                                                    'prof': self.pM,
+                                                    'm': p['m_bin{}'.format(tracer_no)]}
+                else:
+                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                        (zbins[zbins >= 0.], nz[zbins >= 0.])),
+                                                    'prof': self.pM}
             else:
                 raise NotImplementedError('Only tracers delta_g, Compton_y, kappa and cosmic_shear supported. Aborting.')
 
@@ -407,11 +413,11 @@ class GSKYTheory(object):
                 else:
                     tr_g_name = tr_j_name
                 if not self.params['corr_halo_mod']:
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.pM,
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name]['prof'], prof2=self.pM,
                                             normprof1=True, normprof2=True, lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                 else:
                     Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.ccl_tracers[tr_g_name][1], prof2=self.pM,
+                                                              self.ccl_tracers[tr_g_name]['prof'], prof2=self.pM,
                                                               normprof1=True, normprof2=True)
                     Pk_arr *= self.rk_hm
                     Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
@@ -437,7 +443,7 @@ class GSKYTheory(object):
                     tr_g_name = tr_i_name
                 else:
                     tr_g_name = tr_j_name
-                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name][1], prof2=self.py,
+                Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name]['prof'], prof2=self.py,
                                        normprof1=True, normprof2=False,
                                        lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
         elif 'g' in tr_i_name and 'g' in tr_j_name:
@@ -459,14 +465,14 @@ class GSKYTheory(object):
                     Pk = self.pk_ggf
             else:
                 if not self.params['corr_halo_mod']:
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name][1],
-                                                prof2=self.ccl_tracers[tr_j_name][1],
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name]['prof'],
+                                                prof2=self.ccl_tracers[tr_j_name]['prof'],
                                                 prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
                                                 lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
                 else:
                     Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.ccl_tracers[tr_i_name][1], prof_2pt=self.HOD2pt,
-                                                              prof2=self.ccl_tracers[tr_j_name][1],
+                                                              self.ccl_tracers[tr_i_name]['prof'], prof_2pt=self.HOD2pt,
+                                                              prof2=self.ccl_tracers[tr_j_name]['prof'],
                                                               normprof1=True, normprof2=True)
                     Pk_arr *= self.rk_hm
                     Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
@@ -475,7 +481,13 @@ class GSKYTheory(object):
             logger.warning('Tracer combination {}, {} not implemented. Returning zero.'.format(tr_i_name, tr_j_name))
             return np.zeros_like(l_arr)
 
-        cls = ccl.angular_cl(self.cosmo, self.ccl_tracers[tr_i_name][0], self.ccl_tracers[tr_j_name][0], l_arr, p_of_k_a=Pk)
+        cls = ccl.angular_cl(self.cosmo, self.ccl_tracers[tr_i_name]['ccl_tracer'], self.ccl_tracers[tr_j_name]['ccl_tracer'],
+                             l_arr, p_of_k_a=Pk)
+
+        if 'wl' in tr_i_name:
+            cls *= (1. + self.ccl_tracers[tr_i_name]['m'])
+        if 'wl' in tr_j_name:
+            cls *= (1. + self.ccl_tracers[tr_j_name]['m'])
 
         return cls
             
