@@ -189,9 +189,9 @@ class GSKYTheory(object):
         logger.info('Setting up halo profiles.')
 
         self.tracer_quantities = [tr.quantity for tr in self.tracer_list]
-        if 'cosmic_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
+        if 'galaxy_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
             self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
-        if 'Compton_y' in self.tracer_quantities:
+        if 'cmb_tSZ' in self.tracer_quantities:
             if self.params['pprof'] == 'Arnaud':
                 logger.info('Using Arnaud profile.')
                 self.py = sz.HaloProfileArnaud(b_hydro=self.params['bhydro'])
@@ -200,7 +200,7 @@ class GSKYTheory(object):
                 self.py = sz.HaloProfileBattaglia()
             else:
                 raise NotImplementedError('Only pressure profiles Arnaud and Battaglia implemented.')
-        if 'delta_g' in self.tracer_quantities:
+        if 'galaxy_density' in self.tracer_quantities:
             self.HOD2pt = hod.Profile2ptHOD()
             if self.params['HODmod'] == 'zevol':
                 self.pg = hod.HaloProfileHOD(c_M_relation=self.cM,
@@ -219,7 +219,7 @@ class GSKYTheory(object):
         ccl_tracer_dict = {}
 
         for i, tracer in enumerate(self.tracer_list):
-            if tracer.quantity == 'delta_g':
+            if tracer.quantity == 'galaxy_density':
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
                     tracer_no = split_name[1]
@@ -285,13 +285,13 @@ class GSKYTheory(object):
                                                                        lMmin=p['mmin'], lMminp=p['mminp'],
                                                                        lM0=p['m0'], lM0p=p['m0p'],
                                                                        lM1=p['m1'], lM1p=p['m1p'])}
-            elif tracer.quantity == 'Compton_y':
+            elif tracer.quantity == 'cmb_tSZ':
                 ccl_tracer_dict[tracer.name] = {'ccl_tracer': sz.SZTracer(self.cosmo),
                                                 'prof': self.py}
-            elif tracer.quantity == 'kappa':
+            elif tracer.quantity == 'cmb_convergence':
                 ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.CMBLensingTracer(self.cosmo,z_source=1150),
                                                 'prof': self.pM}
-            elif tracer.quantity == 'cosmic_shear':
+            elif tracer.quantity == 'galaxy_shear':
 
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
@@ -341,7 +341,7 @@ class GSKYTheory(object):
                                                         (zbins[zbins >= 0.], nz[zbins >= 0.])),
                                                     'prof': self.pM}
             else:
-                raise NotImplementedError('Only tracers delta_g, Compton_y, kappa and cosmic_shear supported. Aborting.')
+                raise NotImplementedError('Only tracers galaxy_density, cmb_tSZ, cmb_convergence and galaxy_shear supported. Aborting.')
 
         self.ccl_tracers = ccl_tracer_dict
         

@@ -95,9 +95,9 @@ class CovGauss(PowerSpecter) :
                             [tracers[tr_i1].type, tracers[tr_j1].type, tracers[tr_i2].type, tracers[tr_j2].type])
 
                         # All galaxy maps
-                        if set(tr_types_cur) == {'delta_g', 'delta_g', 'delta_g', 'delta_g'}:
+                        if set(tr_types_cur) == {'galaxy_density', 'galaxy_density', 'galaxy_density', 'galaxy_density'}:
                             if not hasattr(self, 'cwsp_counts'):
-                                counts_indx = tracer_type_arr.index('delta_g')
+                                counts_indx = tracer_type_arr.index('galaxy_density')
                                 if not os.path.isfile(
                                         self.get_output_fname('cov_mcm') + '_{}{}{}{}'.format(counts_indx, counts_indx,
                                                                                               counts_indx,
@@ -129,19 +129,19 @@ class CovGauss(PowerSpecter) :
                             cwsp_curr = self.cwsp_counts
 
                         # At least one galaxy map
-                        elif 'delta_g' in tr_types_cur:
-                            counts_indx = tracer_type_arr.index('delta_g')
+                        elif 'galaxy_density' in tr_types_cur:
+                            counts_indx = tracer_type_arr.index('galaxy_density')
                             i1_curr = tr_i1
                             j1_curr = tr_j1
                             i2_curr = tr_i2
                             j2_curr = tr_j2
-                            if tracers[tr_i1].type == 'delta_g':
+                            if tracers[tr_i1].type == 'galaxy_density':
                                 i1_curr = counts_indx
-                            if tracers[tr_j1].type == 'delta_g':
+                            if tracers[tr_j1].type == 'galaxy_density':
                                 j1_curr = counts_indx
-                            if tracers[tr_i2].type == 'delta_g':
+                            if tracers[tr_i2].type == 'galaxy_density':
                                 i2_curr = counts_indx
-                            if tracers[tr_j2].type == 'delta_g':
+                            if tracers[tr_j2].type == 'galaxy_density':
                                 j2_curr = counts_indx
                             cwsp_curr = nmt.NmtCovarianceWorkspaceFlat()
                             if not os.path.isfile(

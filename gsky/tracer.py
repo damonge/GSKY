@@ -23,7 +23,7 @@ class Tracer(object) :
 
         if type == 'ngal_maps':
             logger.info('Creating tracer object for number density.')
-            self.type = 'delta_g'
+            self.type = 'galaxy_density'
             self.spin = 0
             #Read numbers map
             self.fsk,nmap=read_flat_map(None,hdu=hdu_list[2*i_bin])
@@ -67,7 +67,7 @@ class Tracer(object) :
 
         elif type == 'shear_maps':
             logger.info('Creating tracer object for shear.')
-            self.type = 'cosmic_shear'
+            self.type = 'galaxy_shear'
             self.spin = 2
             # Read shear map
             self.fsk, gammamaps = read_flat_map(None, hdu=[hdu_list[6*i_bin], hdu_list[6*i_bin+1]])
@@ -121,7 +121,7 @@ class Tracer(object) :
 
         elif type == 'Compton_y_maps':
             logger.info('Creating tracer object for Compton_y.')
-            self.type = 'Compton_y'
+            self.type = 'cmb_tSZ'
             self.spin = 0
             # Read tSZ map
             self.fsk, tszmap = read_flat_map(None, hdu=hdu_list[i_bin])
@@ -152,7 +152,7 @@ class Tracer(object) :
 
         elif type == 'kappa_maps':
             logger.info('Creating tracer object for kappa.')
-            self.type = 'kappa'
+            self.type = 'cmb_convergence'
             self.spin = 0
             # Read kappa map
             self.fsk, kappamap = read_flat_map(None, hdu=hdu_list[i_bin])
