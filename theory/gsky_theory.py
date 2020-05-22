@@ -189,9 +189,16 @@ class GSKYTheory(object):
         logger.info('Setting up halo profiles.')
 
         self.tracer_quantities = [tr.quantity for tr in self.tracer_list]
-        if 'galaxy_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
+        if 'galaxy_shear' in self.tracer_quantities or 'cmb_convergence' in self.tracer_quantities or \
+                'cosmic_shear' in self.tracer_quantities or 'kappa' in self.tracer_quantities:
+            if 'cosmic_shear' in self.tracer_quantities:
+                logger.warning('tracer quantity cosmic_shear will be deprecated soon.')
+            if 'kappa' in self.tracer_quantities:
+                logger.warning('tracer quantity kappa will be deprecated soon.')
             self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
-        if 'cmb_tSZ' in self.tracer_quantities:
+        if 'cmb_tSZ' in self.tracer_quantities or 'Compton_y' in self.tracer_quantities:
+            if 'Compton_y' in self.tracer_quantities:
+                logger.warning('tracer quantity Compton_y will be deprecated soon.')
             if self.params['pprof'] == 'Arnaud':
                 logger.info('Using Arnaud profile.')
                 self.py = sz.HaloProfileArnaud(b_hydro=self.params['bhydro'])
@@ -200,7 +207,9 @@ class GSKYTheory(object):
                 self.py = sz.HaloProfileBattaglia()
             else:
                 raise NotImplementedError('Only pressure profiles Arnaud and Battaglia implemented.')
-        if 'galaxy_density' in self.tracer_quantities:
+        if 'galaxy_density' in self.tracer_quantities or 'delta_g' in self.tracer_quantities:
+            if 'delta_g' in self.tracer_quantities:
+                logger.warning('tracer quantity delta_g will be deprecated soon.')
             self.HOD2pt = hod.Profile2ptHOD()
             if self.params['HODmod'] == 'zevol':
                 self.pg = hod.HaloProfileHOD(c_M_relation=self.cM,
@@ -219,7 +228,9 @@ class GSKYTheory(object):
         ccl_tracer_dict = {}
 
         for i, tracer in enumerate(self.tracer_list):
-            if tracer.quantity == 'galaxy_density':
+            if tracer.quantity == 'galaxy_density' or tracer.quantity == 'delta_g':
+                if tracer.quantity == 'delta_g':
+                    logger.warning('tracer quantity {} will be deprecated soon.'.format(tracer.quantity))
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
                     tracer_no = split_name[1]
@@ -285,13 +296,19 @@ class GSKYTheory(object):
                                                                        lMmin=p['mmin'], lMminp=p['mminp'],
                                                                        lM0=p['m0'], lM0p=p['m0p'],
                                                                        lM1=p['m1'], lM1p=p['m1p'])}
-            elif tracer.quantity == 'cmb_tSZ':
+            elif tracer.quantity == 'cmb_tSZ' or tracer.quantity == 'Compton_y':
+                if tracer.quantity == 'Compton_y':
+                    logger.warning('tracer quantity {} will be deprecated soon.'.format(tracer.quantity))
                 ccl_tracer_dict[tracer.name] = {'ccl_tracer': sz.SZTracer(self.cosmo),
                                                 'prof': self.py}
-            elif tracer.quantity == 'cmb_convergence':
+            elif tracer.quantity == 'cmb_convergence' or tracer.quantity == 'kappa':
+                if tracer.quantity == 'kappa':
+                    logger.warning('tracer quantity {} will be deprecated soon.'.format(tracer.quantity))
                 ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.CMBLensingTracer(self.cosmo,z_source=1150),
                                                 'prof': self.pM}
-            elif tracer.quantity == 'galaxy_shear':
+            elif tracer.quantity == 'galaxy_shear' or tracer.quantity == 'cosmic_shear':
+                if tracer.quantity == 'cosmic_shear':
+                    logger.warning('tracer quantity {} will be deprecated soon.'.format(tracer.quantity))
 
                 split_name = tracer.name.split('_')
                 if len(split_name) == 2:
