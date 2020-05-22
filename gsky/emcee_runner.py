@@ -200,7 +200,7 @@ if ch_config_params['rerun']:
         ch_config_params['rerun'])
 
     chain_initializer = InitializeFromChain(ch_config_params['path2rerunchain'], fraction=0.8)
-
+    chain_initializer.setup(nparams, nwalkers)
     p_initial = chain_initializer.generate()
 else:
     chain_initializer = SampleBallPositionGenerator()

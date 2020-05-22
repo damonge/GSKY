@@ -13,14 +13,14 @@ class InitializeFromChain(object):
         self.path = path
         self.fraction = fraction
         
-    def setup(self, sampler):
+    def setup(self, nparams, nwalkers):
         sample = np.loadtxt(self.path)
-        if sample.shape[1] != sampler.paramCount:
+        if sample.shape[1] != nparams:
             raise Warning('Sample dimensions do not agree with likelihood ones.')
         nmin = int(sample.shape[0]*float(self.fraction))
         self.n = sample.shape[0]-nmin
         self.sample = sample[nmin:]
-        self.nwalkers = sampler.nwalkers
+        self.nwalkers = nwalkers
         
     def generate(self):
         """
