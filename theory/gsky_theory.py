@@ -501,9 +501,9 @@ class GSKYTheory(object):
         cls = ccl.angular_cl(self.cosmo, self.ccl_tracers[tr_i_name]['ccl_tracer'], self.ccl_tracers[tr_j_name]['ccl_tracer'],
                              l_arr, p_of_k_a=Pk)
 
-        if 'wl' in tr_i_name:
+        if 'wl' in tr_i_name and 'm' in self.ccl_tracers[tr_i_name].keys():
             cls *= (1. + self.ccl_tracers[tr_i_name]['m'])
-        if 'wl' in tr_j_name:
+        if 'wl' in tr_j_name and 'm' in self.ccl_tracers[tr_j_name].keys():
             cls *= (1. + self.ccl_tracers[tr_j_name]['m'])
 
         return cls
