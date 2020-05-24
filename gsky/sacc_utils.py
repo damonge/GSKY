@@ -206,3 +206,42 @@ def coadd_sacc_means(saccfiles, config):
     saccfile_coadd.covariance = None
 
     return saccfile_coadd
+
+def coadd_saccs_separate(saccfiles, tracers, is_noisesacc=False):
+
+        logger.info('Coadding saccfiles with common probes.')
+
+        for i, saccfile in enumerate(saccfiles):
+            if not any('y_' in s for s in tracers) and not any('kappa_' in s for s in tracers):
+                if any('y_' in key for key in saccfile.tracers.keys()):
+                    for t in saccfile.tracers:
+                        logger.info('Removing y_0.')
+                        saccfile.remove_selection(tracers=('y_0', t))
+                        saccfile.remove_selection(tracers=(t, 'y_0'))
+                if any('kappa_' in key for key in saccfile.tracers.keys()):
+                    for t in saccfile.tracers:
+                        logger.info('Removing kappa_0.')
+                        saccfile.remove_selection(tracers=('kappa_0', t))
+                        saccfile.remove_selection(tracers=(t, 'kappa_0'))
+            if i == 0:
+                coadd_mean = saccfile.mean
+                if not is_noisesacc:
+                    coadd_cov = saccfile.covariance.covmat
+            else:
+                coadd_mean += saccfile.mean
+                if not is_noisesacc:
+                    coadd_cov += saccfile.covariance.covmat
+
+        n_saccs = len(saccfiles)
+        coadd_mean /= n_saccs
+        if not is_noisesacc:
+            coadd_cov /= n_saccs ** 2
+
+        # Copy sacc
+        saccfile_coadd = saccfiles[0].copy()
+        # Set mean of new saccfile to coadded mean
+        saccfile_coadd.mean = coadd_mean
+        if not is_noisesacc:
+            saccfile_coadd.add_covariance(coadd_cov)
+
+        return saccfile_coadd

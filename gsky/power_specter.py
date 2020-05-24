@@ -245,7 +245,7 @@ class PowerSpecter(PipelineStage) :
                         logger.info('Setting analytic noise to zero.')
                         nls[map_i, map_j] = np.zeros(self.nbands)
 
-            if type_cur == 'galaxy_shear' == 2:
+            if type_cur == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -1136,7 +1136,7 @@ class PowerSpecter(PipelineStage) :
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i+1, map_j, :],
-                                 window=win)
+                                 window=wins)
                     saccfile.add_ell_cl('cl_be',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
