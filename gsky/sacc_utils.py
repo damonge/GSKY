@@ -207,7 +207,7 @@ def coadd_sacc_means(saccfiles, config):
 
     return saccfile_coadd
 
-def coadd_saccs_separate(saccfiles, tracers, is_noisesacc=False):
+def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, is_noisesacc=False):
 
         logger.info('Coadding saccfiles with common probes.')
 
@@ -223,6 +223,18 @@ def coadd_saccs_separate(saccfiles, tracers, is_noisesacc=False):
                         logger.info('Removing kappa_0.')
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
+
+                if ell_max_dict is not None:
+                    logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                    for tr_i, tr_j in saccfile.get_tracer_combinations():
+                        if tr_i in tracers and tr_j in tracers:
+                            ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                            logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                        else:
+                            saccfile.remove_selection(tracers=(tr_i, tr_j))
+                    logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+
             if i == 0:
                 coadd_mean = saccfile.mean
                 if not is_noisesacc:
