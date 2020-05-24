@@ -241,13 +241,12 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
             if i == 0:
                 coadd_mean = weights[i]*saccfile.mean
                 if not is_noisesacc:
-                    coadd_cov = saccfile.covariance.covmat
+                    coadd_cov = weights[i]**2*saccfile.covariance.covmat
             else:
-                coadd_mean += weights[i]**2*saccfile.mean
+                coadd_mean += weights[i]*saccfile.mean
                 if not is_noisesacc:
-                    coadd_cov += saccfile.covariance.covmat
+                    coadd_cov += weights[i]**2*saccfile.covariance.covmat
 
-        n_saccs = len(saccfiles)
         coadd_mean /= np.sum(weights)
         if not is_noisesacc:
             coadd_cov /= np.sum(weights) ** 2
