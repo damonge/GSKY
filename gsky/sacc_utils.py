@@ -215,6 +215,11 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
             weights = np.ones(len(saccfiles))
 
         for i, saccfile in enumerate(saccfiles):
+            logger.info('Removing B-modes.')
+            saccfile.remove_selection(data_type='cl_eb')
+            saccfile.remove_selection(data_type='cl_be')
+            saccfile.remove_selection(data_type='cl_bb')
+            saccfile.remove_selection(data_type='cl_0b')
             if not any('y_' in s for s in tracers) and not any('kappa_' in s for s in tracers):
                 if any('y_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
