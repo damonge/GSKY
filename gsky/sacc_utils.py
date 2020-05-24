@@ -207,9 +207,12 @@ def coadd_sacc_means(saccfiles, config):
 
     return saccfile_coadd
 
-def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, is_noisesacc=False):
+def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is_noisesacc=False):
 
         logger.info('Coadding saccfiles with common probes.')
+
+        if weights is None:
+            weights = np.ones(len(saccfiles))
 
         for i, saccfile in enumerate(saccfiles):
             if not any('y_' in s for s in tracers) and not any('kappa_' in s for s in tracers):
@@ -236,18 +239,18 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, is_noisesacc=Fal
                     logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
             if i == 0:
-                coadd_mean = saccfile.mean
+                coadd_mean = weights[i]*saccfile.mean
                 if not is_noisesacc:
                     coadd_cov = saccfile.covariance.covmat
             else:
-                coadd_mean += saccfile.mean
+                coadd_mean += weights[i]**2*saccfile.mean
                 if not is_noisesacc:
                     coadd_cov += saccfile.covariance.covmat
 
         n_saccs = len(saccfiles)
-        coadd_mean /= n_saccs
+        coadd_mean /= np.sum(weights)
         if not is_noisesacc:
-            coadd_cov /= n_saccs ** 2
+            coadd_cov /= np.sum(weights) ** 2
 
         # Copy sacc
         saccfile_coadd = saccfiles[0].copy()
