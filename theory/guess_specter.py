@@ -33,27 +33,34 @@ def guess_spectra(params, config):
             get_output_fname(config, path2sacc, 'sacc'))
         saccfiles.append(sacc_curr)
 
-    noise_saccfiles = []
-    for i, saccdir in enumerate(config['saccdirs']):
-        if config['output_run_dir'] != 'NONE':
-            path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
-        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
-        logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
-        if noise_sacc_curr.covariance is None:
-            logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-        noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, config)
+    if config['noisesacc_filename'] is not 'NONE':
+        logger.info('Adding noise to theoretical cls.')
+        noise_saccfiles = []
+        for i, saccdir in enumerate(config['saccdirs']):
+            if config['output_run_dir'] != 'NONE':
+                path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
+            noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+            logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
+            if noise_sacc_curr.covariance is None:
+                logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
+                noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
+            noise_saccfiles.append(noise_sacc_curr)
+        noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, config)
+    else:
+        logger.info('Creating noise-free theoretical cls.')
 
     # Need to coadd saccfiles after adding covariance to noise saccfiles
     saccfile_coadd = sutils.coadd_sacc_means(saccfiles, config)
 
-    theor = GSKYPrediction(noise_saccfile_coadd)
+    theor = GSKYPrediction(saccfile_coadd)
 
     cl_theor = theor.get_prediction(params)
 
-    sacc_guess_spec = copy.deepcopy(noise_saccfile_coadd)
-    sacc_guess_spec.mean = noise_saccfile_coadd.mean + cl_theor
+    sacc_guess_spec = copy.deepcopy(saccfile_coadd)
+    if config['noisesacc_filename'] is not 'NONE':
+        sacc_guess_spec.mean = noise_saccfile_coadd.mean + cl_theor
+    else:
+        sacc_guess_spec.mean = cl_theor
 
     if config['output_run_dir'] != 'NONE':
         input_dir = os.path.join('inputs', config['output_run_dir'])
@@ -73,5 +80,9 @@ def guess_spectra(params, config):
     logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
     noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc'), overwrite=True)
     logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
-    sacc_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra.sacc'), overwrite=True)
-    logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
+    if config['noisesacc_filename'] is not 'NONE':
+        sacc_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra.sacc'), overwrite=True)
+        logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
+    else:
+        sacc_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc'), overwrite=True)
+        logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_noise-free_guess_spectra.sacc')))
