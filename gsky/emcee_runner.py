@@ -133,13 +133,15 @@ if config['fit_comb'] == 'all':
     i = 0
     for tr_i in tracers:
         for tr_j in tracers[:i + 1]:
-            # Generate the appropriate list of tracer combinations to plot
-            trc_combs.append([tr_j, tr_i])
+            if not (tr_i == tr_j and tr_i == 'kappa_0') and not (tr_i == tr_j and tr_i == 'y_0'):
+                # Generate the appropriate list of tracer combinations to plot
+                trc_combs.append([tr_j, tr_i])
         i += 1
 elif config['fit_comb'] == 'auto':
     logger.info('Fitting auto-correlations of tracers.')
     for tr_i in tracers:
-        trc_combs.append([tr_i, tr_i])
+        if not (tr_i == 'kappa_0') and not (tr_i == 'y_0'):
+            trc_combs.append([tr_i, tr_i])
 elif config['fit_comb'] == 'cross':
     tracer_type_list = [tr.split('_')[0] for tr in tracers]
     # Get unique tracers and keep ordering
