@@ -232,9 +232,14 @@ class PowerSpecter(PipelineStage) :
                     elif type_cur == 'galaxy_shear':
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
 
-                        corrfac = np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl = np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
-                        nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+                        if hasattr(t, 'w2e2'):
+                            logger.info('Tracer has w2e2 attribute. Computing analytic shape noise.')
+                            w2e2_fac = t.w2e2*np.radians(t.fsk.dx)*np.radians(t.fsk.dy)
+                            nl = np.ones(self.nbands)*w2e2_fac
+                            nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+                        else:
+                            logger.info('Tracer does not have w2e2 attribute. Setting analytic shape noise to zero.')
+                            nls_temp = np.zeros((4, self.nbands))
 
                         nls_tempe = nls_temp[0]
                         nls_tempb = nls_temp[3]
