@@ -18,6 +18,8 @@ import gsky.sacc_utils as sutils
 
 import logging
 
+DROP_TRC_COMBS = [['y_0', 'y_0'], ['kappa_0', 'kappa_0'], ['y_0', 'kappa_0'], ['kappa_0', 'y_0']]
+
 
 def get_output_fname(config, name, ext=None):
     fname = config['output_dir'] + '/' + name
@@ -133,14 +135,14 @@ if config['fit_comb'] == 'all':
     i = 0
     for tr_i in tracers:
         for tr_j in tracers[:i + 1]:
-            if not (tr_i == tr_j and tr_i == 'kappa_0') and not (tr_i == tr_j and tr_i == 'y_0'):
+            if [tr_i, tr_j] not in DROP_TRC_COMBS:
                 # Generate the appropriate list of tracer combinations to plot
                 trc_combs.append([tr_j, tr_i])
         i += 1
 elif config['fit_comb'] == 'auto':
     logger.info('Fitting auto-correlations of tracers.')
     for tr_i in tracers:
-        if not (tr_i == 'kappa_0') and not (tr_i == 'y_0'):
+        if [tr_i, tr_i] not in DROP_TRC_COMBS:
             trc_combs.append([tr_i, tr_i])
 elif config['fit_comb'] == 'cross':
     tracer_type_list = [tr.split('_')[0] for tr in tracers]
@@ -155,9 +157,16 @@ elif config['fit_comb'] == 'cross':
     for tr_i in tracers[:ntracers0]:
         for tr_j in tracers[ntracers0:]:
             if tr_i.split('_')[0] != tr_j.split('_')[0]:
-                # Generate the appropriate list of tracer combinations to plot
-                trc_combs.append([tr_i, tr_j])
+                if [tr_i, tr_j] not in DROP_TRC_COMBS:
+                    # Generate the appropriate list of tracer combinations to plot
+                    trc_combs.append([tr_i, tr_j])
         i += 1
+elif isinstance(config['fit_comb'], list):
+    logger.info('Fitting provided tracer combination list.')
+    if list(set(config['fit_comb']), set(DROP_TRC_COMBS)) != []:
+        logger.info('Dropping unsupported tracer combinations.')
+        trc_combs_trim = [config['fit_comb'][i] for i in range(len(config['fit_comb'])) if config['fit_comb'][i] not in DROP_TRC_COMBS]
+    trc_combs = config['fit_comb']
 else:
     raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
 
