@@ -163,7 +163,8 @@ elif config['fit_comb'] == 'cross':
         i += 1
 elif isinstance(config['fit_comb'], list):
     logger.info('Fitting provided tracer combination list.')
-    if list(set(config['fit_comb']) & set(DROP_TRC_COMBS)) != []:
+    list_intersec = [config['fit_comb'][i] for i in range(len(config['fit_comb'])) if config['fit_comb'][i] in DROP_TRC_COMBS]
+    if list_intersec != []:
         logger.info('Dropping unsupported tracer combinations.')
         trc_combs_trim = [config['fit_comb'][i] for i in range(len(config['fit_comb'])) if config['fit_comb'][i] not in DROP_TRC_COMBS]
     trc_combs = config['fit_comb']
