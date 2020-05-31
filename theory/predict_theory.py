@@ -43,7 +43,10 @@ class GSKYPrediction(object):
         else:
             raise RuntimeError('Either hmparams or cosmo_params need to be provided. Aborting.')
 
-        cls = np.zeros_like(self.saccfile.mean)
+        if self.ells != 'NONE':
+            cls = []
+        else:
+            cls = np.zeros_like(self.saccfile.mean)
 
         for tr_i, tr_j in trc_combs:
             logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
@@ -69,6 +72,12 @@ class GSKYPrediction(object):
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                 else:
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
+
+                if self.conv_win:
+                    cl_temp = tutil.convolve(cl_temp, win, itp)
+                    
+                cls.append(cl_temp)
+
             else:
                 ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
                 if self.conv_win:
@@ -82,12 +91,12 @@ class GSKYPrediction(object):
                 else:
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
 
-            indx = self.saccfile.indices(datatype, (tr_i, tr_j))
+                indx = self.saccfile.indices(datatype, (tr_i, tr_j))
 
-            if self.conv_win:
-                cl_temp = tutil.convolve(cl_temp, win, itp)
+                if self.conv_win:
+                    cl_temp = tutil.convolve(cl_temp, win, itp)
 
-            cls[indx] = cl_temp
+                cls[indx] = cl_temp
 
         return cls
 
