@@ -105,8 +105,9 @@ class SimulatedMaps(object):
         logger.info('Setting up cl array.')
 
         theory_sacc = sacc.Sacc.load_fits(self.params['theory_sacc'])
-        nell_theor = np.unique(np.array(theory_sacc.get_tag('ell', tracers=(self.params['probes'][0],
+        ell_theor = np.unique(np.array(theory_sacc.get_tag('ell', tracers=(self.params['probes'][0],
                                             self.params['probes'][0]), data_type=None)))
+        nell_theor = int(ell_theor.shape[0])
         self.params['nell_theor'] = nell_theor
 
         nspectra = self.params['ncls']+self.params['nspin2']+self.params['nspin2']*self.params['nprobes']
