@@ -105,8 +105,8 @@ class SimulatedMaps(object):
         logger.info('Setting up cl array.')
 
         theory_sacc = sacc.Sacc.load_fits(self.params['theory_sacc'])
-        ell_theor = np.unique(np.array(theory_sacc.get_tag('ell', tracers=(self.params['probes'][0],
-                                            self.params['probes'][0]), data_type=None)))
+        ell_theor = np.unique(np.array(theory_sacc.get_tag('ell', tracers=(self.params['tracers'][0],
+                                            self.params['tracers'][0]), data_type=None)))
         nell_theor = int(ell_theor.shape[0])
         self.params['nell_theor'] = nell_theor
 
@@ -116,26 +116,26 @@ class SimulatedMaps(object):
 
         k = 0
         j = 0
-        for i, probe1 in enumerate(self.params['probes']):
+        for i, trc1 in enumerate(self.params['tracers']):
             for ii in range(i, self.params['nprobes']):
 
-                probe2 = self.params['probes'][ii]
-                logger.info('Reading cls for probe1 = {} and probe2 = {}.'.format(probe1, probe2))
+                trc2 = self.params['tracers'][ii]
+                logger.info('Reading cls for trc1 = {} and trc2 = {}.'.format(trc1, trc2))
 
                 if self.params['spins'][i] == 2 and self.params['spins'][ii] == 2:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_ee', probe1, probe2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_ee', trc1, trc2, return_cov=False)
                     cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
                     cls[j+2, :] = np.zeros_like(cls_temp)
                     j += 3
                 elif self.params['spins'][i] == 2 and self.params['spins'][ii] == 0 or\
                         self.params['spins'][i] == 0 and self.params['spins'][ii] == 2:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_0e', probe1, probe2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_0e', trc1, trc2, return_cov=False)
                     cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
                     j += 2
                 else:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_00', probe1, probe2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_00', trc1, trc2, return_cov=False)
                     cls[j, :] = cls_temp
                     j += 1
 

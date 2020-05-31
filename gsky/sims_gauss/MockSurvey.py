@@ -195,7 +195,7 @@ class MockSurvey(object):
 
         if self.params['signal'] and self.params['noise']:
             # We need to add the two lists elementwise
-            maps = map(add, signalmaps, noisemaps)
+            maps = list(map(add, signalmaps, noisemaps))
         elif self.params['signal'] and not self.params['noise']:
             maps = copy.deepcopy(signalmaps)
         elif not self.params['signal'] and self.params['noise']:
