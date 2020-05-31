@@ -53,7 +53,7 @@ PowerSpecter:
   oc_all_bands: True
   output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
 
-NoiseMocks:
+MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
     probes: ['gamma', 'gamma', 'gamma', 'gamma']
     spins: [2, 2, 2, 2]

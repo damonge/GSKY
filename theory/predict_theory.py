@@ -75,7 +75,7 @@ class GSKYPrediction(object):
 
                 if self.conv_win:
                     cl_temp = tutil.convolve(cl_temp, win, itp)
-                    
+
                 cls.append(cl_temp)
 
             else:

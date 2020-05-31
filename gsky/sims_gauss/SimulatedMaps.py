@@ -1,12 +1,9 @@
 #! /usr/bin/env python
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 import numpy as np
-from astropy.io import fits
-import os
 import pymaster as nmt
 import copy
+import sacc
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -21,11 +18,12 @@ class SimulatedMaps(object):
     all the probes.
     """
 
-    def __init__(self,params={}):
+    def __init__(self, fsk, params={}):
         """
         Constructor for the SimulatedMaps class
         """
 
+        self.fsk = fsk
         self.params = params
         self.enrich_params()
         self.setup()
@@ -38,8 +36,7 @@ class SimulatedMaps(object):
         :return:
         """
 
-        if 'tempbeam' not in self.params:
-            self.params['tempbeam'] = False
+        pass
 
     def print_params(self):
         """
@@ -60,7 +57,7 @@ class SimulatedMaps(object):
         logger.info('Generating Gaussian map realizations.')
         np.random.seed(seed=None)
         # Now create the maps with the correlations between both spin-0 and spin-2 fields
-        maps = nmt.synfast_flat(self.params['Nx'], self.params['Ny'], self.params['Lx'], self.params['Ly'], \
+        maps = nmt.synfast_flat(self.fsk.nx, self.fsk.ny, self.fsk.lx, self.fsk.ly, \
                                 self.cls, spin_arr=self.params['spins'], seed=-1, beam=None)
         logger.info('Gaussian maps done.')
 
@@ -106,6 +103,12 @@ class SimulatedMaps(object):
         """
 
         logger.info('Setting up cl array.')
+
+        theory_sacc = sacc.Sacc.load_fits(self.params['theory_sacc'])
+        nell_theor = np.unique(np.array(theory_sacc.get_tag('ell', tracers=(self.params['probes'][0],
+                                            self.params['probes'][0]), data_type=None)))
+        self.params['nell_theor'] = nell_theor
+
         nspectra = self.params['ncls']+self.params['nspin2']+self.params['nspin2']*self.params['nprobes']
         cls = np.zeros((nspectra, self.params['nell_theor']))
         logger.info('Cl array shape = {}.'.format(cls.shape))
@@ -118,20 +121,21 @@ class SimulatedMaps(object):
                 probe2 = self.params['probes'][ii]
                 logger.info('Reading cls for probe1 = {} and probe2 = {}.'.format(probe1, probe2))
 
-                path2cls = self.params['path2cls'][k]
-                data = np.genfromtxt(path2cls)
-                logger.info('Read {}.'.format(path2cls))
-                cls_temp = data[:, 1]
-
-                cls[j, :] = cls_temp
                 if self.params['spins'][i] == 2 and self.params['spins'][ii] == 2:
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_ee', probe1, probe2, return_cov=False)
+                    cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
                     cls[j+2, :] = np.zeros_like(cls_temp)
                     j += 3
-                elif self.params['spins'][i] == 2 and self.params['spins'][ii] == 0 or self.params['spins'][i] == 0 and self.params['spins'][ii] == 2:
+                elif self.params['spins'][i] == 2 and self.params['spins'][ii] == 0 or\
+                        self.params['spins'][i] == 0 and self.params['spins'][ii] == 2:
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_0e', probe1, probe2, return_cov=False)
+                    cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
                     j += 2
                 else:
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_00', probe1, probe2, return_cov=False)
+                    cls[j, :] = cls_temp
                     j += 1
 
                 k += 1
@@ -145,37 +149,6 @@ class SimulatedMaps(object):
         """
 
         logger.info('Setting up SimulatedMaps module.')
-
-        # Read in the HEALPix pixel window function
-        if self.params['pixwindow'] == 1:
-            logger.info('Reading pixel window function.')
-            if 'path2pixwindow' in self.params:
-                path2pixwindow = self.params['path2pixwindow']
-                logger.info('path2pixwindow = {}.'.format(path2pixwindow))
-                hdulist = fits.open(path2pixwindow)
-                pixwindow = hdulist[1].data
-                logger.info('Read {}.'.format(path2pixwindow))
-            else:
-                logger.info('path2pixwindow not provided. Reading HEALPix pixel window function.')
-#                path2pixwindow = os.path.join(DEFAULTPATH2HEALPIXWINDOW, 'pixel_window_n{}.fits'.\
-                                                  format(self.params['nside']))
-#                hdulist = fits.open(path2pixwindow)
-#                pixwindow = hdulist[1].data['TEMPERATURE']
-#                logger.info('Read {}.'.format(path2pixwindow))
-                self.pixwin = hp.sphtfunc.pixwin(self.params['nside'], pol=False)
-            self.pixwindow = pixwindow[:self.params['nell']]
-        else:
-            logger.info('Pixel window function not supplied.')
-            self.pixwindow = None
-
-        # Read in the CMB beam window function (which already includes the pixel window function)
-        if self.params['tempbeam']:
-            logger.info('Reading CMB temperature beam window function.')
-            hdulist = fits.open(self.params['path2tempbeam'])
-            # beamwindow = hdulist[2].data['INT_BEAM']
-            beamwindow = hdulist[1].data['BEAMWINDOW']
-            logger.info('Read {}.'.format(self.params['path2tempbeam']))
-            self.beamwindow = beamwindow[:self.params['nell']]
 
         # Save the cls as a class attribute
         self.cls = self.read_cls()

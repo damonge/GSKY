@@ -10,8 +10,11 @@ from gsky.sims_gauss.MockSurvey import MockSurvey
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NoiseMocks(PipelineStage) :
-    name="NoiseMocks"
+NOISEPARAMS_KEYS = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
+SIMPARAMS_KEYS = ['probes', 'tracers', 'spins', 'theory_sacc', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
+
+class MockGen(PipelineStage) :
+    name="MockGen"
     inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
     outputs=[('dummy', DummyFile)]
     config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
@@ -111,16 +114,19 @@ class NoiseMocks(PipelineStage) :
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
 
-        noiseparams_keys = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
-        noiseparams = {key: self.config[key] for key in noiseparams_keys}
+        noiseparams = {key: self.config[key] for key in NOISEPARAMS_KEYS}
         if 'ntomo_bins' in self.config.keys():
             logger.info('Tomographic bin no provided.')
             noiseparams['ntomo_bins'] = self.config['ntomo_bins']
         noiseparams['path2shearcat'] = self.get_input('clean_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
-        simparams_keys = ['probes', 'tracers', 'spins', 'path2theorycls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
-        simparams = {key: self.config[key] for key in simparams_keys}
-        simparams['path2fsk'] = self.get_input('masked_fraction')
+
+        if self.config['theory_sacc'] != 'NONE':
+            logger.info('theory_sacc provided. Adding signal to noise maps.')
+            simparams = {key: self.config[key] for key in SIMPARAMS_KEYS}
+        else:
+            logger.info('theory_sacc not provided. Generating noise maps only.')
+            simparams = {}
 
         mocksurvey = MockSurvey(masks, simparams, noiseparams)
 

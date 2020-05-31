@@ -4,7 +4,7 @@ import numpy as np
 from operator import add
 import multiprocessing
 import copy
-# from .SimulatedMaps import SimulatedMaps
+from .SimulatedMaps import SimulatedMaps
 from .NoiseMaps import NoiseMaps
 import pymaster as nmt
 from ..flatmaps import read_flat_map
@@ -37,7 +37,7 @@ class MockSurvey(object):
         if simparams['path2theorycls'] != 'NONE':
             logger.info('path2theorycls provided. Generating signal realizations.')
             self.params['signal'] = True
-            self.simmaps = SimulatedMaps(simparams)
+            self.simmaps = SimulatedMaps(self.fsk, simparams)
         else:
             logger.info('path2theorycls is NONE. Not generating signal realizations.')
             self.params['signal'] = False
@@ -158,7 +158,7 @@ class MockSurvey(object):
 
         return cls
 
-    def __call__(self, realis):
+    def __call__(self, realiz):
         """
         Convenience method for calculating the signal and noise cls for
         a given mock realization. This is a function that can be pickled and can be thus
@@ -182,7 +182,7 @@ class MockSurvey(object):
 
         self.maskmat = self.init_maps()
 
-        logger.info('Running realization : {}.'.format(realis))
+        logger.info('Running realization : {}.'.format(realiz))
 
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
         noisecls = np.zeros_like(cls)
