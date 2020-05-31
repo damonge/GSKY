@@ -31,15 +31,15 @@ class MockSurvey(object):
         self.enrich_params()
         self.masks = masks
 
-        logger.info("Reading masked fraction from {}.".format(simparams['path2fsk']))
-        self.fsk, _ = read_flat_map(simparams['path2fsk'])
+        logger.info("Reading masked fraction from {}.".format(noiseparams['path2fsk']))
+        self.fsk, _ = read_flat_map(noiseparams['path2fsk'])
 
-        if simparams['path2theorycls'] != 'NONE':
-            logger.info('path2theorycls provided. Generating signal realizations.')
+        if simparams['theory_sacc'] != 'NONE':
+            logger.info('theory_sacc provided. Generating signal realizations.')
             self.params['signal'] = True
             self.simmaps = SimulatedMaps(self.fsk, simparams)
         else:
-            logger.info('path2theorycls is NONE. Not generating signal realizations.')
+            logger.info('theory_sacc is NONE. Not generating signal realizations.')
             self.params['signal'] = False
         if noiseparams != {}:
             logger.info('Generating noise realizations.')
