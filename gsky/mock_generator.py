@@ -47,9 +47,6 @@ class MockGen(PipelineStage) :
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
 
-        if self.config['path2theorycls'] != 'NONE':
-            assert self.get_output('cls_signal_realiz') != 'NONE', 'Signal cls requested but path2theorycls not provided. Aborting.'
-
         return
 
     def cl_realiz_arr_to_sacc(self, cl_realiz_arr, tracer_types, sacc_template):
