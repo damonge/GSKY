@@ -129,11 +129,15 @@ class MockGen(PipelineStage) :
 
         cls, noisecls, ells, wsps = mocksurvey.reconstruct_cls_parallel()
 
-        if os.path.isfile(self.get_output_fname('noi_bias',ext='sacc')):
-            logger.info('Reading template sacc from {}.'.format(self.get_output_fname('noi_bias', ext='sacc')))
-            sacc_template = sacc.Sacc.load_fits(self.get_output_fname('noi_bias', ext='sacc'))
+        if self.config['theory_sacc'] != 'NONE':
+            logger.info('Reading template sacc from {}.'.format(self.config['theory_sacc']))
+            sacc_template = sacc.Sacc.load_fits(self.config['theory_sacc'])
         else:
-            raise RuntimeError('Need template sacc file for analytic noise.')
+            if os.path.isfile(self.get_output_fname('noi_bias',ext='sacc')):
+                logger.info('Reading template sacc from {}.'.format(self.get_output_fname('noi_bias', ext='sacc')))
+                sacc_template = sacc.Sacc.load_fits(self.get_output_fname('noi_bias', ext='sacc'))
+            else:
+                raise RuntimeError('Need template sacc file for analytic noise.')
 
         noise_sacc = self.cl_realiz_arr_to_sacc(noisecls, self.config['tracers'], sacc_template)
 
