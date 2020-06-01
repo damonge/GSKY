@@ -17,14 +17,14 @@ class MockGen(PipelineStage) :
     name="MockGen"
     inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
     outputs=[('dummy', DummyFile)]
-    config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
-    'path2cls': 'NONE', 'ell_bpws': [100.0,200.0,300.0,
-                                     400.0,600.0,800.0,
-                                     1000.0,1400.0,1800.0,
-                                     2200.0,3000.0,3800.0,
-                                     4600.0,6200.0,7800.0,
-                                     9400.0,12600.0,15800.0],
-    'pixwindow': 0, 'nell_theor': 5000, 'noisemodel': 'data',
+    config_options={'nrealiz': 1000,
+    'ell_bpws': [100.0,200.0,300.0,
+                 400.0,600.0,800.0,
+                 1000.0,1400.0,1800.0,
+                 2200.0,3000.0,3800.0,
+                 4600.0,6200.0,7800.0,
+                 9400.0,12600.0,15800.0],
+    'pixwindow': 0, 'noisemodel': 'data', 'theory_sacc': 'NONE',
     'posfromshearcat': 1, 'shearrot': 'noflip', 'mask_type': 'sirius'}
 
     def get_output_fname(self, name, ext=None):
@@ -137,7 +137,7 @@ class MockGen(PipelineStage) :
 
         noise_sacc = self.cl_realiz_arr_to_sacc(noisecls, self.config['tracers'], sacc_template)
 
-        if self.config['path2cls'] != 'NONE':
+        if self.config['theory_sacc'] != 'NONE':
             np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
             logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', ext='npy')))
 
