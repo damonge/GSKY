@@ -57,7 +57,7 @@ class SimulatedMaps(object):
         logger.info('Generating Gaussian map realizations.')
         np.random.seed(seed=None)
         # Now create the maps with the correlations between both spin-0 and spin-2 fields
-        maps = nmt.synfast_flat(self.fsk.nx, self.fsk.ny, self.fsk.lx, self.fsk.ly, \
+        maps = nmt.synfast_flat(self.fsk.nx, self.fsk.ny, np.radians(self.fsk.lx), np.radians(self.fsk.ly), \
                                 self.cls, spin_arr=self.params['spins'], seed=-1, beam=None)
         logger.info('Gaussian maps done.')
 
