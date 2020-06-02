@@ -180,8 +180,6 @@ class MockSurvey(object):
         :return tempells: array of the ell range of the power spectra
         """
 
-        self.maskmat = self.init_maps()
-
         logger.info('Running realization : {}.'.format(realiz))
 
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
@@ -230,10 +228,12 @@ class MockSurvey(object):
                     if spin1 == 2 and spin2 == 0:
                         # Define flat sky spin-2 field
                         emaps = [maps[j], maps[j+self.params['nspin2']]]
-                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj]]
-                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         if self.wsps[j][jj] is None:
                             logger.info('Workspace element for j, jj = {}, {} not set.'.format(j, jj))
@@ -261,10 +261,12 @@ class MockSurvey(object):
                     elif spin1 == 2 and spin2 == 2:
                         # Define flat sky spin-2 field
                         emaps = [maps[j], maps[j+self.params['nspin2']]]
-                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj], maps[jj+self.params['nspin2']]]
-                        f2_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         if self.wsps[j][jj] is None:
                             logger.info('Workspace element for j, jj = {}, {} not set.'.format(j, jj))
@@ -294,10 +296,12 @@ class MockSurvey(object):
                     else:
                         # Define flat sky spin-0 field
                         emaps = [maps[j]]
-                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj]]
-                        f0_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         if self.wsps[j][jj] is None:
                             logger.info('Workspace element for j, jj = {}, {} not set.'.format(j, jj))
@@ -329,7 +333,8 @@ class MockSurvey(object):
                 if self.params['spins'][j] == 2:
                     # Define flat sky spin-2 field
                     emaps = [noisemaps[j], noisemaps[j+self.params['nspin2']]]
-                    f2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, j], emaps, purify_b=False)
+                    f2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                          emaps, purify_b=False)
 
                     if self.wsps[j][j] is None:
                         logger.info('Workspace element for j, j = {}, {} not set.'.format(j, j))
@@ -354,7 +359,8 @@ class MockSurvey(object):
                 else:
                     # Define flat sky spin-0 field
                     emaps = [noisemaps[j]]
-                    f0 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, j], emaps, purify_b=False)
+                    f0 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                          emaps, purify_b=False)
 
                     if self.wsps[j][j] is None:
                         logger.info('Workspace element for j, j = {}, {} not set.'.format(j, j))
@@ -382,8 +388,6 @@ class MockSurvey(object):
         Convenience method for calculating the NaMaster workspaces for all the probes in the simulation.
         :return wsps: wsps list
         """
-
-        self.maskmat = self.init_maps()
 
         self.wsps = [[None for i in range(self.params['nprobes'])] for ii in range(self.params['nprobes'])]
 
@@ -422,10 +426,12 @@ class MockSurvey(object):
                     if spin1 == 2 and spin2 == 0:
                         # Define flat sky spin-2 field
                         emaps = [maps[j], maps[j+self.params['nspin2']]]
-                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj]]
-                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         logger.info('Computing workspace element.')
                         wsp = nmt.NmtWorkspaceFlat()
@@ -437,10 +443,12 @@ class MockSurvey(object):
                     elif spin1 == 2 and spin2 == 2:
                         # Define flat sky spin-2 field
                         emaps = [maps[j], maps[j+self.params['nspin2']]]
-                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj], maps[jj+self.params['nspin2']]]
-                        f2_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f2_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         logger.info('Computing workspace element.')
                         wsp = nmt.NmtWorkspaceFlat()
@@ -452,10 +460,12 @@ class MockSurvey(object):
                     else:
                         # Define flat sky spin-0 field
                         emaps = [maps[j]]
-                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_1 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[j],
+                                                emaps, purify_b=False)
                         # Define flat sky spin-0 field
                         emaps = [maps[jj]]
-                        f0_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.maskmat[j, jj], emaps, purify_b=False)
+                        f0_2 = nmt.NmtFieldFlat(np.radians(self.fsk.lx), np.radians(self.fsk.ly), self.masks[jj],
+                                                emaps, purify_b=False)
 
                         logger.info('Computing workspace element.')
                         wsp = nmt.NmtWorkspaceFlat()
@@ -465,42 +475,6 @@ class MockSurvey(object):
                             self.wsps[jj][j] = wsp
 
         return self.wsps
-
-    def init_maps(self):
-        """
-        Initialises an array of masks from the input mask array using the specifications
-        in params.
-        :param :
-        :return maskmat: 3D array with 0. and 1. axis denoting the number of the map to cross correlate
-        (i.e. the power spectrum) and the 3. axis is the mask belonging to this index
-        This is different for separate masks for the cross correlation or combined masks for the cross correlation
-        """
-
-        maskmat = np.zeros((self.params['nprobes'], self.params['nprobes']) + (self.fsk.ny, self.fsk.nx))
-        k = 0
-        # 1st case: We give a combined mask to the cross power spectrum
-        if len(self.masks) > self.params['nprobes']:
-            logger.info('Number of provided masks larger than number of probes.')
-            logger.info('Setting the mask for the cross power spectrum to the provided combined mask.')
-            for i in range(self.params['nprobes']):
-                tempmask = self.masks[i]
-                maskmat[i, i, :, :] = tempmask
-                k += 1
-            for i in range(self.params['nprobes']):
-                for ii in range(self.params['nprobes']):
-                    if i < ii:
-                        tempmask = self.masks[k]
-                        maskmat[i, ii, :, :] = tempmask
-                        maskmat[ii, i, :, :] = tempmask
-                        k += 1
-        elif self.params['nprobes'] == 1 and len(self.masks) == 1:
-            for i in range(self.params['nprobes']):
-                tempmask = self.masks[i]
-                maskmat[i, i, :, :] = tempmask
-        else:
-            raise NotImplementedError('No other masking option implemented yet. Aborting.')
-
-        return maskmat
 
 
 

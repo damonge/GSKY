@@ -49,6 +49,28 @@ class MockGen(PipelineStage) :
 
         return
 
+    def get_galaxy_mask(self):
+
+        logger.info('Generating galaxy_density mask.')
+
+        # Depth-based mask
+        fsk, mp_depth = read_flat_map(self.get_input("depth_map"), i_map=0)
+        mp_depth[np.isnan(mp_depth)] = 0
+        mp_depth[mp_depth > 40] = 0
+        msk_depth = np.zeros_like(mp_depth)
+        msk_depth[mp_depth >= self.config['depth_cut']] = 1
+
+        _, mskfrac = read_flat_map(self.get_input("masked_fraction"), i_map=0)
+
+        # Create binary mask (fraction>threshold and depth req.)
+        msk_bo = np.zeros_like(mskfrac)
+        msk_bo[mskfrac > self.config['mask_thr']] = 1
+        msk_bi = msk_bo * msk_depth
+
+        weight = mskfrac * msk_bi
+
+        return fsk, weight, msk_bi, mskfrac
+
     def cl_realiz_arr_to_sacc(self, cl_realiz_arr, tracer_types, sacc_template):
 
         logger.info('Creating saccfile for simulated noise.')
@@ -91,22 +113,31 @@ class MockGen(PipelineStage) :
         logger.info('Number of probes = {}.'.format(nprobes))
 
         logger.info("Reading masks from {}.".format(self.get_input('gamma_maps')))
-        # Here we read the weight masks
         masks = []
-        for i in self.config['ntomo_bins']:
-            if 'weightmask' in self.config.keys():
-                if self.config['weightmask'] == 1:
-                    logger.info('Using weightmask.')
-                    fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+2)
+        for i, probe in enumerate(self.config['probes']):
+            if probe == 'galaxy_shear':
+                i_bin = self.config['ntomo_bins'][i]
+                if 'weightmask' in self.config.keys():
+                    if self.config['weightmask'] == 1:
+                        logger.info('Using weightmask.')
+                        fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i_bin+2)
+                    else:
+                        logger.info('Using binary mask.')
+                        fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i_bin+3)
                 else:
-                    logger.info('Using binary mask.')
-                    fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6*i+3)
+                    logger.info('weightmask keyword not provided. Using default weightmask.')
+                    fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6 * i_bin + 2)
+            elif probe == 'galaxy_density':
+                fsk_temp, mask_temp, _, _ = self.get_galaxy_mask()
+            elif probe == 'cmb_tSZ':
+                fsk_temp, mask_temp = read_flat_map(self.get_input('act_maps'), i_map=1)
+            elif probe == 'cmb_convergence':
+                fsk_temp, mask_temp = read_flat_map(self.get_input('act_maps'), i_map=3)
             else:
-                logger.info('weightmask keyword not provided. Using default weightmask.')
-                fsk_temp, mask_temp = read_flat_map(self.get_input('gamma_maps'), i_map=6 * i + 2)
+                raise NotImplementedError('Only tracer types galaxy_density, galaxy_shear, cmb_tSZ and cmb_convergence'\
+                                          ' supported.')
             mask_temp = mask_temp.reshape([fsk_temp.ny, fsk_temp.nx])
             masks.append(mask_temp)
-        masks += [mask_temp]*(nprobes*(nprobes-1)//2)
 
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
@@ -117,6 +148,11 @@ class MockGen(PipelineStage) :
             noiseparams['ntomo_bins'] = self.config['ntomo_bins']
         noiseparams['path2shearcat'] = self.get_input('clean_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
+        if 'galaxy_density' in self.config['probes']:
+            _, mask, msk_bi, mskfrac = self.get_galaxy_mask()
+            noiseparams['galaxy_density_mask'] = mask
+            noiseparams['galaxy_density_msk_bi'] = msk_bi
+            noiseparams['galaxy_density_mskfrac'] = mskfrac
 
         if self.config['theory_sacc'] != 'NONE':
             logger.info('theory_sacc provided. Adding signal to noise maps.')

@@ -64,18 +64,35 @@ PowerSpecter:
   output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
 
 MockGen:
-  tracers: ['wl_0']
-  probes: ['gamma']
-  spins: [2]
+  tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'kappa_0', 'y_0', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+  probes: ['galaxy_density', 'galaxy_density', 'galaxy_density', 'galaxy_density', 'cmb_convergence', 'cmb_tSZ',
+           'galaxy_shear', 'galaxy_shear', 'galaxy_shear', 'galaxy_shear']
+  spins: [0, 0, 0, 0, 0, 0, 2, 2, 2, 2]
   nrealiz: 1000
-  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
-  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/'\
+  'CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,
+             3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
   pixwindow: 0
   nell_theor: 5000
-  noisemodel: data
+  noisemodel: ['data', 'data', 'data', 'data', 'ps', 'ps', 'ps', 'ps', 'data', 'data', 'data', 'data']
   posfromshearcat: 1
-  ntomo_bins: [0]
+  ntomo_bins: [0, 1, 2, 3, -1, -1, 0, 1, 2, 3]
   output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj
+
+#MockGen:
+#  tracers: ['wl_0']
+#  probes: ['gamma']
+#  spins: [2]
+#  nrealiz: 1000
+#  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
+#  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+#  pixwindow: 0
+#  nell_theor: 5000
+#  noisemodel: data
+#  posfromshearcat: 1
+#  ntomo_bins: [0]
+#  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj
 
 #MockGen:
 #    tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']

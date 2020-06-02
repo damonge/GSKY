@@ -4,6 +4,7 @@ import numpy as np
 #import healpy as hp
 import copy
 from astropy.io import fits
+import pymaster as nmt
 from ..map_utils import createSpin2Map
 from ..flatmaps import read_flat_map
 
@@ -60,13 +61,13 @@ class NoiseMaps(object):
             logger.info('Generating map for tracer = {}.'.format(tracer))
             logger.info('Generating map for probe = {}.'.format(probe))
             if probe != 'gamma':
-                if self.params['noisemodel'] == 'data':
+                if self.params['noisemodel'][i] == 'data':
                     maps[ii] = self.datanoisemap(probe, data[tracer])
                 else:
                     maps[ii] = self.gaussnoisemap(probe, data[tracer])
                 ii += 1
             else:
-                if self.params['noisemodel'] == 'data':
+                if self.params['noisemodel'][i] == 'data':
                     if signalmaps is not None:
                         shearmaps = [signalmaps[i], signalmaps[i+self.params['nspin2']]]
                     else:
@@ -118,10 +119,10 @@ class NoiseMaps(object):
         :return noisemap: HEALPix map of the noise for the respective probe
         """
 
-        if probe == 'deltag':
-            noisemap = self.randomize_deltag_map_fast(data)
+        if probe == 'galaxy_density':
+            noisemap = self.randomize_deltag_map(data)
 
-        elif probe == 'gamma':
+        elif probe == 'galaxy_shear':
             # Add the cosmic shear to the noise ellipticites
             if shearmaps is not None:
                 logger.info('Adding signal map to ellipticities.')
@@ -133,7 +134,8 @@ class NoiseMaps(object):
             noisemap = self.randomize_shear_map(data)
 
         else:
-            raise NotImplementedError('Probes other than deltag and gamma not implemented yet. Aborting.')
+            raise NotImplementedError('Probes other than galaxy_density and galaxy_shear'\
+                                      ' not implemented yet. Aborting.')
 
         return noisemap
 
@@ -193,12 +195,14 @@ class NoiseMaps(object):
             # TT, EE, BB, TE, EB, TB
             # and one needs to set at least 4 of those
             # We set the E and B mode power spectra to the theoretical shape noise power spectrum
-            zeroarr = np.zeros(self.data[probe].shape[0])
-            ps = [zeroarr, self.data[probe], self.data[probe], zeroarr]
-            tempmaps = list(hp.synfast(ps, self.params['nside'], new=True, pixwin=False))
-            noisemap = [tempmaps[1], tempmaps[2]]
+            zeroarr = np.zeros(data[probe]['noisecls'].shape[0])
+            cl_inp = [data[probe]['noisecls'], zeroarr, data[probe]['noisecls']]
+            noisemap = nmt.synfast_flat(data['fsk'].nx, data['fsk'].ny, np.radians(data['fsk'].lx),
+                                        np.radians(data['fsk'].ly), cl_inp, spin_arr=[2], seed=-1, beam=None)
         else:
-            noisemap = hp.synfast(self.data[probe], self.params['nside'], new=True, pixwin=False)
+            noisemap = nmt.synfast_flat(data['fsk'].nx, data['fsk'].ny, np.radians(data['fsk'].lx),
+                                        np.radians(data['fsk'].ly), [data[probe]['noisecls']], spin_arr=[0],
+                                        seed=-1, beam=None)
 
         return noisemap
 
@@ -215,18 +219,22 @@ class NoiseMaps(object):
         probe
         """
 
+        # Read quantities needed by all probes
+        assert 'path2fsk' in self.params, 'path2fsk parameter not provided. Aborting.'
+        logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
+        fsk, _ = read_flat_map(self.params['path2fsk'])
+
         data = {}
         for i, tracer in enumerate(self.params['tracers']):
             probe = self.params['probes'][i]
             logger.info('Reading noise data for tracer = {}.'.format(tracer))
             logger.info('Reading noise data for probe = {}.'.format(probe))
-            logger.info('Noisemodel = {}.'.format(self.params['noisemodel']))
+            logger.info('Noisemodel = {}.'.format(self.params['noisemodel'][i]))
 
-            if self.params['noisemodel'] == 'data':
+            if self.params['noisemodel'][i] == 'data':
 
                 if probe == 'gamma':
                     # assert 'shearrot' in self.params, 'Requesting noise model from data but shearrot parameter not provided. Aborting.'
-                    assert 'path2fsk' in self.params, 'Requesting noise model from data but path2fsk parameter not provided. Aborting.'
                     assert 'path2shearcat' in self.params, 'Requesting noise model from data but path2shearcat parameter not provided. Aborting.'
 
                     data[tracer] = {}
@@ -279,9 +287,6 @@ class NoiseMaps(object):
                             logger.info('Size after cut = {}.'.format(cat['ra'].shape))
 
                     data[tracer]['shearcat'] = cat
-
-                    logger.info("Reading masked fraction from {}.".format(self.params['path2fsk']))
-                    fsk, _ = read_flat_map(self.params['path2fsk'])
                     data[tracer]['fsk'] = fsk
 
                     if self.params['posfromshearcat'] == 0:
@@ -291,18 +296,16 @@ class NoiseMaps(object):
 
                 elif probe == 'deltag':
                     assert 'Ngal' in self.params, 'Requesting noise model from data but Ngal parameter not provided. Aborting.'
-                    assert 'path2deltagmask' in self.params, 'Requesting noise model from data but path to galaxy mask not provided. Aborting.'
+                    assert 'galaxy_density_mask' in self.params, 'Requesting noise model from data but galaxy_density'\
+                                                                 '_mask not provided. Aborting.'
 
                     data[tracer] = {}
 
-                    tempmap = read_flat_map(self.params['path2deltagmask'])
-                    if len(tempmap.shape) == 3:
-                        tempmask = tempmap[0].astype('bool').astype('int')
-                    else:
-                        tempmask = tempmap.astype('bool').astype('int')
-                    data[tracer]['deltagmask'] = tempmask
-                    logger.info('Read {}.'.format(self.params['path2deltagmask']))
-                    data[tracer]['Ngal'] = self.params['Ngal']
+                    tempmask = self.params['galaxy_density_mask'].astype('bool').astype('int')
+                    data[tracer]['msk'] = tempmask
+                    data[tracer]['msk_bi'] = self.params['galaxy_density_msk_bi']
+                    data[tracer]['mskfrac'] = self.params['galaxy_density_mskfrac']
+                    data[tracer]['Ngal'] = self.params['Ngal'][self.params['ntomo_bins'][i]]
 
                 else:
                     raise NotImplementedError('Probes other than deltag, gamma not implemented at the moment. Aborting.')
@@ -317,76 +320,34 @@ class NoiseMaps(object):
 
         return data
 
-    # def randomize_deltag_map_fast(self, data):
-    #     """
-    #     Creates a randomised version of the input map map by assigning the
-    #     galaxies in the surevy to random pixels in the map. Basically it rotates each
-    #     galaxy by a random angle but not rotating it out of the survey footprint.
-    #     :param map: masked galaxy overdensity map which needs to randomised
-    #     :param Ngal: number of galaxies used to create the map
-    #     :return randomised_map: a randomised version of the masked input map
-    #     """
-    #
-    #     logger.info('Randomizing galaxy map.')
-    #
-    #     mask = data['deltagmask']
-    #     Ngal = data['Ngal']
-    #
-    #     np.random.seed(seed=None)
-    #     maskpixy, maskpixx = np.where(mask == 1.)
-    #
-    #     galpix_mask = np.random.choice(np.arange(maskpixx.shape[0]), size=Ngal)
-    #
-    #     galpixx = maskpixx[galpix_mask]
-    #     galpixy = maskpixy[galpix_mask]
-    #
-    #     maskshape = mask.shape
-    #     ny, nx = maskshape
-    #     ipix = galpixx + nx*galpixy
-    #
-    #     randomized_map = np.bincount(ipix, minlength=nx*ny).reshape(maskshape)
-    #
-    #     randomized_map = np.ma.masked_array(randomized_map)
-    #     randomized_map.mask = np.logical_not(mask)
-    #
-    #     mean = np.mean(randomized_map)
-    #     randomized_map = (randomized_map-mean)/mean
-    #
-    #     return randomized_map
-    #
-    # def randomize_deltag_map(self, data):
-    #     """
-    #     Creates a randomised version of the input map map by assigning the
-    #     galaxies in the survey to random pixels in the map.
-    #     :param map: masked galaxy overdensity map which needs to randomized
-    #     :param Ngal: number of galaxies used to create the map
-    #     :return randomised_map: a randomised version of the masked input map
-    #     """
-    #
-    #     logger.info('Randomizing galaxy map.')
-    #
-    #     mask = data['deltagmask']
-    #     Ngal = data['Ngal']
-    #
-    #     np.random.seed(seed=None)
-    #     maskpixy, maskpixx = np.where(mask == 1.)
-    #
-    #     galpix_mask = np.random.choice(np.arange(maskpixx.shape[0]), size=Ngal)
-    #
-    #     galpixx = maskpixx[galpix_mask]
-    #     galpixy = maskpixy[galpix_mask]
-    #     randomized_map = np.zeros_like(mask)
-    #
-    #     for i in np.arange(Ngal):
-    #         randomized_map[galpixy[i], galpixx[i]] += 1.
-    #
-    #     randomized_map = np.ma.masked_array(randomized_map)
-    #     randomized_map.mask = np.logical_not(mask)
-    #
-    #     mean = np.mean(randomized_map)
-    #     randomized_map = (randomized_map-mean)/mean
-    #
-    #     return randomized_map
+    def randomize_deltag_map(self, data):
+        """
+        Creates a randomised version of the input map map by assigning the
+        galaxies in the surevy to random pixels in the map. Basically it rotates each
+        galaxy by a random angle but not rotating it out of the survey footprint.
+        :param map: masked galaxy overdensity map which needs to randomised
+        :param Ngal: number of galaxies used to create the map
+        :return randomised_map: a randomised version of the masked input map
+        """
+
+        logger.info('Randomizing galaxy map.')
+
+        mask = data['msk']
+        Ngal = data['Ngal']
+
+        np.random.seed(seed=None)
+        maskpix = np.where(mask == 1.)
+
+        galpix = np.random.choice(np.arange(maskpix.shape[0]), size=Ngal)
+
+        random_nmap = np.bincount(galpix, minlength=mask.shape[0])
+
+        goodpix = np.where(data['msk_bi'] > 0.1)[0]
+        ndens = np.sum(random_nmap * data['msk_bi']) / np.sum(mask)
+        delta = np.zeros_like(mask)
+        delta[goodpix] = random_nmap[goodpix] / (ndens * data['mskfrac'][goodpix]) - 1
+
+        return delta
 
     def setup(self):
         """
