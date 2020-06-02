@@ -15,7 +15,8 @@ SIMPARAMS_KEYS = ['probes', 'tracers', 'spins', 'theory_sacc', 'nrealiz', 'ell_b
 
 class MockGen(PipelineStage) :
     name="MockGen"
-    inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
+    inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('depth_map', FitsFile),
+            ('gamma_maps', FitsFile), ('ngal_maps', FitsFile), ('act_maps', FitsFile)]
     outputs=[('dummy', DummyFile)]
     config_options={'nrealiz': 1000,
     'ell_bpws': [100.0,200.0,300.0,
