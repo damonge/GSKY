@@ -317,7 +317,8 @@ class NoiseMaps(object):
                 data[tracer] = {}
 
                 data[tracer]['noisecls'] = np.genfromtxt(self.params['path2noisecls'][i], usecols={1})
-                logger.info('Read {}.'.format(self.params['path2noisecls']))
+                logger.info('Read {}.'.format(self.params['path2noisecls'][i]))
+                data[tracer]['fsk'] = fsk
 
         return data
 
