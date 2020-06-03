@@ -60,7 +60,7 @@ class NoiseMaps(object):
             probe = self.params['probes'][i]
             logger.info('Generating map for tracer = {}.'.format(tracer))
             logger.info('Generating map for probe = {}.'.format(probe))
-            if probe != 'gamma':
+            if probe != 'galaxy_shear':
                 if self.params['noisemodel'][i] == 'data':
                     maps[ii] = self.datanoisemap(probe, data[tracer])
                 else:
@@ -190,7 +190,7 @@ class NoiseMaps(object):
         :return noisemap: HEALPix map of the noise for the respective probe
         """
 
-        if probe == 'gamma':
+        if probe == 'galaxy_shear':
             # In the new healpy ordering the order of the power spectra is
             # TT, EE, BB, TE, EB, TB
             # and one needs to set at least 4 of those
@@ -233,7 +233,7 @@ class NoiseMaps(object):
 
             if self.params['noisemodel'][i] == 'data':
 
-                if probe == 'gamma':
+                if probe == 'galaxy_shear':
                     # assert 'shearrot' in self.params, 'Requesting noise model from data but shearrot parameter not provided. Aborting.'
                     assert 'path2shearcat' in self.params, 'Requesting noise model from data but path2shearcat parameter not provided. Aborting.'
 
@@ -294,7 +294,7 @@ class NoiseMaps(object):
                         tempmap = read_flat_map(self.params['path2shearmask'], i_map=6*i+3)
                         data[tracer]['shearmask'] = tempmap
 
-                elif probe == 'deltag':
+                elif probe == 'galaxy_density':
                     assert 'Ngal' in self.params, 'Requesting noise model from data but Ngal parameter not provided. Aborting.'
                     assert 'galaxy_density_mask' in self.params, 'Requesting noise model from data but galaxy_density'\
                                                                  '_mask not provided. Aborting.'
@@ -308,7 +308,7 @@ class NoiseMaps(object):
                     data[tracer]['Ngal'] = self.params['Ngal'][self.params['ntomo_bins'][i]]
 
                 else:
-                    raise NotImplementedError('Probes other than deltag, gamma not implemented at the moment. Aborting.')
+                    raise NotImplementedError('Probes other than galaxy_density, galaxy_shear not implemented at the moment. Aborting.')
 
             else:
                 assert 'path2noisecls' in self.params, 'Requesting theretical noise model but path2noisecls parameter not provided. Aborting.'
