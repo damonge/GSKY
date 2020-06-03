@@ -347,6 +347,9 @@ class NoiseMaps(object):
         delta = np.zeros_like(mask)
         delta[goodpix] = random_nmap[goodpix] / (ndens * data['mskfrac'][goodpix]) - 1
 
+        # Reshape map
+        delta = delta.reshape([data['fsk'].ny, data['fsk'].nx])
+
         return delta
 
     def setup(self):
