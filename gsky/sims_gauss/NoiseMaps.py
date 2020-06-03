@@ -303,6 +303,7 @@ class NoiseMaps(object):
 
                     tempmask = self.params['galaxy_density_mask'].astype('bool').astype('int')
                     data[tracer]['msk'] = tempmask
+                    data[tracer]['fsk'] = fsk
                     data[tracer]['msk_bi'] = self.params['galaxy_density_msk_bi']
                     data[tracer]['mskfrac'] = self.params['galaxy_density_mskfrac']
                     data[tracer]['Ngal'] = self.params['Ngal'][self.params['ntomo_bins'][i]]
