@@ -10,7 +10,7 @@ from gsky.sims_gauss.MockSurvey import MockSurvey
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-NOISEPARAMS_KEYS = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
+NOISEPARAMS_KEYS = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type', 'Ngal']
 SIMPARAMS_KEYS = ['probes', 'tracers', 'spins', 'theory_sacc', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
 
 class MockGen(PipelineStage) :
