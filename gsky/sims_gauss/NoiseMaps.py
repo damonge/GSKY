@@ -336,7 +336,7 @@ class NoiseMaps(object):
         Ngal = data['Ngal']
 
         np.random.seed(seed=None)
-        maskpix = np.where(mask == 1.)
+        maskpix = np.where(mask == 1.)[0]
 
         galpix = np.random.choice(np.arange(maskpix.shape[0]), size=Ngal)
 
