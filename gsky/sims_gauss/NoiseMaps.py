@@ -195,13 +195,13 @@ class NoiseMaps(object):
             # TT, EE, BB, TE, EB, TB
             # and one needs to set at least 4 of those
             # We set the E and B mode power spectra to the theoretical shape noise power spectrum
-            zeroarr = np.zeros(data[probe]['noisecls'].shape[0])
-            cl_inp = [data[probe]['noisecls'], zeroarr, data[probe]['noisecls']]
+            zeroarr = np.zeros(data['noisecls'].shape[0])
+            cl_inp = [data['noisecls'], zeroarr, data['noisecls']]
             noisemap = nmt.synfast_flat(data['fsk'].nx, data['fsk'].ny, np.radians(data['fsk'].lx),
                                         np.radians(data['fsk'].ly), cl_inp, spin_arr=[2], seed=-1, beam=None)
         else:
             noisemap = nmt.synfast_flat(data['fsk'].nx, data['fsk'].ny, np.radians(data['fsk'].lx),
-                                        np.radians(data['fsk'].ly), [data[probe]['noisecls']], spin_arr=[0],
+                                        np.radians(data['fsk'].ly), [data['noisecls']], spin_arr=[0],
                                         seed=-1, beam=None)
 
         return noisemap
