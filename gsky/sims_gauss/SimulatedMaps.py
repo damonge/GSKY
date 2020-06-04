@@ -150,6 +150,8 @@ class SimulatedMaps(object):
                     j += 1
 
             if self.params['spins'][i] == 2:
+                cls[j, :] = np.zeros_like(cls_temp)
+                j += 1
                 for k in range(i+1, self.params['nprobes']):
                     cls[j, :] = np.zeros_like(cls_temp)
                     j += 1
