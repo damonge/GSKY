@@ -202,7 +202,7 @@ class NoiseMaps(object):
         else:
             noisemap = nmt.synfast_flat(data['fsk'].nx, data['fsk'].ny, np.radians(data['fsk'].lx),
                                         np.radians(data['fsk'].ly), [data['noisecls']], spin_arr=[0],
-                                        seed=-1, beam=None)
+                                        seed=-1, beam=None)[0]
 
         return noisemap
 
