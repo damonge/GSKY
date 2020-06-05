@@ -1,5 +1,5 @@
  GuessSpecter:
-    output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
+    output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs'
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj'
     noisesacc_filename: 'noi_bias_comb'
     #  noisesacc_filename: 'NONE'
