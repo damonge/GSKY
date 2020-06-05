@@ -102,7 +102,7 @@ class ShearMapper(PipelineStage):
             w2e2_curr = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
             w2e2.append(w2e2_curr)
 
-            return np.array(w2e2)
+        return np.array(w2e2)
 
     def get_nz_cosmos(self):
         """
@@ -294,7 +294,7 @@ class ShearMapper(PipelineStage):
             hdus.append(fits.BinTableHDU.from_columns(cols))
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
-                fits.Column(name='w2e2', array=w2e2, format='2E'),
+                fits.Column(name='w2e2', array=w2e2, format='2'),
                 fits.Column(name='mhats', array=mhats, format='E')]
         hdus.append(fits.BinTableHDU.from_columns(cols))
 

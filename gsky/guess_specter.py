@@ -35,15 +35,11 @@ class GuessSpecter(PipelineStage) :
         """
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
-        self.output_dir = self.config['output_dir']+'/'
-        if self.config['output_plot_dir'] != 'NONE':
-            self.output_plot_dir = os.path.join(self.config['output_dir'], self.config['output_plot_dir'])
+        self.output_dir=self.get_output('dummy',final_name=True)[:-5]
         if self.config['output_run_dir'] != 'NONE':
-            self.output_plot_dir = os.path.join(self.output_plot_dir, self.config['output_run_dir'])
-        if not os.path.isdir(self.output_plot_dir):
-            os.makedirs(self.output_plot_dir)
-
-        self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+            self.output_dir+=self.config['output_run_dir']+'/'
+        if not os.path.isdir(self.output_dir):
+            os.makedirs(self.output_dir)
 
         return
 
@@ -92,11 +88,11 @@ class GuessSpecter(PipelineStage) :
 
         return masks, fsk
 
-    def guess_spectra(self, params, config):
+    def guess_spectra(self, params):
 
-        if 'dcpl_cl' in config.keys():
+        if 'dcpl_cl' in self.config.keys():
             logger.info('dcpl_cl provided.')
-            if config['dcpl_cl']:
+            if self.config['dcpl_cl']:
                 logger.info('Computing coupled guess spectra.')
                 self.guess_spectra_cpld(params)
             else:
@@ -112,6 +108,8 @@ class GuessSpecter(PipelineStage) :
         for saccdir in self.config['saccdirs']:
             if self.config['output_run_dir'] != 'NONE':
                 path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+            else:
+                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
             sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
             logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
             assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
@@ -124,6 +122,8 @@ class GuessSpecter(PipelineStage) :
             for i, saccdir in enumerate(self.config['saccdirs']):
                 if self.config['output_run_dir'] != 'NONE':
                     path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
+                else:
+                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
                 noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
                 logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
                 if noise_sacc_curr.covariance is None:
@@ -147,31 +147,7 @@ class GuessSpecter(PipelineStage) :
         else:
             saccfile_guess_spec.mean = cl_theor
 
-        if self.config['output_run_dir'] != 'NONE':
-            input_dir = os.path.join('inputs', self.config['output_run_dir'])
-            input_dir = self.get_output_fname(input_dir)
-        if not os.path.isdir(input_dir):
-            os.makedirs(input_dir)
-            logger.info(('Created {}.'.format(input_dir)))
-
-        if self.config['output_run_dir'] != 'NONE':
-            coadd_dir = os.path.join('coadds', self.config['output_run_dir'])
-            coadd_dir = self.get_output_fname(coadd_dir)
-        if not os.path.isdir(coadd_dir):
-            os.makedirs(coadd_dir)
-            logger.info(('Created {}.'.format(coadd_dir)))
-
-        saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd.sacc'), overwrite=True)
-        logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] is not 'NONE':
-            noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] is not 'NONE':
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
-        else:
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_noise-free_guess_spectra.sacc')))
+        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
 
     def guess_spectra_cpld(self, params):
 
@@ -179,6 +155,8 @@ class GuessSpecter(PipelineStage) :
         for saccdir in self.config['saccdirs']:
             if self.config['output_run_dir'] != 'NONE':
                 path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+            else:
+                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
             sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
             logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
             assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
@@ -191,6 +169,8 @@ class GuessSpecter(PipelineStage) :
             for i, saccdir in enumerate(self.config['saccdirs']):
                 if self.config['output_run_dir'] != 'NONE':
                     path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
+                else:
+                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
                 noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
                 logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
                 if noise_sacc_curr.covariance is None:
@@ -256,16 +236,17 @@ class GuessSpecter(PipelineStage) :
 
             cl_cpld_curr = self.get_cl_cpld(cl_theor_curr, ell_theor, leff_hi, wsp_hi_curr, msk_prod)
 
-            if tr_i == tr_j:
-                if 'wl' in tr_i:
-                    datatype = 'cl_ee'
-                else:
-                    datatype = 'cl_00'
-                l_curr, nl_curr = noise_saccfile_coadd.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
-                nl_curr_int = scipy.interpolate.interp1d(l_curr, nl_curr, bounds_error=False,
-                                                         fill_value=(nl_curr[0], nl_curr[-1]))
-                nl_curr_hi = nl_curr_int(ell_theor)
-                cl_cpld_curr += nl_curr_hi
+            if self.config['noisesacc_filename'] is not 'NONE':
+                if tr_i == tr_j:
+                    if 'wl' in tr_i:
+                        datatype = 'cl_ee'
+                    else:
+                        datatype = 'cl_00'
+                    l_curr, nl_curr = noise_saccfile_coadd.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+                    nl_curr_int = scipy.interpolate.interp1d(l_curr, nl_curr, bounds_error=False,
+                                                             fill_value=(nl_curr[0], nl_curr[-1]))
+                    nl_curr_hi = nl_curr_int(ell_theor)
+                    cl_cpld_curr += nl_curr_hi
 
             cl_cpld.append(cl_cpld_curr)
 
@@ -285,9 +266,23 @@ class GuessSpecter(PipelineStage) :
                 saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
                 saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
 
+        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
+
+
+    def run(self):
+
+        params = {
+                    'cosmo': self.config['cosmo'],
+                    'hmparams': self.config['hmparams']
+                  }
+
+        saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra(params)
+
         if self.config['output_run_dir'] != 'NONE':
             input_dir = os.path.join('inputs', self.config['output_run_dir'])
             input_dir = self.get_output_fname(input_dir)
+        else:
+            input_dir = self.get_output_fname('inputs')
         if not os.path.isdir(input_dir):
             os.makedirs(input_dir)
             logger.info(('Created {}.'.format(input_dir)))
@@ -295,18 +290,20 @@ class GuessSpecter(PipelineStage) :
         if self.config['output_run_dir'] != 'NONE':
             coadd_dir = os.path.join('coadds', self.config['output_run_dir'])
             coadd_dir = self.get_output_fname(coadd_dir)
+        else:
+            coadd_dir = self.get_output_fname('coadds')
         if not os.path.isdir(coadd_dir):
             os.makedirs(coadd_dir)
             logger.info(('Created {}.'.format(coadd_dir)))
 
-        saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd.sacc'), overwrite=True)
+        saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd_test.sacc'), overwrite=True)
         logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
         if self.config['noisesacc_filename'] is not 'NONE':
-            noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc'), overwrite=True)
+            noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
         if self.config['noisesacc_filename'] is not 'NONE':
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra.sacc'), overwrite=True)
+            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
         else:
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc'), overwrite=True)
+            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_noise-free_guess_spectra.sacc')))
