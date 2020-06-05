@@ -14,8 +14,8 @@ global:
     pz_mark: best
     pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
     plots_dir: /global/cscratch1/sd/damonge/GSKY/outputs/GAMA09H_ceci/plots
-    
- GuessSpecter:
+
+GuessSpecter:
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj'
     noisesacc_filename: 'noi_bias_comb'
     #  noisesacc_filename: 'NONE'
