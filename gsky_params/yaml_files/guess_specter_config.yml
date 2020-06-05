@@ -1,3 +1,20 @@
+global:
+    depth_cut: 24.5
+    mapping:
+        res: 0.00833333333333
+        pad: 0.2
+        res_bo: 0.003
+        projection: CAR
+    mask_type: sirius
+    band: i
+    mask_thr: 0.5
+    shearrot: noflip
+    sys_collapse_type: average
+    pz_code: ephor_ab
+    pz_mark: best
+    pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
+    plots_dir: /global/cscratch1/sd/damonge/GSKY/outputs/GAMA09H_ceci/plots
+    
  GuessSpecter:
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj'
     noisesacc_filename: 'noi_bias_comb'

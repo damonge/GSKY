@@ -271,10 +271,10 @@ class GuessSpecter(PipelineStage) :
 
         saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd_test.sacc'), overwrite=True)
         logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] is not 'NONE':
+        if self.config['noisesacc_filename'] != 'NONE':
             noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] is not 'NONE':
+        if self.config['noisesacc_filename'] != 'NONE':
             saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_guess_spectra.sacc')))
         else:
