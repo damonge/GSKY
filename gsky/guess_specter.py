@@ -221,7 +221,7 @@ class GuessSpecter(PipelineStage) :
                 self.get_output_fname(path2sacc, 'sacc'))
             saccfiles.append(sacc_curr)
 
-        if self.config['noisesacc_filename'] is not 'NONE':
+        if self.config['noisesacc_filename'] != 'NONE':
             logger.info('Adding noise to theoretical cls.')
             noise_saccfiles = []
             for i, saccdir in enumerate(self.config['saccdirs']):
@@ -238,7 +238,7 @@ class GuessSpecter(PipelineStage) :
             noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, self.config)
         else:
             logger.info('Creating noise-free theoretical cls.')
-            noise_saccfile_coadd=None
+            noise_saccfile_coadd = None
 
         # Need to coadd saccfiles after adding covariance to noise saccfiles
         saccfile_coadd = sutils.coadd_sacc_means(saccfiles, self.config)
