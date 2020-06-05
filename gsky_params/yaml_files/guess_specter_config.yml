@@ -4,6 +4,7 @@
     #  noisesacc_filename: 'NONE'
     saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci']
     tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'kappa_0', 'y_0', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    dcpl_cl: True
     hmparams:
         corr_halo_mod: True
         massdef: 'M500c'

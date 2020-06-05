@@ -205,7 +205,6 @@ class GuessSpecter(PipelineStage) :
 
         return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
 
-
     def run(self):
 
         self.parse_input()
@@ -277,10 +276,10 @@ class GuessSpecter(PipelineStage) :
             logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
         if self.config['noisesacc_filename'] is not 'NONE':
             saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra_test.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_guess_spectra.sacc')))
+            logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_guess_spectra.sacc')))
         else:
             saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra_test.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_noise-free_guess_spectra.sacc')))
+            logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc')))
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
