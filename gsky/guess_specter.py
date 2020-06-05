@@ -52,6 +52,8 @@ class GuessSpecter(PipelineStage) :
 
     def get_masks(self):
 
+        logger.info('Reading masks.')
+
         masks = []
         for trc in self.config['tracers']:
             trc_id, trc_ind = trc.split('_')
@@ -137,6 +139,9 @@ class GuessSpecter(PipelineStage) :
         cl_cpld = []
         trc_combs = saccfile_coadd.get_tracer_combinations()
         for i, (tr_i, tr_j) in enumerate(trc_combs):
+
+            logger.info('Computing wsp for trc_comb = {}.'.format((tr_i, tr_j)))
+
             tr_i_ind = self.config['tracers'].index(tr_i)
             tr_j_ind = self.config['tracers'].index(tr_j)
 
@@ -175,6 +180,7 @@ class GuessSpecter(PipelineStage) :
             cl_cpld_curr = self.get_cl_cpld(cl_theor_curr, ell_theor, leff_hi, wsp_hi_curr, msk_prod)
 
             if noise_saccfile_coadd is not None:
+                logger.info('Adding noise.')
                 if tr_i == tr_j:
                     if 'wl' in tr_i:
                         datatype = 'cl_ee'
@@ -193,7 +199,7 @@ class GuessSpecter(PipelineStage) :
         for trc_name, trc in saccfile_coadd.tracers.items():
             saccfile_guess_spec.add_tracer_object(trc)
 
-        for i, (tr_i, tr_j) in trc_combs:
+        for i, (tr_i, tr_j) in enumerate(trc_combs):
             if 'wl' not in tr_i and 'wl' not in tr_j:
                 saccfile_guess_spec.add_ell_cl('cl_00', tr_i, tr_j, ell_theor, cl_cpld[i])
             elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
