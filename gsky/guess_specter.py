@@ -55,6 +55,7 @@ class GuessSpecter(PipelineStage) :
         masks = []
         for trc in self.config['tracers']:
             trc_id, trc_ind = trc.split('_')
+            trc_ind = int(trc_ind)
 
             if trc_id == 'gc':
                 fsk, mp_depth = read_flat_map(self.get_input("depth_map"),i_map=0)
