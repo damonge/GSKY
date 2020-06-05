@@ -35,9 +35,7 @@ class GuessSpecter(PipelineStage) :
         """
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
-        self.output_dir=self.get_output('dummy',final_name=True)[:-5]
-        if self.config['output_run_dir'] != 'NONE':
-            self.output_dir+=self.config['output_run_dir']+'/'
+        self.output_dir = self.get_output('dummy',final_name=True)[:-5]
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -88,101 +86,40 @@ class GuessSpecter(PipelineStage) :
 
         return masks, fsk
 
-    def guess_spectra(self, params):
+    def guess_spectra(self, params, saccfile_coadd, noise_saccfile_coadd):
 
         if 'dcpl_cl' in self.config.keys():
             logger.info('dcpl_cl provided.')
             if self.config['dcpl_cl']:
                 logger.info('Computing coupled guess spectra.')
-                self.guess_spectra_cpld(params)
+                saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_cpld(params,
+                                                                                saccfile_coadd, noise_saccfile_coadd)
             else:
                 logger.info('Computing uncoupled guess spectra.')
-                self.guess_spectra_uncpld(params)
+                saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_uncpld(params,
+                                                                                saccfile_coadd, noise_saccfile_coadd)
         else:
             logger.info('dcpl_cl not provided. Computing uncoupled guess spectra.')
-            self.guess_spectra_uncpld(params)
+            saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_uncpld(params,
+                                                                                saccfile_coadd, noise_saccfile_coadd)
 
-    def guess_spectra_uncpld(self, params):
+        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
 
-        saccfiles = []
-        for saccdir in self.config['saccdirs']:
-            if self.config['output_run_dir'] != 'NONE':
-                path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
-            else:
-                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
-            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-            assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
-                self.get_output_fname(path2sacc, 'sacc'))
-            saccfiles.append(sacc_curr)
-
-        if self.config['noisesacc_filename'] is not 'NONE':
-            logger.info('Adding noise to theoretical cls.')
-            noise_saccfiles = []
-            for i, saccdir in enumerate(self.config['saccdirs']):
-                if self.config['output_run_dir'] != 'NONE':
-                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
-                else:
-                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
-                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-                logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-                if noise_sacc_curr.covariance is None:
-                    logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-                noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, self.config)
-        else:
-            logger.info('Creating noise-free theoretical cls.')
-
-        # Need to coadd saccfiles after adding covariance to noise saccfiles
-        saccfile_coadd = sutils.coadd_sacc_means(saccfiles, self.config)
+    def guess_spectra_uncpld(self, params, saccfile_coadd, noise_saccfile_coadd=None):
 
         theor = GSKYPrediction(saccfile_coadd)
 
         cl_theor = theor.get_prediction(params)
 
         saccfile_guess_spec = copy.deepcopy(saccfile_coadd)
-        if self.config['noisesacc_filename'] is not 'NONE':
+        if noise_saccfile_coadd is not None:
             saccfile_guess_spec.mean = noise_saccfile_coadd.mean + cl_theor
         else:
             saccfile_guess_spec.mean = cl_theor
 
         return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
 
-    def guess_spectra_cpld(self, params):
-
-        saccfiles = []
-        for saccdir in self.config['saccdirs']:
-            if self.config['output_run_dir'] != 'NONE':
-                path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
-            else:
-                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
-            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-            assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
-                self.get_output_fname(path2sacc, 'sacc'))
-            saccfiles.append(sacc_curr)
-
-        if self.config['noisesacc_filename'] is not 'NONE':
-            logger.info('Adding noise to theoretical cls.')
-            noise_saccfiles = []
-            for i, saccdir in enumerate(self.config['saccdirs']):
-                if self.config['output_run_dir'] != 'NONE':
-                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
-                else:
-                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
-                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-                logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-                if noise_sacc_curr.covariance is None:
-                    logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-                noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, self.config)
-        else:
-            logger.info('Creating noise-free theoretical cls.')
-
-        # Need to coadd saccfiles after adding covariance to noise saccfiles
-        saccfile_coadd = sutils.coadd_sacc_means(saccfiles, self.config)
+    def guess_spectra_cpld(self, params, saccfile_coadd, noise_saccfile_coadd=None):
 
         ell_theor = np.arange(self.config['ellmax'])
         theor = GSKYPrediction(saccfile_coadd, ells=ell_theor)
@@ -236,7 +173,7 @@ class GuessSpecter(PipelineStage) :
 
             cl_cpld_curr = self.get_cl_cpld(cl_theor_curr, ell_theor, leff_hi, wsp_hi_curr, msk_prod)
 
-            if self.config['noisesacc_filename'] is not 'NONE':
+            if noise_saccfile_coadd is not None:
                 if tr_i == tr_j:
                     if 'wl' in tr_i:
                         datatype = 'cl_ee'
@@ -273,12 +210,47 @@ class GuessSpecter(PipelineStage) :
 
         self.parse_input()
 
+        saccfiles = []
+        for saccdir in self.config['saccdirs']:
+            if self.config['output_run_dir'] != 'NONE':
+                path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+            else:
+                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
+            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
+            assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
+                self.get_output_fname(path2sacc, 'sacc'))
+            saccfiles.append(sacc_curr)
+
+        if self.config['noisesacc_filename'] is not 'NONE':
+            logger.info('Adding noise to theoretical cls.')
+            noise_saccfiles = []
+            for i, saccdir in enumerate(self.config['saccdirs']):
+                if self.config['output_run_dir'] != 'NONE':
+                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
+                else:
+                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
+                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
+                if noise_sacc_curr.covariance is None:
+                    logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
+                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
+                noise_saccfiles.append(noise_sacc_curr)
+            noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, self.config)
+        else:
+            logger.info('Creating noise-free theoretical cls.')
+            noise_saccfile_coadd=None
+
+        # Need to coadd saccfiles after adding covariance to noise saccfiles
+        saccfile_coadd = sutils.coadd_sacc_means(saccfiles, self.config)
+
         params = {
                     'cosmo': self.config['cosmo'],
                     'hmparams': self.config['hmparams']
                   }
 
-        saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra(params)
+        saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra(params, saccfile_coadd,
+                                                                                       noise_saccfile_coadd)
 
         if self.config['output_run_dir'] != 'NONE':
             input_dir = os.path.join('inputs', self.config['output_run_dir'])
