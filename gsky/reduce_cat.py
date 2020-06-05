@@ -248,26 +248,29 @@ class ReduceCat(PipelineStage):
         # Galaxies used for shear
         mask_shear = cat['shear_cat'] & (cat['tomo_bin'] >= 0)
 
-        # Compute responsivity
-        resp = 1. - np.average(cat[mask_shear]['ishape_hsm_regauss_derived_rms_e']**2,
-                               weights=cat[mask_shear]['ishape_hsm_regauss_derived_shape_weight'])
-
         # Calibrate shears per redshift bin
         e1cal = np.zeros(len(cat))
         e2cal = np.zeros(len(cat))
         mhats = np.zeros(self.nbins)
+        resps = np.zeros(self.nbins)
         for ibin in range(self.nbins):
             mask_bin = mask_shear & (cat['tomo_bin'] == ibin)
+            # Compute multiplicative bias
             mhat = np.average(cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_m'],
                               weights=cat[mask_bin]['ishape_hsm_regauss_derived_shape_weight'])
             mhats[ibin] = mhat
+            # Compute responsivity
+            resp = 1. - np.average(cat[mask_bin]['ishape_hsm_regauss_derived_rms_e'] ** 2,
+                                   weights=cat[mask_bin]['ishape_hsm_regauss_derived_shape_weight'])
+            resps[ibin] = resp
+
             e1 = (cat[mask_bin]['ishape_hsm_regauss_e1']/(2.*resp) -
                   cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c1']) / (1 + mhat)
             e2 = (cat[mask_bin]['ishape_hsm_regauss_e2']/(2.*resp) -
                   cat[mask_bin]['ishape_hsm_regauss_derived_shear_bias_c2']) / (1 + mhat)
             e1cal[mask_bin] = e1
             e2cal[mask_bin] = e2
-        return e1cal, e2cal, mhats, resp
+        return e1cal, e2cal, mhats, resps
 
     def pz_binning(self, cat):
         zi_arr = self.config['pz_bins'][:-1]
@@ -492,7 +495,8 @@ class ReduceCat(PipelineStage):
         hdr = fits.Header()
         for ibin in range(self.nbins):
             hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
-        hdr['RESPONS'] = resp
+        for ibin in range(self.nbins):
+            hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
         hdr['BAND'] = self.config['band']
         hdr['DEPTH'] = self.config['depth_cut']
         prm_hdu = fits.PrimaryHDU(header=hdr)
