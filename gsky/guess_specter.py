@@ -20,7 +20,7 @@ class GuessSpecter(PipelineStage) :
     inputs=[('masked_fraction', FitsFile), ('depth_map', FitsFile),
             ('gamma_maps', FitsFile), ('act_maps', FitsFile)]
     outputs=[('dummy', DummyFile)]
-    config_options={'saccdirs': [str], 'output_run_dir': 'NONE', 'output_dir': 'NONE',
+    config_options={'saccdirs': [str], 'output_run_dir': 'NONE',
                     'noisesacc_filename': 'NONE', 'tracers': [str]}
 
     def get_output_fname(self,name,ext=None):
