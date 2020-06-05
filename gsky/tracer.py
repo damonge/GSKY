@@ -104,7 +104,7 @@ class Tracer(object) :
             e1_2rms_cat, e2_2rms_cat = hdu_list[-1].data['e2rms'][i_bin, :].copy()
             self.e1_2rms_cat = e1_2rms_cat
             self.e2_2rms_cat = e2_2rms_cat
-            if 'w2e2' in hdu_list[-1].comuns.names:
+            if 'w2e2' in hdu_list[-1].columns.names:
                 logger.info('Found w2e2 attribute.')
                 self.w2e2 = hdu_list[-1].data['w2e2'][i_bin].copy()
 
