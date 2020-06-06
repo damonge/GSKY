@@ -1463,7 +1463,7 @@ class PowerSpecter(PipelineStage) :
         self.ncross = self.nmaps*(self.nmaps + 1)//2 + self.ntracers_shear
 
         logger.info("Getting guess power spectra.")
-        lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
+        lth,clth=self.get_cl_guess(ell_eff, cls_wdpj, tracers_sacc)
 
         logger.info("Computing deprojection bias.")
         cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)
