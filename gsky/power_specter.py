@@ -1153,7 +1153,7 @@ class PowerSpecter(PipelineStage) :
                                  window=wins)
                     map_j += 2
 
-            if sacc_t[tr_i].spin == 2:
+            if sacc_t[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
