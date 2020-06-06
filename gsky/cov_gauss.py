@@ -31,8 +31,7 @@ class CovGauss(PowerSpecter) :
                     'oc_dpj_list': ['airmass','seeing','sigma_sky'],
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
                     'gaus_covar_type':'analytic','oc_all_bands':True,
-                    'mask_systematics':False,'noise_bias_type':'analytic',
-                    'output_run_dir': 'NONE','sys_collapse_type':'average',
+                    'mask_systematics':False,'output_run_dir': 'NONE','sys_collapse_type':'average',
                     'subsamp_winds': False}
 
     def get_covar(self, lth, clth, bpws, tracers, wsp, temps, cl_dpj_all):

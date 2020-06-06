@@ -33,8 +33,7 @@ class PowerSpecter(PipelineStage) :
                                 9400.0,12600.0,15800.0],
                     'oc_dpj_list': ['airmass','seeing','sigma_sky'],
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
-                    'gaus_covar_type':'analytic','oc_all_bands':True,
-                    'mask_systematics':False,'noise_bias_type':'analytic',
+                    'oc_all_bands':True,'mask_systematics':False,'noise_bias_type':'analytic',
                     'output_run_dir': 'NONE','sys_collapse_type':'average',
                     'subsamp_winds': False}
 
@@ -855,8 +854,6 @@ class PowerSpecter(PipelineStage) :
             os.mkdir(self.output_dir)
         if (self.config['noise_bias_type']!='analytic') and (self.config['noise_bias_type']!='pois_sim') :
             raise ValueError('Noise bias calculation must be either \'analytic\' or \'pois_sim\'')
-        if (self.config['gaus_covar_type']!='analytic') and (self.config['gaus_covar_type']!='gaus_sim') :
-            raise ValueError('Gaussian covariance calculation must be either \'analytic\' or \'pois_sim\'')
         if self.config['guess_spectrum']!='NONE' :
             if not os.path.isfile(self.config['guess_spectrum']) :
                 raise ValueError('Guess spectrum must be either \'NONE\' or an existing ASCII file')
