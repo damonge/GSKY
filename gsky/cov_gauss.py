@@ -282,36 +282,20 @@ class CovGauss(PowerSpecter) :
                 ca2b1 = clth[ps_inds3[:, 0], ps_inds3[:, 1]]
                 ca2b2 = clth[ps_inds4[:, 0], ps_inds4[:, 1]]
 
-                if tr_i1.tracer_type == 'NZ':
-                    spin_i1 = tr_i1.metadata['spin']
-                else:
-                    spin_i1 = tr_i1.spin
-                if tr_j1.tracer_type == 'NZ':
-                    spin_j1 = tr_j1.metadata['spin']
-                else:
-                    spin_j1 = tr_j1.spin
-                if tr_i2.tracer_type == 'NZ':
-                    spin_i2 = tr_i2.metadata['spin']
-                else:
-                    spin_i2 = tr_i2.spin
-                if tr_j2.tracer_type == 'NZ':
-                    spin_j2 = tr_j2.metadata['spin']
-                else:
-                    spin_j2 = tr_j2.spin
-
-                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], spin_i1,
-                                                        spin_j1, spin_i2, spin_j2, lth,
+                cov_here = nmt.gaussian_covariance_flat(cwsp[tr_i1][tr_j1][tr_i2][tr_j2], tracers[tr_i1].spin,
+                                                        tracers[tr_j1].spin,
+                                                        tracers[tr_i2].spin, tracers[tr_j2].spin, lth,
                                                         ca1b1, ca1b2, ca2b1, ca2b2, wsp[tr_i1][tr_j1],
                                                         wsp[tr_i2][tr_j2])
 
-                if set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                        (spin_i2, spin_j2)) == set((0, 0)):
+                if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     covar[ix_1, :, ix_2, :] = cov_here
                     if (tr_i1, tr_j1) != (tr_i2, tr_j2):
                         covar[ix_2, :, ix_1, :] = cov_here.T
                     ix_2 += 1
-                elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                        (spin_i2, spin_j2)) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 2])
                     cov_te_te = cov_here[:, 0, :, 0]
                     cov_te_tb = cov_here[:, 0, :, 1]
@@ -328,8 +312,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2, :, ix_1 + 1, :] = cov_tb_te.T
                         covar[ix_2 + 1, :, ix_1 + 1, :] = cov_tb_tb.T
                     ix_2 += 2
-                elif set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                        (spin_i2, spin_j2)) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
                     cov_tt_te = cov_here[:, 0, :, 0]
                     cov_tt_tb = cov_here[:, 0, :, 1]
@@ -340,8 +324,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2, :, ix_1, :] = cov_tt_te.T
                         covar[ix_2 + 1, :, ix_1, :] = cov_tt_tb.T
                     ix_2 += 2
-                elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                        (spin_i2, spin_j2)) == set((0, 0)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 2])
                     cov_tt_te = cov_here[:, 0, :, 0]
                     cov_tt_tb = cov_here[:, 0, :, 1]
@@ -352,8 +336,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2, :, ix_1, :] = cov_tt_te.T
                         covar[ix_2, :, ix_1 + 1, :] = cov_tt_tb.T
                     ix_2 += 1
-                elif set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                        (spin_i2, spin_j2)) == set((2, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
                     cov_tt_ee = cov_here[:, 0, :, 0]
                     cov_tt_eb = cov_here[:, 0, :, 1]
@@ -370,8 +354,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2 + 2, :, ix_1, :] = cov_tt_be.T
                         covar[ix_2 + 3, :, ix_1, :] = cov_tt_bb.T
                     ix_2 += 4
-                elif set((spin_i1, spin_j1)) == set((2, 2)) and set(
-                        (spin_i2, spin_j2)) == set((0, 0)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                     cov_here = cov_here.reshape([self.nbands, 1, self.nbands, 4])
                     cov_tt_ee = cov_here[:, 0, :, 0]
                     cov_tt_eb = cov_here[:, 0, :, 1]
@@ -388,8 +372,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2, :, ix_1 + 2, :] = cov_tt_be.T
                         covar[ix_2, :, ix_1 + 3, :] = cov_tt_bb.T
                     ix_2 += 1
-                elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                        (spin_i2, spin_j2)) == set((2, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
                     cov_te_ee = cov_here[:, 0, :, 0]
                     cov_te_eb = cov_here[:, 0, :, 1]
@@ -418,8 +402,8 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2 + 2, :, ix_1 + 1, :] = cov_tb_be.T
                         covar[ix_2 + 3, :, ix_1 + 1, :] = cov_tb_bb.T
                     ix_2 += 4
-                elif set((spin_i1, spin_j1)) == set((2, 2)) and set(
-                        (spin_i2, spin_j2)) == set((0, 2)):
+                elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
+                        (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                     cov_here = cov_here.reshape([self.nbands, 2, self.nbands, 4])
                     cov_te_ee = cov_here[:, 0, :, 0]
                     cov_te_eb = cov_here[:, 0, :, 1]
@@ -501,33 +485,33 @@ class CovGauss(PowerSpecter) :
                         covar[ix_2 + 2, :, ix_1 + 3, :] = cov_bb_be.T
                         covar[ix_2 + 3, :, ix_1 + 3, :] = cov_bb_bb.T
                     ix_2 += 4
-            if set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                    (spin_i2, spin_j2)) == set((0, 0)):
+            if set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1 += 1
 
-            elif set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                    (spin_i2, spin_j2)) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1 += 1
-            elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                    (spin_i2, spin_j2)) == set((0, 0)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1 += 2
 
-            elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                    (spin_i2, spin_j2)) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1 += 2
 
-            elif set((spin_i1, spin_j1)) == set((0, 0)) and set(
-                    (spin_i2, spin_j2)) == set((2, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 0)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                 ix_1 += 1
-            elif set((spin_i1, spin_j1)) == set((2, 2)) and set(
-                    (spin_i2, spin_j2)) == set((0, 0)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 0)):
                 ix_1 += 4
 
-            elif set((spin_i1, spin_j1)) == set((0, 2)) and set(
-                    (spin_i2, spin_j2)) == set((2, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((0, 2)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((2, 2)):
                 ix_1 += 2
-            elif set((spin_i1, spin_j1)) == set((2, 2)) and set(
-                    (spin_i2, spin_j2)) == set((0, 2)):
+            elif set((tracers[tr_i1].spin, tracers[tr_j1].spin)) == set((2, 2)) and set(
+                    (tracers[tr_i2].spin, tracers[tr_j2].spin)) == set((0, 2)):
                 ix_1 += 4
 
             else:
