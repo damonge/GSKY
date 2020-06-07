@@ -129,7 +129,6 @@ def get_cosmos30band() :
         os.remove('./COSMOS2015_Laigle+_v1.1.fits.gz')
         os.system('mv ./COSMOS2015_Laigle+_v1.1.fits '+fname_out)
 get_cosmos30band()
-'''
 
 
 ##########################
@@ -157,6 +156,34 @@ def get_pdfs(fld):
 #for f in ['aegis','gama09h','gama15h','hectomap','vvds', 'wide12h','xmm']:
 for f in ['gama15h']:
     get_pdfs(f)
+'''
+
+def get_cosmos_hsc_data(fname, subdir=None):
+    predir = prd.predir_saving + 'cosmos_pzs/'
+    if subdir is not None:
+        predir += subdir + '/'
+    os.system('mkdir -p ' + predir)
+    url = "https://hsc-release.mtk.nao.ac.jp/archive/filetree/cosmos_photoz_catalog_reweighted_to_s16a_shape_catalog/"
+    if subdir is not None:
+        url += subdir + '/'
+    url += fname
+    os.system('wget --user=damonge --password=$HSC_SSP_CAS_PASSWORD '+url)
+    os.system("mv " + fname + " " + predir)
+get_cosmos_hsc_data("Afterburner_reweighted_COSMOS_photoz_FDFC.fits")
+get_cosmos_hsc_data("target_wide_s17a_9812.fits")
+get_cosmos_hsc_data("target_wide_s17a_9813.fits")
+get_cosmos_hsc_data("PDz.target_wide_s17a_9812.cat.fits", subdir="DEmP")
+get_cosmos_hsc_data("PDz.target_wide_s17a_9813.cat.fits", subdir="DEmP")
+get_cosmos_hsc_data("target_wide_s17a_9812.v1.P.cat.fits", subdir="MLZ")
+get_cosmos_hsc_data("target_wide_s17a_9813.v1.P.cat.fits", subdir="MLZ")
+get_cosmos_hsc_data("target_wide_s17a_9812_all.cat.fits", subdir="Mizuki")
+get_cosmos_hsc_data("target_wide_s17a_9813_all.cat.fits", subdir="Mizuki")
+get_cosmos_hsc_data("target_wide_s17a_9812_mags_photoz.cat.fits", subdir="NNPZ")
+get_cosmos_hsc_data("target_wide_s17a_9813_mags_photoz.cat.fits", subdir="NNPZ")
+get_cosmos_hsc_data("pdf-s17a_wide-9812.cat.fits", subdir="ephor")
+get_cosmos_hsc_data("pdf-s17a_wide-9813.cat.fits", subdir="ephor")
+get_cosmos_hsc_data("pdf-s17a_wide-9812.cat.fits", subdir="ephor_ab")
+get_cosmos_hsc_data("pdf-s17a_wide-9813.cat.fits", subdir="ephor_ab")
 
 '''
 for c in ['demp', 'ephor', 'ephor_ab', 'frankenz', 'mizuki', 'mlz', 'nnpz']:
