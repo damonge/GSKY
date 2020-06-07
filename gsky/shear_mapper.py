@@ -2,7 +2,7 @@ from ceci import PipelineStage
 from .types import FitsFile, ASCIIFile
 import numpy as np
 from .flatmaps import read_flat_map
-from .map_utils import createSpin2Map
+from .map_utils import createSpin2Map, createW2QU2Map
 from astropy.io import fits
 from .plot_utils import plot_map, plot_curves
 
@@ -76,6 +76,33 @@ class ShearMapper(PipelineStage):
             e2rms_arr.append(e2rms_combined)
 
         return np.array(e2rms_arr)
+
+    def get_w2e2(self, cat):
+        """
+        Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
+        noise estimation).
+        :param cat:
+        :return:
+        """
+
+        if 'ishape_hsm_regauss_e1_calib' not in cat.dtype.names:
+            raise RuntimeError('get_gamma_maps must be called with '
+                               'calibrated shear catalog. Aborting.')
+        w2e2 = []
+
+        for ibin in range(self.nbins):
+            msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+            subcat = cat[msk_bin]
+            w2e2maps = createW2QU2Map(subcat['ra'],
+                                                   subcat['dec'],
+                                                   subcat['ishape_hsm_regauss_e1_calib'],
+                                                   subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
+                                                   weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
+
+            w2e2_curr = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
+            w2e2.append(w2e2_curr)
+
+        return np.array(w2e2)
 
     def get_nz_cosmos(self):
         """
@@ -174,7 +201,8 @@ class ShearMapper(PipelineStage):
         head_cat = hdul[0].header
         mhats = np.array([head_cat['MHAT_%d' % (ibin+1)]
                           for ibin in range(self.nbins)])
-        response = head_cat['RESPONS']
+        resps = np.array([head_cat['RESPONS_%d' % (ibin+1)]
+                          for ibin in range(self.nbins)])
         cat = hdul[1].data
         # Remove masked objects
         if self.config['mask_type'] == 'arcturus':
@@ -207,6 +235,9 @@ class ShearMapper(PipelineStage):
         logger.info("Computing e2rms.")
         e2rms = self.get_e2rms(cat)
 
+        logger.info("Computing w2e2.")
+        w2e2 = self.get_w2e2(cat)
+
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat)
 
@@ -220,7 +251,6 @@ class ShearMapper(PipelineStage):
             head['DESCR'] = ('gamma1, bin %d' % (im+1),
                              'Description')
             if im == 0:
-                head['RESPONS'] = response
                 hdu = fits.PrimaryHDU(data=m_list[0][0].reshape(shp_mp),
                                       header=head)
             else:
@@ -264,7 +294,9 @@ class ShearMapper(PipelineStage):
             hdus.append(fits.BinTableHDU.from_columns(cols))
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
-                fits.Column(name='mhats', array=mhats, format='E')]
+                fits.Column(name='w2e2', array=w2e2, format='E'),
+                fits.Column(name='mhats', array=mhats, format='E'),
+                fits.Column(name='resps', array=resps, format='E')]
         hdus.append(fits.BinTableHDU.from_columns(cols))
 
         hdulist = fits.HDUList(hdus)
@@ -289,6 +321,8 @@ class ShearMapper(PipelineStage):
         x = np.arange(self.nbins)
         plot_curves(self.config, 'mhat', np.arange(self.nbins),
                     [mhats], ['m_hat'], xt='bin', yt=r'$\hat{m}$')
+        plot_curves(self.config, 'resp', np.arange(self.nbins),
+                    [resps], ['resp'], xt='bin', yt=r'$R$')
 
 
 if __name__ == '__main__':
