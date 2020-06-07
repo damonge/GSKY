@@ -201,7 +201,8 @@ class ShearMapper(PipelineStage):
         head_cat = hdul[0].header
         mhats = np.array([head_cat['MHAT_%d' % (ibin+1)]
                           for ibin in range(self.nbins)])
-        response = head_cat['RESPONS']
+        resps = np.array([head_cat['RESPONS_%d' % (ibin+1)]
+                          for ibin in range(self.nbins)])
         cat = hdul[1].data
         # Remove masked objects
         if self.config['mask_type'] == 'arcturus':
@@ -250,7 +251,6 @@ class ShearMapper(PipelineStage):
             head['DESCR'] = ('gamma1, bin %d' % (im+1),
                              'Description')
             if im == 0:
-                head['RESPONS'] = response
                 hdu = fits.PrimaryHDU(data=m_list[0][0].reshape(shp_mp),
                                       header=head)
             else:
@@ -295,7 +295,8 @@ class ShearMapper(PipelineStage):
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
                 fits.Column(name='w2e2', array=w2e2, format='E'),
-                fits.Column(name='mhats', array=mhats, format='E')]
+                fits.Column(name='mhats', array=mhats, format='E'),
+                fits.Column(name='resps', array=resps, format='E')]
         hdus.append(fits.BinTableHDU.from_columns(cols))
 
         hdulist = fits.HDUList(hdus)
@@ -320,6 +321,8 @@ class ShearMapper(PipelineStage):
         x = np.arange(self.nbins)
         plot_curves(self.config, 'mhat', np.arange(self.nbins),
                     [mhats], ['m_hat'], xt='bin', yt=r'$\hat{m}$')
+        plot_curves(self.config, 'resp', np.arange(self.nbins),
+                    [resps], ['resp'], xt='bin', yt=r'$R$')
 
 
 if __name__ == '__main__':
