@@ -8,7 +8,8 @@ from .shear_mapper import ShearMapper  # noqa
 from .act_mapper import ACTMapper  # noqa
 from .map_diagnoser import MapDiagnoser  # noqa
 from .power_specter import PowerSpecter  # noqa
-from .noise_mocks import NoiseMocks
+from .mock_generator import MockGen
 from .cov_gauss import CovGauss
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
+from .like_minimizer import LikeMinimizer

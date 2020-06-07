@@ -10,18 +10,21 @@ from gsky.sims_gauss.MockSurvey import MockSurvey
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class NoiseMocks(PipelineStage) :
-    name="NoiseMocks"
+NOISEPARAMS_KEYS = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
+SIMPARAMS_KEYS = ['probes', 'tracers', 'spins', 'theory_sacc', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
+
+class MockGen(PipelineStage) :
+    name="MockGen"
     inputs=[('clean_catalog', FitsFile), ('masked_fraction', FitsFile), ('gamma_maps', FitsFile)]
     outputs=[('dummy', DummyFile)]
-    config_options={'probes': ['gamma'], 'spins': [2], 'nrealiz': 1000,
-    'path2cls': 'NONE', 'ell_bpws': [100.0,200.0,300.0,
-                                     400.0,600.0,800.0,
-                                     1000.0,1400.0,1800.0,
-                                     2200.0,3000.0,3800.0,
-                                     4600.0,6200.0,7800.0,
-                                     9400.0,12600.0,15800.0],
-    'pixwindow': 0, 'nell_theor': 5000, 'noisemodel': 'data',
+    config_options={'nrealiz': 1000,
+    'ell_bpws': [100.0,200.0,300.0,
+                 400.0,600.0,800.0,
+                 1000.0,1400.0,1800.0,
+                 2200.0,3000.0,3800.0,
+                 4600.0,6200.0,7800.0,
+                 9400.0,12600.0,15800.0],
+    'pixwindow': 0, 'noisemodel': 'data', 'theory_sacc': 'NONE',
     'posfromshearcat': 1, 'shearrot': 'noflip', 'mask_type': 'sirius'}
 
     def get_output_fname(self, name, ext=None):
@@ -43,9 +46,6 @@ class NoiseMocks(PipelineStage) :
             self.output_dir = os.path.join(self.output_dir, self.config['output_run_dir'])
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
-
-        if self.config['path2theorycls'] != 'NONE':
-            assert self.get_output('cls_signal_realiz') != 'NONE', 'Signal cls requested but path2theorycls not provided. Aborting.'
 
         return
 
@@ -111,16 +111,19 @@ class NoiseMocks(PipelineStage) :
         if 'spins' in self.config:
             self.config['spins'] = np.array(self.config['spins'])
 
-        noiseparams_keys = ['probes', 'tracers', 'noisemodel', 'posfromshearcat', 'shearrot', 'mask_type']
-        noiseparams = {key: self.config[key] for key in noiseparams_keys}
+        noiseparams = {key: self.config[key] for key in NOISEPARAMS_KEYS}
         if 'ntomo_bins' in self.config.keys():
             logger.info('Tomographic bin no provided.')
             noiseparams['ntomo_bins'] = self.config['ntomo_bins']
         noiseparams['path2shearcat'] = self.get_input('clean_catalog')
         noiseparams['path2fsk'] = self.get_input('masked_fraction')
-        simparams_keys = ['probes', 'tracers', 'spins', 'path2theorycls', 'nrealiz', 'ell_bpws', 'pixwindow', 'nell_theor']
-        simparams = {key: self.config[key] for key in simparams_keys}
-        simparams['path2fsk'] = self.get_input('masked_fraction')
+
+        if self.config['theory_sacc'] != 'NONE':
+            logger.info('theory_sacc provided. Adding signal to noise maps.')
+            simparams = {key: self.config[key] for key in SIMPARAMS_KEYS}
+        else:
+            logger.info('theory_sacc not provided. Generating noise maps only.')
+            simparams = {}
 
         mocksurvey = MockSurvey(masks, simparams, noiseparams)
 
@@ -134,7 +137,7 @@ class NoiseMocks(PipelineStage) :
 
         noise_sacc = self.cl_realiz_arr_to_sacc(noisecls, self.config['tracers'], sacc_template)
 
-        if self.config['path2cls'] != 'NONE':
+        if self.config['theory_sacc'] != 'NONE':
             np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
             logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', ext='npy')))
 

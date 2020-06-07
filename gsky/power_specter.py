@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 class PowerSpecter(PipelineStage) :
     name="PowerSpecter"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('act_maps', FitsFile), ('dust_map',FitsFile),('star_map',FitsFile),
-            ('depth_map',FitsFile),('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),
-            ('exptime_maps',FitsFile),('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),
-            ('seeing_maps',FitsFile),('ellipt_maps',FitsFile),('nvisit_maps',FitsFile),
-            ('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
+            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_map',FitsFile),
+            ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
+            ('airmass_maps',FitsFile),('exptime_maps',FitsFile),('skylevel_maps',FitsFile),
+            ('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),('ellipt_maps',FitsFile),
+            ('nvisit_maps',FitsFile),('cosmos_weights',FitsFile),('syst_masking_file',ASCIIFile)]
     outputs=[('dummy',DummyFile)]
     config_options={'ell_bpws':[100.0,200.0,300.0,
                                 400.0,600.0,800.0,
@@ -33,9 +33,9 @@ class PowerSpecter(PipelineStage) :
                                 9400.0,12600.0,15800.0],
                     'oc_dpj_list': ['airmass','seeing','sigma_sky'],
                     'depth_cut':24.5,'band':'i','mask_thr':0.5,'guess_spectrum':'NONE',
-                    'gaus_covar_type':'analytic','oc_all_bands':True,
-                    'mask_systematics':False,'noise_bias_type':'analytic',
-                    'output_run_dir': 'NONE','sys_collapse_type':'average'}
+                    'oc_all_bands':True,'mask_systematics':False,'noise_bias_type':'analytic',
+                    'output_run_dir': 'NONE','sys_collapse_type':'average',
+                    'subsamp_winds': False}
 
     def read_map_bands(self,fname,read_bands,bandname,offset=0) :
         """
@@ -68,6 +68,16 @@ class PowerSpecter(PipelineStage) :
         logger.info("Computing window functions.")
         l_arr = np.arange(self.lmax + 1)
 
+        if self.config['subsamp_winds']:
+            logger.info('Subsampling window functions.')
+            if self.config['subsamp_winds_band'] is not None:
+                subsamp_winds_band = self.config['subsamp_winds_band']
+                logger.info('Window sunbsampling deltal provided = {}.'.format(subsamp_winds_band))
+            else:
+                subsamp_winds_band = 14
+                logger.info('Window sunbsampling deltal not provided. Setting to 14')
+            n_subsamp = (self.lmax + 1) // subsamp_winds_band
+
         windows_list = [[0 for i in range(self.ntracers)] for ii in range(self.ntracers)]
 
         zero_arr = np.zeros(self.lmax + 1)
@@ -81,9 +91,9 @@ class PowerSpecter(PipelineStage) :
                 if not os.path.isfile(self.get_output_fname('windows_l') + '_{}{}'.format(i, ii) + '.npz'):
                     tr_types_cur = [tracers[i].type, tracers[ii].type]
                     # All galaxy maps
-                    if set(tr_types_cur) == {'delta_g', 'delta_g'}:
+                    if set(tr_types_cur) == {'galaxy_density', 'galaxy_density'}:
                         if not hasattr(self, 'windows_counts'):
-                            counts_indx = tracer_type_arr.index('delta_g')
+                            counts_indx = tracer_type_arr.index('galaxy_density')
                             if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz'):
                                 logger.info("Computing window functions for counts.")
                                 self.windows_counts = np.zeros([self.nbands, self.lmax + 1])
@@ -92,6 +102,9 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     self.windows_counts[:, il] = wsp[counts_indx][counts_indx].decouple_cell(wsp[counts_indx][counts_indx].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
+                                if self.config['subsampl_winds']:
+                                    self.windows_counts = self.windows_counts.reshape((self.nbands, n_subsamp, subsamp_winds_band))
+                                    self.windows_counts = np.mean(self.windows_counts, axis=-1)
                                 np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz', windows=self.windows_counts)
                                 logger.info('Written window function to {}.'.format(
                                     self.get_output_fname('windows_l') + '_{}{}'.format(counts_indx, counts_indx) + '.npz'))
@@ -104,19 +117,19 @@ class PowerSpecter(PipelineStage) :
                         windows_curr = self.windows_counts
 
                     # One galaxy map
-                    elif 'delta_g' in tr_types_cur:
-                        counts_indx = tracer_type_arr.index('delta_g')
+                    elif 'galaxy_density' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('galaxy_density')
                         i_curr = i
                         ii_curr = ii
-                        if tracers[i].type == 'delta_g':
+                        if tracers[i].type == 'galaxy_density':
                             i_curr = counts_indx
-                        if tracers[ii].type == 'delta_g':
+                        if tracers[ii].type == 'galaxy_density':
                             ii_curr = counts_indx
                         if not os.path.isfile(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'):
                             logger.info("Computing window functions for counts xcorr.")
                             windows_curr = np.zeros([self.nbands, self.lmax + 1])
                             t_hat = np.zeros(self.lmax + 1)
-                            if 'cosmic_shear' in tr_types_cur:
+                            if 'galaxy_shear' in tr_types_cur:
                                 logger.info("Only using E-mode window function.")
                                 for il, l in enumerate(l_arr):
                                     t_hat[il] = 1.
@@ -127,6 +140,10 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
+                            if self.config['subsampl_winds']:
+                                windows_curr = windows_curr.reshape(
+                                    (self.nbands, n_subsamp, subsamp_winds_band))
+                                windows_curr = np.mean(windows_curr, axis=-1)
                             np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz', windows=windows_curr)
                             logger.info('Written window function to {}.'.format(self.get_output_fname('windows_l')+'_{}{}'.format(i_curr, ii_curr)+'.npz'))
                         else:
@@ -140,13 +157,13 @@ class PowerSpecter(PipelineStage) :
                         logger.info("Computing window functions for {}.".format(self.get_output_fname('windows_l')+'_{}{}'.format(i, ii)+'.npz'))
                         windows_curr = np.zeros([self.nbands, self.lmax + 1])
                         t_hat = np.zeros(self.lmax + 1)
-                        if set(tr_types_cur) == {'cosmic_shear', 'cosmic_shear'}:
+                        if set(tr_types_cur) == {'galaxy_shear', 'galaxy_shear'}:
                             logger.info("Only using E-mode window function.")
                             for il, l in enumerate(l_arr):
                                 t_hat[il] = 1.
                                 windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat, zero_arr, zero_arr, zero_arr]))[0, :]
                                 t_hat[il] = 0.
-                        elif 'cosmic_shear' in tr_types_cur:
+                        elif 'galaxy_shear' in tr_types_cur:
                             logger.info("Only using E-mode window function.")
                             for il, l in enumerate(l_arr):
                                 t_hat[il] = 1.
@@ -157,6 +174,10 @@ class PowerSpecter(PipelineStage) :
                                 t_hat[il] = 1.
                                 windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
                                 t_hat[il] = 0.
+                        if self.config['subsampl_winds']:
+                            windows_curr = windows_curr.reshape(
+                                (self.nbands, n_subsamp, subsamp_winds_band))
+                            windows_curr = np.mean(windows_curr, axis=-1)
                         np.savez(self.get_output_fname('windows_l')+ '_{}{}'.format(i, ii) + '.npz', windows=windows_curr)
 
                 # File exists
@@ -200,30 +221,35 @@ class PowerSpecter(PipelineStage) :
                     t = tracers[tr_j]
                     type_cur = t.type
                     logger.info('Computing analytic noise for tracer_type = {}.'.format(type_cur))
-                    if type_cur == 'delta_g':
+                    if type_cur == 'galaxy_density':
 
                         corrfac = np.sum(t.weight) / (t.fsk.nx * t.fsk.ny)
                         nl = np.ones(self.nbands) * corrfac / t.ndens_perad
 
                         nls[map_i, map_j] = wsp[tr_i][tr_j].decouple_cell([nl])[0]
                         map_j += 1
-                    elif type_cur == 'cosmic_shear':
+                    elif type_cur == 'galaxy_shear':
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
 
-                        corrfac = np.sum(t.weight)/(t.fsk.nx*t.fsk.ny)
-                        nl = np.ones(self.nbands)*np.mean(t.e1_2rms_cat+t.e2_2rms_cat)*corrfac/t.ndens_perad
-                        nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+                        if hasattr(t, 'w2e2'):
+                            logger.info('Tracer has w2e2 attribute. Computing analytic shape noise.')
+                            w2e2_fac = t.w2e2*np.radians(t.fsk.dx)*np.radians(t.fsk.dy)
+                            nl = np.ones(self.nbands)*w2e2_fac
+                            nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+                        else:
+                            logger.info('Tracer does not have w2e2 attribute. Setting analytic shape noise to zero.')
+                            nls_temp = np.zeros((4, self.nbands))
 
                         nls_tempe = nls_temp[0]
                         nls_tempb = nls_temp[3]
                         nls[map_i, map_j] = nls_tempe
                         nls[map_i+1, map_j+1] = nls_tempb
                         map_j += 2
-                    elif type_cur == 'Compton_y' or type_cur == 'kappa':
+                    elif type_cur == 'cmb_tSZ' or type_cur == 'cmb_convergence':
                         logger.info('Setting analytic noise to zero.')
                         nls[map_i, map_j] = np.zeros(self.nbands)
 
-            if type_cur == 'cosmic_shear' == 2:
+            if type_cur == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -311,11 +337,11 @@ class PowerSpecter(PipelineStage) :
             for tr_i in range(self.ntracers):
                 map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
-                    if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
+                    if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=[cl_deproj_bias[map_i, map_j]])
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
-                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
+                    elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
                                                            cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i, map_j+1]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
@@ -324,7 +350,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j] = cl_deproj_tempe
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
-                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
+                    elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
                                                            cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i+1, map_j]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
@@ -349,7 +375,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i + 1, map_j + 1] = cl_deproj_tempb
                         map_j += 2
 
-                if trc[tr_i].spin == 2:
+                if trc[tr_i].quantity == 'galaxy_shear':
                     map_i += 2
                 else:
                     map_i += 1
@@ -364,14 +390,14 @@ class PowerSpecter(PipelineStage) :
             for tr_i in range(self.ntracers):
                 map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
-                    if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
+                    if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                             lth, [clth[map_i, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias_temp)
                         cl_deproj_bias[map_i, map_j] = cl_deproj_bias_temp[0]
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
-                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
+                    elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i, map_j + 1]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
@@ -386,7 +412,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j] = cl_deproj_tempe
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
-                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
+                    elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i + 1, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
@@ -427,28 +453,35 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i + 1, map_j + 1] = cl_deproj_tempb
                         map_j += 2
 
-                if trc[tr_i].spin == 2:
+                if trc[tr_i].quantity == 'galaxy_shear':
                     map_i += 2
                 else:
                     map_i += 1
 
         return cl_deproj, cl_deproj_bias
 
-    def get_cl_guess(self,ld,cld) :
+    def get_cl_guess(self, ld, cld, sacc_t) :
         """
         Read or compute the guess power spectra.
         :param ld: list of multipoles at which the data power spectra have been measured.
         :param cld: list of power spectrum measurements from the data.
         """
 
-        if self.config['guess_spectrum']=='NONE' :
-            print("Interpolating data power spectra")
+        if self.config['guess_spectrum'] == 'NONE' :
+            logger.info("Interpolating data power spectra.")
             l_use=ld
             cl_use=cld
         else:
-            data=np.loadtxt(self.config['guess_spectrum'],unpack=True)
-            l_use=data[0]
-            cl_use=data[1:]
+            logger.info('Using provided guess_spectrum.')
+            theory_sacc = sacc.Sacc.load_fits(self.config['guess_spectrum'])
+            logger.info('Read {}.'.format(self.config['guess_spectrum']))
+            datatypes_curr = theory_sacc.get_data_types()
+            tracers_curr = theory_sacc.get_tracer_combinations(data_type=datatypes_curr[0])
+            ell_theor, _ = theory_sacc.get_ell_cl(datatypes_curr[0], tracers_curr[0][0], tracers_curr[0][1],
+                                               return_cov=False)
+            l_use = ell_theor
+            cl_theory_arr = self.convert_sacc_to_clarr(theory_sacc, sacc_t)
+            cl_use = cl_theory_arr
             if cl_use.shape != (self.nmaps, self.nmaps, self.nbands):
                 raise ValueError("Theory power spectra have a wrong shape.")
         #Interpolate
@@ -484,11 +517,11 @@ class PowerSpecter(PipelineStage) :
             for tr_j in range(tr_i, self.ntracers) :
                 cl_coupled_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field,trc[tr_j].field,bpws)
                 cl_decoupled_temp = wsp[tr_i][tr_j].decouple_cell(cl_coupled_temp)
-                if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
+                if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                     cls_coupled[map_i, map_j] = cl_coupled_temp[0]
                     cls_decoupled[map_i, map_j] = cl_decoupled_temp[0]
                     map_j += 1
-                elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
+                elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -499,7 +532,7 @@ class PowerSpecter(PipelineStage) :
                     cls_decoupled[map_i, map_j] = cl_decoupled_tempe
                     cls_decoupled[map_i, map_j+1] = cl_decoupled_tempb
                     map_j += 2
-                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
+                elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -530,7 +563,7 @@ class PowerSpecter(PipelineStage) :
                     cls_decoupled[map_i+1, map_j+1] = cl_decoupled_tempb
                     map_j += 2
 
-            if trc[tr_i].spin == 2:
+            if trc[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -554,9 +587,9 @@ class PowerSpecter(PipelineStage) :
                 if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(i, ii) + '.dat'):
                     tr_types_cur = [tracers[i].type, tracers[ii].type]
                     # All galaxy maps
-                    if set(tr_types_cur) == {'delta_g', 'delta_g'}:
+                    if set(tr_types_cur) == {'galaxy_density', 'galaxy_density'}:
                         if not hasattr(self, 'wsp_counts'):
-                            counts_indx = tracer_type_arr.index('delta_g')
+                            counts_indx = tracer_type_arr.index('galaxy_density')
                             wsp_curr = nmt.NmtWorkspaceFlat()
                             if not os.path.isfile(self.get_output_fname('mcm') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'):
                                 logger.info("Computing MCM for counts.")
@@ -572,13 +605,13 @@ class PowerSpecter(PipelineStage) :
                         wsp_curr = self.wsp_counts
 
                     # One galaxy map
-                    elif 'delta_g' in tr_types_cur:
-                        counts_indx = tracer_type_arr.index('delta_g')
+                    elif 'galaxy_density' in tr_types_cur:
+                        counts_indx = tracer_type_arr.index('galaxy_density')
                         i_curr = i
                         ii_curr = ii
-                        if tracers[i].type == 'delta_g':
+                        if tracers[i].type == 'galaxy_density':
                             i_curr = counts_indx
-                        if tracers[ii].type == 'delta_g':
+                        if tracers[ii].type == 'galaxy_density':
                             ii_curr = counts_indx
                         wsp_curr = nmt.NmtWorkspaceFlat()
                         if not os.path.isfile(
@@ -698,8 +731,15 @@ class PowerSpecter(PipelineStage) :
         elif map_type == 'Compton_y_maps':
             logger.info('Creating Compton_y tracers.')
 
-            tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)]
-            tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)]
+            if self.get_input('y_beam') != 'NONE':
+                logger.info('y beam provided.')
+                _, beam = np.genfromtxt(self.get_input('y_beam'), unpack=True)
+            else:
+                logger.info('No y beam provided.')
+                beam = None
+
+            tracers_nocont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, beam=beam)]
+            tracers_wcont=[Tracer(hdul,0,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type, beam=beam)]
 
         elif map_type == 'kappa_maps':
             logger.info('Creating kappa tracers.')
@@ -814,8 +854,6 @@ class PowerSpecter(PipelineStage) :
             os.mkdir(self.output_dir)
         if (self.config['noise_bias_type']!='analytic') and (self.config['noise_bias_type']!='pois_sim') :
             raise ValueError('Noise bias calculation must be either \'analytic\' or \'pois_sim\'')
-        if (self.config['gaus_covar_type']!='analytic') and (self.config['gaus_covar_type']!='gaus_sim') :
-            raise ValueError('Gaussian covariance calculation must be either \'analytic\' or \'pois_sim\'')
         if self.config['guess_spectrum']!='NONE' :
             if not os.path.isfile(self.config['guess_spectrum']) :
                 raise ValueError('Guess spectrum must be either \'NONE\' or an existing ASCII file')
@@ -836,42 +874,49 @@ class PowerSpecter(PipelineStage) :
         sacc_tracers=[]
 
         for i_t,t in enumerate(tracers):
-            if t.type == 'delta_g':
+            if t.type == 'galaxy_density':
                 z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 nz = t.nz_data['nz_cosmos']
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'gc_{}'.format(i_t),
-                                                      'delta_g',
-                                                      spin=0,
+                                                      quantity='galaxy_density',
+                                                      metadata={'spin': 0},
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
                                                                      for key in t.nz_data.dtype.names if
                                                                      'nz_' in key and key != 'nz_cosmos'})
 
-            elif t.type == 'Compton_y':
+            elif t.type == 'cmb_tSZ':
+                if t.beam is not None:
+                    logger.info('Adding y beam to sacc tracer.')
+                    ell_beam = np.arange(t.beam.shape[0])
+                    beam = t.beam
+                else:
+                    ell_beam = -1*np.ones(self.nbands)
+                    beam = -1*np.ones(self.nbands)
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'y_{}'.format(i_t - self.ntracers_counts),
-                                                      'Compton_y',
+                                                      quantity='cmb_tSZ',
                                                       spin=0,
-                                                      ell=-1*np.ones(self.nbands),
-                                                      beam_ell=-1*np.ones(self.nbands))
+                                                      ell=ell_beam,
+                                                      beam=beam)
 
-            elif t.type == 'kappa':
+            elif t.type == 'cmb_convergence':
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'kappa_{}'.format(i_t - self.ntracers_counts - self.ntracers_comptony),
-                                                      'kappa',
+                                                      quantity='cmb_convergence',
                                                       spin=0,
                                                       ell=-1*np.ones(self.nbands),
-                                                      beam_ell=-1*np.ones(self.nbands))
+                                                      beam=-1*np.ones(self.nbands))
 
-            elif t.type == 'cosmic_shear':
+            elif t.type == 'galaxy_shear':
                 z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 nz = t.nz_data['nz_cosmos']
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
-                                                      'cosmic_shear',
-                                                      spin=2,
+                                                      quantity='galaxy_shear',
+                                                      metadata={'spin': 2},
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
@@ -879,7 +924,7 @@ class PowerSpecter(PipelineStage) :
                                                                      'nz_' in key and key != 'nz_cosmos'})
 
             else:
-                raise NotImplementedError('Only tracer types delta_g, cosmic_shear, Compton_y supported.')
+                raise NotImplementedError('Only tracer types galaxy_density, galaxy_shear, cmb_tSZ supported.')
 
             sacc_tracers.append(tracer)
 
@@ -907,233 +952,208 @@ class PowerSpecter(PipelineStage) :
         for tr_i in range(self.ntracers):
             map_j = map_i
             for tr_j in range(tr_i, self.ntracers):
-                wins = sacc.Window(ells_all, windows[tr_i][tr_j].T)
-                if sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'delta_g':
+
+                wins = sacc.BandpowerWindow(ells_all, windows[tr_i][tr_j].T)
+
+                if sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'galaxy_density':
                     saccfile.add_ell_cl('cl_00',
                                  'gc_{}'.format(tr_i),
                                  'gc_{}'.format(tr_j),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     saccfile.add_ell_cl('cl_0e',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j+1, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'galaxy_density':
                     saccfile.add_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i+1, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     saccfile.add_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands)
-                                        )
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     saccfile.add_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'galaxy_density':
                     saccfile.add_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     saccfile.add_ell_cl('cl_0e',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j + 1, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     saccfile.add_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i + 1, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     saccfile.add_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands)
-                                        )
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     saccfile.add_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'galaxy_density':
                     saccfile.add_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'gc_{}'.format(tr_j),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     saccfile.add_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     saccfile.add_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     saccfile.add_ell_cl('cl_0e',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         ells,
                                         cls[map_i, map_j + 1, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     saccfile.add_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     saccfile.add_ell_cl('cl_0b',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                         ells,
                                         cls[map_i + 1, map_j, :],
-                                        window=wins,
-                                        window_id=range(self.nbands))
+                                        window=wins)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     saccfile.add_ell_cl('cl_ee',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     saccfile.add_ell_cl('cl_eb',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i+1, map_j, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     saccfile.add_ell_cl('cl_be',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i, map_j+1, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     saccfile.add_ell_cl('cl_bb',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  ells,
                                  cls[map_i+1, map_j+1, :],
-                                 window=wins,
-                                 window_id=range(self.nbands))
+                                 window=wins)
                     map_j += 2
 
-            if sacc_t[tr_i].spin == 2:
+            if sacc_t[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -1160,14 +1180,14 @@ class PowerSpecter(PipelineStage) :
         for tr_i in range(self.ntracers):
             map_j = map_i
             for tr_j in range(tr_i, self.ntracers):
-                if sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'delta_g':
+                if sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'galaxy_density':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                                                 'gc_{}'.format(tr_i),
                                                                 'gc_{}'.format(tr_j),
                                                                 return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                  'gc_{}'.format(tr_i),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
@@ -1178,7 +1198,7 @@ class PowerSpecter(PipelineStage) :
                                  return_cov=False)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'galaxy_density':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'gc_{}'.format(tr_j),
@@ -1189,28 +1209,28 @@ class PowerSpecter(PipelineStage) :
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'galaxy_density':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'gc_{}'.format(tr_j),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
@@ -1221,7 +1241,7 @@ class PowerSpecter(PipelineStage) :
                                          return_cov=False)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
@@ -1232,42 +1252,42 @@ class PowerSpecter(PipelineStage) :
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'delta_g' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'galaxy_density' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'gc_{}'.format(tr_i),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'delta_g':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'galaxy_density':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'gc_{}'.format(tr_j),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'Compton_y' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'cmb_tSZ' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'y_{}'.format(tr_i - self.ntracers_counts),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'Compton_y':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'cmb_tSZ':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_00',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'y_{}'.format(tr_j - self.ntracers_counts),
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'kappa' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'cmb_convergence' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                         'kappa_{}'.format(tr_i - self.ntracers_counts - self.ntracers_comptony),
                                         'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
@@ -1278,7 +1298,7 @@ class PowerSpecter(PipelineStage) :
                                         return_cov=False)
                     map_j += 2
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'kappa':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'cmb_convergence':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_0e',
                                         'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                         'kappa_{}'.format(tr_j - self.ntracers_counts - self.ntracers_comptony),
@@ -1289,7 +1309,7 @@ class PowerSpecter(PipelineStage) :
                                          return_cov=False)
                     map_j += 1
 
-                elif sacc_t[tr_i].quantity == 'cosmic_shear' and sacc_t[tr_j].quantity == 'cosmic_shear':
+                elif sacc_t[tr_i].quantity == 'galaxy_shear' and sacc_t[tr_j].quantity == 'galaxy_shear':
                     _, cls[map_i, map_j, :] = saccfile.get_ell_cl('cl_ee',
                                  'wl_{}'.format(tr_i-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                  'wl_{}'.format(tr_j-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
@@ -1308,7 +1328,7 @@ class PowerSpecter(PipelineStage) :
                                   return_cov=False)
                     map_j += 2
 
-            if sacc_t[tr_i].spin == 2:
+            if sacc_t[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -1326,12 +1346,12 @@ class PowerSpecter(PipelineStage) :
             map_j = map_i
             self.maps2tracers[map_i] = tr_i
             for tr_j in range(tr_i, self.ntracers):
-                if trcs[tr_i].spin == 0 and trcs[tr_j].spin == 0:
+                if trcs[tr_i].quantity != 'galaxy_shear' and trcs[tr_j].quantity != 'galaxy_shear':
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     if map_i != map_j:
                         self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
                     map_j += 1
-                elif trcs[tr_i].spin == 0 and trcs[tr_j].spin == 2:
+                elif trcs[tr_i].quantity != 'galaxy_shear' and trcs[tr_j].quantity == 'galaxy_shear':
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
@@ -1339,7 +1359,7 @@ class PowerSpecter(PipelineStage) :
                         self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
                         self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
                     map_j += 2
-                elif trcs[tr_i].spin == 2 and trcs[tr_j].spin == 0:
+                elif trcs[tr_i].quantity == 'galaxy_shear' and trcs[tr_j].quantity != 'galaxy_shear':
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
@@ -1360,7 +1380,7 @@ class PowerSpecter(PipelineStage) :
                         self.pss2tracers[map_j+1][map_i+1] = (tr_i, tr_j)
                     map_j += 2
 
-            if trcs[tr_i].spin == 2:
+            if trcs[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
@@ -1376,7 +1396,7 @@ class PowerSpecter(PipelineStage) :
             tr_i, tr_j = trc
             for i in range(len(self.pss2tracers)):
                 for ii in range(len(self.pss2tracers[i])):
-                    if not (trcs[tr_i].spin == 2 and trcs[tr_j].spin == 2):
+                    if not (trcs[tr_i].quantity == 'galaxy_shear' and trcs[tr_j].quantity == 'galaxy_shear'):
                         if self.pss2tracers[i][ii] == trc and [ii, i] not in self.tracers2maps[tr_i][tr_j]:
                             self.tracers2maps[tr_i][tr_j].append([i, ii])
                     else:
@@ -1443,7 +1463,7 @@ class PowerSpecter(PipelineStage) :
         self.ncross = self.nmaps*(self.nmaps + 1)//2 + self.ntracers_shear
 
         logger.info("Getting guess power spectra.")
-        lth,clth=self.get_cl_guess(ell_eff,cls_wdpj)
+        lth,clth=self.get_cl_guess(ell_eff, cls_wdpj, tracers_sacc)
 
         logger.info("Computing deprojection bias.")
         cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)

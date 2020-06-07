@@ -4,7 +4,7 @@ import numpy as np
 from operator import add
 import multiprocessing
 import copy
-# from .SimulatedMaps import SimulatedMaps
+from .SimulatedMaps import SimulatedMaps
 from .NoiseMaps import NoiseMaps
 import pymaster as nmt
 from ..flatmaps import read_flat_map
@@ -31,15 +31,15 @@ class MockSurvey(object):
         self.enrich_params()
         self.masks = masks
 
-        logger.info("Reading masked fraction from {}.".format(simparams['path2fsk']))
-        self.fsk, _ = read_flat_map(simparams['path2fsk'])
+        logger.info("Reading masked fraction from {}.".format(noiseparams['path2fsk']))
+        self.fsk, _ = read_flat_map(noiseparams['path2fsk'])
 
-        if simparams['path2theorycls'] != 'NONE':
-            logger.info('path2theorycls provided. Generating signal realizations.')
+        if simparams['theory_sacc'] != 'NONE':
+            logger.info('theory_sacc provided. Generating signal realizations.')
             self.params['signal'] = True
-            self.simmaps = SimulatedMaps(simparams)
+            self.simmaps = SimulatedMaps(self.fsk, simparams)
         else:
-            logger.info('path2theorycls is NONE. Not generating signal realizations.')
+            logger.info('theory_sacc is NONE. Not generating signal realizations.')
             self.params['signal'] = False
         if noiseparams != {}:
             logger.info('Generating noise realizations.')
@@ -158,7 +158,7 @@ class MockSurvey(object):
 
         return cls
 
-    def __call__(self, realis):
+    def __call__(self, realiz):
         """
         Convenience method for calculating the signal and noise cls for
         a given mock realization. This is a function that can be pickled and can be thus
@@ -182,7 +182,7 @@ class MockSurvey(object):
 
         self.maskmat = self.init_maps()
 
-        logger.info('Running realization : {}.'.format(realis))
+        logger.info('Running realization : {}.'.format(realiz))
 
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
         noisecls = np.zeros_like(cls)
@@ -195,7 +195,7 @@ class MockSurvey(object):
 
         if self.params['signal'] and self.params['noise']:
             # We need to add the two lists elementwise
-            maps = map(add, signalmaps, noisemaps)
+            maps = list(map(add, signalmaps, noisemaps))
         elif self.params['signal'] and not self.params['noise']:
             maps = copy.deepcopy(signalmaps)
         elif not self.params['signal'] and self.params['noise']:
