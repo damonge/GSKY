@@ -6,6 +6,7 @@ from .plot_utils import plot_histo
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.io import fits
+import os
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 import scipy.spatial as spatial
@@ -193,6 +194,10 @@ class COSMOSWeight(PipelineStage):
         plot_histo(self.config, 'COSMOS_weights',
                    [cat_weights['weight']], ['weights'],
                    density=True, logy=True, bins=50)
+
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 
 if __name__ == '__main__':

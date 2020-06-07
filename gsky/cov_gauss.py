@@ -650,5 +650,9 @@ class CovGauss(PowerSpecter) :
             s_wdpj.save_fits(self.get_output_fname('cov_wdpj',ext='sacc'), overwrite=True)
             logger.info('Written deprojected covariance matrix.')
 
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
+
 if __name__ == '__main__':
     cls = PipelineStage.main()

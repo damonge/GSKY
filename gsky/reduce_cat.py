@@ -2,6 +2,7 @@ from ceci import PipelineStage
 from .types import FitsFile
 from astropy.table import Table, vstack
 import numpy as np
+import os
 from .flatmaps import FlatMapInfo
 from .map_utils import (createCountsMap,
                         createMeanStdMaps,
@@ -530,6 +531,9 @@ class ReduceCat(PipelineStage):
                    ['m_%s' % b for b in self.bands], bins=100, logy=True)
         ####
 
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

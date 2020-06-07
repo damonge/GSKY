@@ -1,6 +1,7 @@
 from ceci import PipelineStage
 from .types import FitsFile,ASCIIFile,SACCFile,DummyFile
 import numpy as np
+import os
 import pymaster as nmt
 from .cov_gauss import CovGauss
 
@@ -79,6 +80,10 @@ class CwspCalc(CovGauss) :
         self.mapping(tracers_nc)
 
         cwsp_curr = self.get_covar_mcm(tracers_wc, bpws, tracerCombInd=self.config['tracerCombInd'])
+
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

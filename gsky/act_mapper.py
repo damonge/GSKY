@@ -3,6 +3,7 @@ from .types import FitsFile
 import numpy as np
 from .flatmaps import read_flat_map
 from astropy.io import fits
+import os
 from .plot_utils import plot_map
 
 import logging
@@ -185,6 +186,10 @@ class ACTMapper(PipelineStage):
                          'act_' + d['name'])
                 plot_map(self.config, self.fsk_hsc, d['mask'].flatten(),
                          'act_mask_' + d['name'])
+
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 
 if __name__ == '__main__':
