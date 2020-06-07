@@ -337,11 +337,11 @@ class PowerSpecter(PipelineStage) :
             for tr_i in range(self.ntracers):
                 map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
-                    if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                    if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=[cl_deproj_bias[map_i, map_j]])
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
-                    elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
+                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
                                                            cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i, map_j+1]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
@@ -350,7 +350,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j] = cl_deproj_tempe
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
-                    elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
                                                            cl_bias=[cl_deproj_bias[map_i, map_j], cl_deproj_bias[map_i+1, map_j]])
                         # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
@@ -375,7 +375,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i + 1, map_j + 1] = cl_deproj_tempb
                         map_j += 2
 
-                if trc[tr_i].quantity == 'galaxy_shear':
+                if trc[tr_i].spin == 2:
                     map_i += 2
                 else:
                     map_i += 1
@@ -390,14 +390,14 @@ class PowerSpecter(PipelineStage) :
             for tr_i in range(self.ntracers):
                 map_j = map_i
                 for tr_j in range(tr_i, self.ntracers):
-                    if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                    if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                             lth, [clth[map_i, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j]], cl_bias=cl_deproj_bias_temp)
                         cl_deproj_bias[map_i, map_j] = cl_deproj_bias_temp[0]
                         cl_deproj[map_i, map_j] = cl_deproj_temp[0]
                         map_j += 1
-                    elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
+                    elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i, map_j + 1]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i, map_j + 1]],
@@ -412,7 +412,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i, map_j] = cl_deproj_tempe
                         cl_deproj[map_i, map_j + 1] = cl_deproj_tempb
                         map_j += 2
-                    elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                    elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                         cl_deproj_bias_temp = nmt.deprojection_bias_flat(trc[tr_i].field, trc[tr_j].field, bpws,
                                                                 lth, [clth[map_i, map_j], clth[map_i + 1, map_j]])
                         cl_deproj_temp = wsp[tr_i][tr_j].decouple_cell([cl_coupled[map_i, map_j], cl_coupled[map_i + 1, map_j]],
@@ -453,7 +453,7 @@ class PowerSpecter(PipelineStage) :
                         cl_deproj[map_i + 1, map_j + 1] = cl_deproj_tempb
                         map_j += 2
 
-                if trc[tr_i].quantity == 'galaxy_shear':
+                if trc[tr_i].spin == 2:
                     map_i += 2
                 else:
                     map_i += 1
@@ -517,11 +517,11 @@ class PowerSpecter(PipelineStage) :
             for tr_j in range(tr_i, self.ntracers) :
                 cl_coupled_temp = nmt.compute_coupled_cell_flat(trc[tr_i].field,trc[tr_j].field,bpws)
                 cl_decoupled_temp = wsp[tr_i][tr_j].decouple_cell(cl_coupled_temp)
-                if trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                if trc[tr_i].spin == 0 and trc[tr_j].spin == 0:
                     cls_coupled[map_i, map_j] = cl_coupled_temp[0]
                     cls_decoupled[map_i, map_j] = cl_decoupled_temp[0]
                     map_j += 1
-                elif trc[tr_i].quantity != 'galaxy_shear' and trc[tr_j].quantity == 'galaxy_shear':
+                elif trc[tr_i].spin == 0 and trc[tr_j].spin == 2:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -532,7 +532,7 @@ class PowerSpecter(PipelineStage) :
                     cls_decoupled[map_i, map_j] = cl_decoupled_tempe
                     cls_decoupled[map_i, map_j+1] = cl_decoupled_tempb
                     map_j += 2
-                elif trc[tr_i].quantity == 'galaxy_shear' and trc[tr_j].quantity != 'galaxy_shear':
+                elif trc[tr_i].spin == 2 and trc[tr_j].spin == 0:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     cl_coupled_tempe = cl_coupled_temp[0]
                     cl_coupled_tempb = cl_coupled_temp[1]
@@ -563,7 +563,7 @@ class PowerSpecter(PipelineStage) :
                     cls_decoupled[map_i+1, map_j+1] = cl_decoupled_tempb
                     map_j += 2
 
-            if trc[tr_i].quantity == 'galaxy_shear':
+            if trc[tr_i].spin == 2:
                 map_i += 2
             else:
                 map_i += 1
@@ -880,7 +880,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'gc_{}'.format(i_t),
                                                       quantity='galaxy_density',
-                                                      metadata={'spin': 0},
+                                                      spin=0,
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
@@ -916,7 +916,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                                       quantity='galaxy_shear',
-                                                      metadata={'spin': 2},
+                                                      spin=2,
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
@@ -1328,7 +1328,7 @@ class PowerSpecter(PipelineStage) :
                                   return_cov=False)
                     map_j += 2
 
-            if sacc_t[tr_i].quantity == 'galaxy_shear':
+            if sacc_t[tr_i].spin == 2:
                 map_i += 2
             else:
                 map_i += 1
@@ -1346,12 +1346,12 @@ class PowerSpecter(PipelineStage) :
             map_j = map_i
             self.maps2tracers[map_i] = tr_i
             for tr_j in range(tr_i, self.ntracers):
-                if trcs[tr_i].quantity != 'galaxy_shear' and trcs[tr_j].quantity != 'galaxy_shear':
+                if trcs[tr_i].spin == 0 and trcs[tr_j].spin == 0:
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     if map_i != map_j:
                         self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
                     map_j += 1
-                elif trcs[tr_i].quantity != 'galaxy_shear' and trcs[tr_j].quantity == 'galaxy_shear':
+                elif trcs[tr_i].spin == 0 and trcs[tr_j].spin == 2:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i][map_j+1] = (tr_i, tr_j)
@@ -1359,7 +1359,7 @@ class PowerSpecter(PipelineStage) :
                         self.pss2tracers[map_j][map_i] = (tr_i, tr_j)
                         self.pss2tracers[map_j+1][map_i] = (tr_i, tr_j)
                     map_j += 2
-                elif trcs[tr_i].quantity == 'galaxy_shear' and trcs[tr_j].quantity != 'galaxy_shear':
+                elif trcs[tr_i].spin == 2 and trcs[tr_j].spin == 0:
                     # For one spin-0 field and one spin-2 field, NaMaster gives: n_cls=2, [C_TE,C_TB]
                     self.pss2tracers[map_i][map_j] = (tr_i, tr_j)
                     self.pss2tracers[map_i+1][map_j] = (tr_i, tr_j)
@@ -1380,7 +1380,7 @@ class PowerSpecter(PipelineStage) :
                         self.pss2tracers[map_j+1][map_i+1] = (tr_i, tr_j)
                     map_j += 2
 
-            if trcs[tr_i].quantity == 'galaxy_shear':
+            if trcs[tr_i].spin == 2:
                 map_i += 2
             else:
                 map_i += 1
@@ -1396,7 +1396,7 @@ class PowerSpecter(PipelineStage) :
             tr_i, tr_j = trc
             for i in range(len(self.pss2tracers)):
                 for ii in range(len(self.pss2tracers[i])):
-                    if not (trcs[tr_i].quantity == 'galaxy_shear' and trcs[tr_j].quantity == 'galaxy_shear'):
+                    if not (trcs[tr_i].spin == 2 and trcs[tr_j].spin == 2):
                         if self.pss2tracers[i][ii] == trc and [ii, i] not in self.tracers2maps[tr_i][tr_j]:
                             self.tracers2maps[tr_i][tr_j].append([i, ii])
                     else:
