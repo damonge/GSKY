@@ -4,6 +4,7 @@ import numpy as np
 from .flatmaps import FlatMapInfo, read_flat_map
 from .obscond import ObsCond
 from astropy.io import fits
+import os
 from shapely.geometry.polygon import Polygon
 from shapely.prepared import prep
 from .plot_utils import plot_map
@@ -135,6 +136,9 @@ class SystMapper(PipelineStage) :
                 mp = oc_maps[q][b].collapse_map_mean()
                 plot_map(self.config, fsk, mp, '%s_%s' % (q, b))
 
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

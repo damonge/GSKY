@@ -260,3 +260,6 @@ for pos, prob, _ in sampler.sample(p_initial, iterations=nsteps):
 
     counter = counter + 1
 
+# Permissions on NERSC
+os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')

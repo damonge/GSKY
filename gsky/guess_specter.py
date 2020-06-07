@@ -288,5 +288,9 @@ class GuessSpecter(PipelineStage) :
             saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra_test.sacc'), overwrite=True)
             logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc')))
 
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
+
 if __name__ == '__main__':
     cls = PipelineStage.main()

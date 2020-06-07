@@ -4,6 +4,7 @@ import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createCountsMap
 from astropy.io import fits
+import os
 from .plot_utils import plot_map, plot_curves
 
 import logging
@@ -204,6 +205,9 @@ class GalMapper(PipelineStage):
             plot_curves(self.config, 'nz_%d' % im,
                         z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
 
+        # Permissions on NERSC
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
