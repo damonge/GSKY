@@ -880,7 +880,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'gc_{}'.format(i_t),
                                                       quantity='galaxy_density',
-                                                      spin=0,
+                                                      metadata={'spin': 0},
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
@@ -898,7 +898,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'y_{}'.format(i_t - self.ntracers_counts),
                                                       quantity='cmb_tSZ',
-                                                      metadata={'spin': 0},
+                                                      spin=0,
                                                       ell=ell_beam,
                                                       beam=beam)
 
