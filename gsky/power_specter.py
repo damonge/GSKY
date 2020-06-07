@@ -898,7 +898,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('Map',
                                                       'y_{}'.format(i_t - self.ntracers_counts),
                                                       quantity='cmb_tSZ',
-                                                      spin=0,
+                                                      metadata={'spin': 0},
                                                       ell=ell_beam,
                                                       beam=beam)
 
@@ -916,7 +916,7 @@ class PowerSpecter(PipelineStage) :
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                                       quantity='galaxy_shear',
-                                                      spin=2,
+                                                      metadata={'spin': 2},
                                                       z=z,
                                                       nz=nz,
                                                       extra_columns={key: t.nz_data[key]
@@ -1328,7 +1328,7 @@ class PowerSpecter(PipelineStage) :
                                   return_cov=False)
                     map_j += 2
 
-            if sacc_t[tr_i].spin == 2:
+            if sacc_t[tr_i].quantity == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
