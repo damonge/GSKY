@@ -36,6 +36,8 @@ class SimulatedMaps(object):
         :return:
         """
 
+        self.params['nmaps'] = len(self.params['probes']) + np.sum(self.params['spins'] == 2)
+
         pass
 
     def print_params(self):
@@ -109,37 +111,51 @@ class SimulatedMaps(object):
                                             self.params['tracers'][0]), data_type=None)))
         nell_theor = int(ell_theor.shape[0])
         self.params['nell_theor'] = nell_theor
+        sacc_tracers = theory_sacc.get_tracer_combinations()
 
-        nspectra = self.params['ncls']+self.params['nspin2']+self.params['nspin2']*self.params['nprobes']
+        nspectra = int(self.params['nmaps']*(self.params['nmaps']+1)/2)
         cls = np.zeros((nspectra, self.params['nell_theor']))
         logger.info('Cl array shape = {}.'.format(cls.shape))
 
-        k = 0
         j = 0
         for i, trc1 in enumerate(self.params['tracers']):
             for ii in range(i, self.params['nprobes']):
 
                 trc2 = self.params['tracers'][ii]
-                logger.info('Reading cls for trc1 = {} and trc2 = {}.'.format(trc1, trc2))
+
+                if (trc1, trc2) in sacc_tracers:
+                    trc1_here = trc1
+                    trc2_here = trc2
+                elif (trc2, trc1) in sacc_tracers:
+                    trc1_here = trc2
+                    trc2_here = trc1
+                else:
+                    raise RuntimeError('Tracer combination not in theory_sacc. Aborting.')
+                logger.info('Reading cls for trc1 = {} and trc2 = {}.'.format(trc1_here, trc2_here))
 
                 if self.params['spins'][i] == 2 and self.params['spins'][ii] == 2:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_ee', trc1, trc2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_ee', trc1_here, trc2_here, return_cov=False)
                     cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
-                    cls[j+2, :] = np.zeros_like(cls_temp)
-                    j += 3
+                    j += 2
                 elif self.params['spins'][i] == 2 and self.params['spins'][ii] == 0 or\
                         self.params['spins'][i] == 0 and self.params['spins'][ii] == 2:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_0e', trc1, trc2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_0e', trc1_here, trc2_here, return_cov=False)
                     cls[j, :] = cls_temp
                     cls[j+1, :] = np.zeros_like(cls_temp)
                     j += 2
                 else:
-                    _, cls_temp = theory_sacc.get_ell_cl('cl_00', trc1, trc2, return_cov=False)
+                    _, cls_temp = theory_sacc.get_ell_cl('cl_00', trc1_here, trc2_here, return_cov=False)
                     cls[j, :] = cls_temp
                     j += 1
 
-                k += 1
+            if self.params['spins'][i] == 2:
+                cls[j, :] = np.zeros_like(cls_temp)
+                j += 1
+                for k in range(i+1, self.params['nprobes']):
+                    cls[j, :] = np.zeros_like(cls_temp)
+                    cls[j+1, :] = np.zeros_like(cls_temp)
+                    j += 2
 
         return cls
 
