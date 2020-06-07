@@ -13,3 +13,4 @@ from .cov_gauss import CovGauss
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
 from .like_minimizer import LikeMinimizer
+from .guess_specter import GuessSpecter
