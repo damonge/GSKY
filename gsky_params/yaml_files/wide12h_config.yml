@@ -68,8 +68,7 @@ MockGen:
            'galaxy_shear', 'galaxy_shear', 'galaxy_shear', 'galaxy_shear']
   spins: [0, 0, 0, 0, 0, 0, 2, 2, 2, 2]
   nrealiz: 1000
-  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/'\
-  'CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
+  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,
              3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
   pixwindow: 0
