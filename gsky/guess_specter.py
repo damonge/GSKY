@@ -7,7 +7,7 @@ import scipy.interpolate
 from astropy.io import fits
 import pymaster as nmt
 from .flatmaps import read_flat_map
-from .types import FitsFile, DummyFile
+from .types import FitsFile, DummyFile, SACCFile
 import sacc
 from theory.predict_theory import GSKYPrediction
 import gsky.sacc_utils as sutils
@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 class GuessSpecter(PipelineStage) :
     name="GuessSpecter"
     inputs=[('masked_fraction', FitsFile), ('depth_map', FitsFile),
-            ('gamma_maps', FitsFile), ('act_maps', FitsFile)]
+            ('gamma_maps', FitsFile), ('act_maps', FitsFile),
+            ('saccfile_signal', SACCFile), ('saccfile_noise', SACCFile)]
     outputs=[('dummy', DummyFile)]
-    config_options={'saccdirs': [str], 'output_run_dir': 'NONE',
-                    'noisesacc_filename': 'NONE', 'tracers': [str]}
+    config_options={'cosmo': dict, 'hmparams': dict, 'ellmax': 30000, 'cpl_cl': True}
 
     def get_output_fname(self,name,ext=None):
         fname=self.output_dir+name
@@ -36,6 +36,8 @@ class GuessSpecter(PipelineStage) :
         # This is a hack to get the path of the root output directory.
         # It should be easy to get this from ceci, but I don't know how to.
         self.output_dir = self.get_output('dummy',final_name=True)[:-5]
+        if self.config['output_run_dir'] != 'NONE':
+            self.output_dir += self.config['output_run_dir'] + '/'
         if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -50,12 +52,13 @@ class GuessSpecter(PipelineStage) :
 
         return cl_o
 
-    def get_masks(self):
+    def get_masks(self, tracers):
 
         logger.info('Reading masks.')
 
         masks = []
-        for trc in self.config['tracers']:
+        for trc in tracers:
+            logger.info('Reading mask for tracer = {}.'.format(trc))
             trc_id, trc_ind = trc.split('_')
             trc_ind = int(trc_ind)
 
@@ -89,47 +92,46 @@ class GuessSpecter(PipelineStage) :
 
         return masks, fsk
 
-    def guess_spectra(self, params, saccfile_coadd, noise_saccfile_coadd):
+    def guess_spectra(self, params, saccfile_signal, saccfile_noise):
 
-        if 'dcpl_cl' in self.config.keys():
-            logger.info('dcpl_cl provided.')
-            if self.config['dcpl_cl']:
+        if 'cpl_cl' in self.config.keys():
+            logger.info('cpl_cl provided.')
+            if self.config['cpl_cl']:
                 logger.info('Computing coupled guess spectra.')
-                saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_cpld(params,
-                                                                                saccfile_coadd, noise_saccfile_coadd)
+                saccfile_guess_spec = self.guess_spectra_cpld(params, saccfile_signal, saccfile_noise)
             else:
                 logger.info('Computing uncoupled guess spectra.')
-                saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_uncpld(params,
-                                                                                saccfile_coadd, noise_saccfile_coadd)
+                saccfile_guess_spec = self.guess_spectra_dcpld(params, saccfile_signal, saccfile_noise)
         else:
             logger.info('dcpl_cl not provided. Computing uncoupled guess spectra.')
-            saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra_uncpld(params,
-                                                                                saccfile_coadd, noise_saccfile_coadd)
+            saccfile_guess_spec = self.guess_spectra_dcpld(params, saccfile_signal, saccfile_noise)
 
-        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
+        return saccfile_guess_spec
 
-    def guess_spectra_uncpld(self, params, saccfile_coadd, noise_saccfile_coadd=None):
+    def guess_spectra_dcpld(self, params, saccfile_signal, saccfile_noise=None):
 
-        theor = GSKYPrediction(saccfile_coadd)
+        theor = GSKYPrediction(saccfile_signal)
 
         cl_theor = theor.get_prediction(params)
 
-        saccfile_guess_spec = copy.deepcopy(saccfile_coadd)
-        if noise_saccfile_coadd is not None:
-            saccfile_guess_spec.mean = noise_saccfile_coadd.mean + cl_theor
+        saccfile_guess_spec = copy.deepcopy(saccfile_signal)
+        if saccfile_noise is not None:
+            saccfile_guess_spec.mean = saccfile_noise.mean + cl_theor
         else:
             saccfile_guess_spec.mean = cl_theor
 
-        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
+        return saccfile_guess_spec
 
-    def guess_spectra_cpld(self, params, saccfile_coadd, noise_saccfile_coadd=None):
+    def guess_spectra_cpld(self, params, saccfile_signal, saccfile_noise=None):
 
         ell_theor = np.arange(self.config['ellmax'])
-        theor = GSKYPrediction(saccfile_coadd, ells=ell_theor)
+        theor = GSKYPrediction(saccfile_signal, ells=ell_theor)
 
         cl_theor = theor.get_prediction(params)
 
-        masks, fsk = self.get_masks()
+        tracers = list(saccfile_signal.tracers.keys())
+        tracer_id_arr = [tr.split('_')[0] for tr in tracers]
+        masks, fsk = self.get_masks(tracers)
 
         dl_min = int(min(2 * np.pi / np.radians(fsk.lx), 2 * np.pi / np.radians(fsk.ly)))
         ells_hi = np.arange(2, 15800, dl_min * 1.5).astype(int)
@@ -137,19 +139,21 @@ class GuessSpecter(PipelineStage) :
         leff_hi = bpws_hi.get_effective_ells()
 
         cl_cpld = []
-        trc_combs = saccfile_coadd.get_tracer_combinations()
+        trc_combs = saccfile_signal.get_tracer_combinations()
         for i, (tr_i, tr_j) in enumerate(trc_combs):
 
             logger.info('Computing wsp for trc_comb = {}.'.format((tr_i, tr_j)))
 
-            tr_i_ind = self.config['tracers'].index(tr_i)
-            tr_j_ind = self.config['tracers'].index(tr_j)
+            tr_i_id, _ = tr_i.split('_')
+            tr_j_id, _ = tr_j.split('_')
+            tr_i_ind = tracers.index(tr_i)
+            tr_j_ind = tracers.index(tr_j)
 
             mask_i = masks[tr_i_ind]
             mask_j = masks[tr_j_ind]
 
             cl_theor_curr = [cl_theor[i]]
-            if 'wl' in tr_i:
+            if tr_i_id == 'wl':
                 field_i = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly),
                             mask_i.reshape([fsk.ny,fsk.nx]),
                             [mask_i.reshape([fsk.ny,fsk.nx]), mask_i.reshape([fsk.ny,fsk.nx])],
@@ -160,7 +164,7 @@ class GuessSpecter(PipelineStage) :
                             mask_i.reshape([fsk.ny,fsk.nx]),
                             [mask_i.reshape([fsk.ny,fsk.nx])],
                             templates=None)
-            if 'wl' in tr_j:
+            if tr_j_id == 'wl':
                 field_j = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly),
                             mask_j.reshape([fsk.ny,fsk.nx]),
                             [mask_j.reshape([fsk.ny,fsk.nx]), mask_j.reshape([fsk.ny,fsk.nx])],
@@ -172,21 +176,80 @@ class GuessSpecter(PipelineStage) :
                             [mask_j.reshape([fsk.ny,fsk.nx])],
                             templates=None)
 
-            wsp_hi_curr = nmt.NmtWorkspaceFlat()
-            wsp_hi_curr.compute_coupling_matrix(field_i, field_j, bpws_hi)
+            # File does not exist
+            if not os.path.isfile(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat'):
+                # All galaxy maps
+                if tr_i_id == 'gc' and tr_j_id == 'gc':
+                    if not hasattr(self, 'wsp_counts'):
+                        counts_indx = tracer_id_arr.index('gc')
+                        wsp_hi_curr = nmt.NmtWorkspaceFlat()
+                        if not os.path.isfile(
+                                self.get_output_fname('mcm_hi') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'):
+                            logger.info("Computing MCM for counts.")
+                            wsp_hi_curr.compute_coupling_matrix(field_i, field_j, bpws_hi)
+                            wsp_hi_curr.write_to(
+                                self.get_output_fname('mcm_hi') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
+                            logger.info("MCM written to {}.".format(
+                                self.get_output_fname('mcm_hi') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'))
+                        else:
+                            logger.info("Reading MCM for counts.")
+                            wsp_hi_curr.read_from(
+                                self.get_output_fname('mcm_hi') + '_{}{}'.format(counts_indx, counts_indx) + '.dat')
+                            logger.info("MCM read from {}.".format(
+                                self.get_output_fname('mcm_hi') + '_{}{}'.format(counts_indx, counts_indx) + '.dat'))
+                        self.wsp_counts = wsp_hi_curr
+                    wsp_hi_curr = self.wsp_counts
+
+                # One galaxy map
+                elif tr_i_id == 'gc' or tr_j_id == 'gc':
+                    counts_indx = tracer_id_arr.index('gc')
+                    tr_i_ind_curr = tr_i_ind
+                    tr_j_ind_curr = tr_j_ind
+                    if tr_i_id == 'gc':
+                        tr_i_ind_curr = counts_indx
+                    if tr_j_id == 'gc':
+                        tr_j_ind_curr = counts_indx
+                    wsp_hi_curr = nmt.NmtWorkspaceFlat()
+                    if not os.path.isfile(
+                            self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind_curr, tr_j_ind_curr) + '.dat'):
+                        logger.info("Computing MCM for counts xcorr.")
+                        wsp_hi_curr.compute_coupling_matrix(field_i, field_j, bpws_hi)
+                        wsp_hi_curr.write_to(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind_curr, tr_j_ind_curr) + '.dat')
+                        logger.info("MCM written to {}.".format(
+                            self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind_curr, tr_j_ind_curr) + '.dat'))
+                    else:
+                        logger.info("Reading MCM for counts xcorr.")
+                        wsp_hi_curr.read_from(
+                            self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind_curr, tr_j_ind_curr) + '.dat')
+                        logger.info("MCM read from {}.".format(
+                            self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind_curr, tr_j_ind_curr) + '.dat'))
+
+                # No galaxy maps
+                else:
+                    logger.info(
+                        "Computing MCM for {}.".format(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat'))
+                    wsp_hi_curr = nmt.NmtWorkspaceFlat()
+                    wsp_hi_curr.compute_coupling_matrix(field_i, field_j, bpws_hi)
+                    wsp_hi_curr.write_to(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat')
+
+            # File exists
+            else:
+                logger.info("Reading MCM for {}.".format(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat'))
+                wsp_hi_curr = nmt.NmtWorkspaceFlat()
+                wsp_hi_curr.read_from(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat')
 
             msk_prod = mask_i*mask_j
 
             cl_cpld_curr = self.get_cl_cpld(cl_theor_curr, ell_theor, leff_hi, wsp_hi_curr, msk_prod)
 
-            if noise_saccfile_coadd is not None:
+            if saccfile_noise is not None:
                 logger.info('Adding noise.')
                 if tr_i == tr_j:
                     if 'wl' in tr_i:
                         datatype = 'cl_ee'
                     else:
                         datatype = 'cl_00'
-                    l_curr, nl_curr = noise_saccfile_coadd.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+                    l_curr, nl_curr = saccfile_noise.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
                     nl_curr_int = scipy.interpolate.interp1d(l_curr, nl_curr, bounds_error=False,
                                                              fill_value=(nl_curr[0], nl_curr[-1]))
                     nl_curr_hi = nl_curr_int(ell_theor)
@@ -196,7 +259,7 @@ class GuessSpecter(PipelineStage) :
 
         # Add tracers to sacc
         saccfile_guess_spec = sacc.Sacc()
-        for trc_name, trc in saccfile_coadd.tracers.items():
+        for trc_name, trc in saccfile_signal.tracers.items():
             saccfile_guess_spec.add_tracer_object(trc)
 
         for i, (tr_i, tr_j) in enumerate(trc_combs):
@@ -210,83 +273,48 @@ class GuessSpecter(PipelineStage) :
                 saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
                 saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
 
-        return saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec
+        return saccfile_guess_spec
 
     def run(self):
 
         self.parse_input()
 
-        saccfiles = []
-        for saccdir in self.config['saccdirs']:
-            if self.config['output_run_dir'] != 'NONE':
-                path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
-            else:
-                path2sacc = os.path.join(saccdir, 'power_spectra_wodpj')
-            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-            assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
-                self.get_output_fname(path2sacc, 'sacc'))
-            saccfiles.append(sacc_curr)
+        saccfile_signal = sacc.Sacc.load_fits(self.get_input("saccfile_signal"))
+        logger.info('Read {}.'.format(self.get_input("saccfile_signal")))
 
-        if self.config['noisesacc_filename'] != 'NONE':
+        if self.get_input("saccfile_noise") != 'NONE':
             logger.info('Adding noise to theoretical cls.')
-            noise_saccfiles = []
-            for i, saccdir in enumerate(self.config['saccdirs']):
-                if self.config['output_run_dir'] != 'NONE':
-                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
-                else:
-                    path2sacc = os.path.join(saccdir, self.config['noisesacc_filename'])
-                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-                logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-                if noise_sacc_curr.covariance is None:
-                    logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-                noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = sutils.coadd_sacc_means(noise_saccfiles, self.config)
+            saccfile_noise = sacc.Sacc.load_fits(self.get_input("saccfile_noise"))
+            logger.info('Read {}.'.format(self.get_input("saccfile_noise")))
         else:
             logger.info('Creating noise-free theoretical cls.')
-            noise_saccfile_coadd = None
-
-        # Need to coadd saccfiles after adding covariance to noise saccfiles
-        saccfile_coadd = sutils.coadd_sacc_means(saccfiles, self.config)
+            saccfile_noise = None
 
         params = {
                     'cosmo': self.config['cosmo'],
                     'hmparams': self.config['hmparams']
                   }
 
-        saccfile_coadd, noise_saccfile_coadd, saccfile_guess_spec = self.guess_spectra(params, saccfile_coadd,
-                                                                                       noise_saccfile_coadd)
+        saccfile_guess_spec = self.guess_spectra(params, saccfile_signal, saccfile_noise)
 
-        if self.config['output_run_dir'] != 'NONE':
-            input_dir = os.path.join('inputs', self.config['output_run_dir'])
-            input_dir = self.get_output_fname(input_dir)
+        if self.get_input("saccfile_noise") != 'NONE':
+            if self.config['cpl_cl']:
+                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_guess_spectra_cpld', ext='sacc'),
+                                              overwrite=True)
+                logger.info('Written {}.'.format(self.get_output_fname('saccfile_guess_spectra_cpld', ext='sacc')))
+            else:
+                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_guess_spectra_dcpld', ext='sacc'),
+                                              overwrite=True)
+                logger.info('Written {}.'.format(self.get_output_fname('saccfile_guess_spectra_dcpld', ext='sacc')))
         else:
-            input_dir = self.get_output_fname('inputs')
-        if not os.path.isdir(input_dir):
-            os.makedirs(input_dir)
-            logger.info(('Created {}.'.format(input_dir)))
-
-        if self.config['output_run_dir'] != 'NONE':
-            coadd_dir = os.path.join('coadds', self.config['output_run_dir'])
-            coadd_dir = self.get_output_fname(coadd_dir)
-        else:
-            coadd_dir = self.get_output_fname('coadds')
-        if not os.path.isdir(coadd_dir):
-            os.makedirs(coadd_dir)
-            logger.info(('Created {}.'.format(coadd_dir)))
-
-        saccfile_coadd.save_fits(os.path.join(coadd_dir, 'saccfile_coadd_test.sacc'), overwrite=True)
-        logger.info('Written {}.'.format(os.path.join(coadd_dir, 'saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] != 'NONE':
-            noise_saccfile_coadd.save_fits(os.path.join(coadd_dir, 'noise_saccfile_coadd_test.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(coadd_dir, 'noise_saccfile_coadd.sacc')))
-        if self.config['noisesacc_filename'] != 'NONE':
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_guess_spectra_test.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_guess_spectra.sacc')))
-        else:
-            saccfile_guess_spec.save_fits(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra_test.sacc'), overwrite=True)
-            logger.info('Written {}.'.format(os.path.join(input_dir, 'saccfile_noise-free_guess_spectra.sacc')))
+            if self.config['cpl_cl']:
+                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_noise-free_guess_spectra_cpld',
+                                                                    ext='sacc'), overwrite=True)
+                logger.info('Written {}.'.format('saccfile_noise-free_guess_spectra_cpld', ext='sacc'))
+            else:
+                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_noise-free_guess_spectra_dcpld',
+                                                                    ext='sacc'), overwrite=True)
+                logger.info('Written {}.'.format('saccfile_noise-free_guess_spectra_dcpld', ext='sacc'))
 
         # Permissions on NERSC
         os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
