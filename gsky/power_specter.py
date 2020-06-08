@@ -210,6 +210,7 @@ class PowerSpecter(PipelineStage) :
         """
 
         nls = np.zeros((self.nmaps, self.nmaps, self.nbands))
+        nls_corr = np.zeros((self.nmaps, self.nmaps, self.nbands))
 
         zero_arr = np.zeros(self.nbands)
 
@@ -222,39 +223,60 @@ class PowerSpecter(PipelineStage) :
                     type_cur = t.type
                     logger.info('Computing analytic noise for tracer_type = {}.'.format(type_cur))
                     if type_cur == 'galaxy_density':
-
+                        # Noise power spectrum
                         corrfac = np.sum(t.weight) / (t.fsk.nx * t.fsk.ny)
                         nl = np.ones(self.nbands) * corrfac / t.ndens_perad
-
                         nls[map_i, map_j] = wsp[tr_i][tr_j].decouple_cell([nl])[0]
+
+                        # Rescaled noise power spectrum for covariance matrix
+                        nl_corr = nl/np.mean(t.weight**2)
+                        nls_corr[map_i, map_j] = nl_corr
+
                         map_j += 1
                     elif type_cur == 'galaxy_shear':
                         # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
 
                         if hasattr(t, 'w2e2'):
                             logger.info('Tracer has w2e2 attribute. Computing analytic shape noise.')
+                            # Noise power spectrum
                             w2e2_fac = t.w2e2*np.radians(t.fsk.dx)*np.radians(t.fsk.dy)
                             nl = np.ones(self.nbands)*w2e2_fac
                             nls_temp = wsp[tr_i][tr_j].decouple_cell([nl, zero_arr, zero_arr, nl])
+
+                            # Rescaled noise power spectrum for covariance matrix
+                            nl_corr = nl/np.mean(t.weight**2)
+                            nls_corr_temp = np.zeros((4, self.nbands))
+                            nls_corr_temp[0] = nl_corr
+                            nls_corr_temp[3] = nl_corr
                         else:
                             logger.info('Tracer does not have w2e2 attribute. Setting analytic shape noise to zero.')
                             nls_temp = np.zeros((4, self.nbands))
+                            nls_corr_temp = np.zeros((4, self.nbands))
 
+                        # Noise power spectrum
                         nls_tempe = nls_temp[0]
                         nls_tempb = nls_temp[3]
                         nls[map_i, map_j] = nls_tempe
                         nls[map_i+1, map_j+1] = nls_tempb
+
+                        # Rescaled noise power spectrum for covariance matrix
+                        nls_corr_tempe = nls_corr_temp[0]
+                        nls_corr_tempb = nls_corr_temp[3]
+                        nls_corr[map_i, map_j] = nls_corr_tempe
+                        nls_corr[map_i+1, map_j+1] = nls_corr_tempb
+
                         map_j += 2
                     elif type_cur == 'cmb_tSZ' or type_cur == 'cmb_convergence':
                         logger.info('Setting analytic noise to zero.')
                         nls[map_i, map_j] = np.zeros(self.nbands)
+                        nls_corr[map_i, map_j] = np.zeros(self.nbands)
 
             if type_cur == 'galaxy_shear':
                 map_i += 2
             else:
                 map_i += 1
 
-        return nls
+        return nls, nls_corr
         
     def get_noise_simulated(self,tracers,wsp,bpws,nsims) :
         """
@@ -1469,12 +1491,15 @@ class PowerSpecter(PipelineStage) :
         cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)
 
         logger.info("Computing noise bias.")
-        nls=self.get_noise(tracers_nc,wsp,bpws)
+        nls, nls_corr = self.get_noise(tracers_nc,wsp,bpws)
 
         logger.info("Writing output")
         self.write_vector_to_sacc(self.get_output_fname('noi_bias',ext='sacc'), tracers_sacc,
                                   nls, ell_eff, windows)
         logger.info('Written noise bias.')
+        self.write_vector_to_sacc(self.get_output_fname('noi_bias_cpld_mskcorr',ext='sacc'), tracers_sacc,
+                                  nls_corr, ell_eff, windows)
+        logger.info('Written coupled and mask-corrected noise bias.')
         self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
                                   cl_deproj_bias, ell_eff, windows)
         logger.info('Written deprojection bias.')
