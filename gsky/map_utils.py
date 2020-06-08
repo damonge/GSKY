@@ -128,36 +128,6 @@ def createWQUMap(ra, dec, q, u, fsk, weights=None):
 
     return mp
 
-
-def createW2QU2Map(ra, dec, q, u, fsk, weights=None):
-    """
-    Creates two maps containing the averages (optionally weighted)
-    of the Q, U components of a spin-2 field.
-    :param ra:
-    :param dec:
-    :param q:
-    :param u:
-    :param fsk:
-    :param weights:
-    :param shearrot:
-    :return:
-    """
-
-    flatmap = fsk.pos2pix(ra, dec)
-    id_good = flatmap >= 0
-
-    w2q2map = np.bincount(flatmap[id_good],
-                       weights=q[id_good]**2*weights[id_good]**2,
-                       minlength=fsk.get_size())
-    w2u2map = np.bincount(flatmap[id_good],
-                       weights=u[id_good]**2*weights[id_good]**2,
-                       minlength=fsk.get_size())
-
-    mp = [w2q2map, w2u2map]
-
-    return mp
-
-
 def createMeanStdMaps(ra, dec, quantity, fsk):
     """
     Creates maps of the mean and standard deviation of a given quantity
