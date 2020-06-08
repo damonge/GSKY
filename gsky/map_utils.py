@@ -100,7 +100,7 @@ def createSpin2Map(ra, dec, q, u, fsk, weights=None, shearrot=None):
 
     return mp, ms
 
-def createW2QU2Map(ra, dec, q, u, fsk, weights=None):
+def createWQUMap(ra, dec, q, u, fsk, weights=None):
     """
     Creates two maps containing the averages (optionally weighted)
     of the Q, U components of a spin-2 field.
@@ -117,14 +117,14 @@ def createW2QU2Map(ra, dec, q, u, fsk, weights=None):
     flatmap = fsk.pos2pix(ra, dec)
     id_good = flatmap >= 0
 
-    w2q2map = np.bincount(flatmap[id_good],
-                       weights=q[id_good]**2*weights[id_good]**2,
+    wqmap = np.bincount(flatmap[id_good],
+                       weights=q[id_good]*weights[id_good],
                        minlength=fsk.get_size())
-    w2u2map = np.bincount(flatmap[id_good],
-                       weights=u[id_good]**2*weights[id_good]**2,
+    wumap = np.bincount(flatmap[id_good],
+                       weights=u[id_good]*weights[id_good],
                        minlength=fsk.get_size())
 
-    mp = [w2q2map, w2u2map]
+    mp = [wqmap, wumap]
 
     return mp
 

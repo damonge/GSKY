@@ -94,13 +94,13 @@ class ShearMapper(PipelineStage):
         for ibin in range(self.nbins):
             msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
             subcat = cat[msk_bin]
-            w2e2maps = createW2QU2Map(subcat['ra'],
+            wemaps = createW2QU2Map(subcat['ra'],
                                                    subcat['dec'],
                                                    subcat['ishape_hsm_regauss_e1_calib'],
                                                    subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
                                                    weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
 
-            w2e2_curr = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
+            w2e2_curr = 0.5*(np.mean(wemaps[0]**2) + np.mean(wemaps[1]**2))
             w2e2.append(w2e2_curr)
 
         return np.array(w2e2)
