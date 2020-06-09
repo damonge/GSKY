@@ -175,6 +175,9 @@ class GuessSpecter(PipelineStage) :
                             [mask_j.reshape([fsk.ny,fsk.nx])],
                             templates=None)
 
+            if tr_i_id == 'wl' and tr_j_id == 'wl':
+                cl_theor_curr.append(np.zeros_like(cl_theor[i]))
+
             # File does not exist
             if not os.path.isfile(self.get_output_fname('mcm_hi') + '_{}{}'.format(tr_i_ind, tr_j_ind) + '.dat'):
                 # All galaxy maps
