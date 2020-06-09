@@ -72,7 +72,7 @@ class PSpecPlotter(PipelineStage) :
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
             theor = GSKYPrediction(saccfile, ell_theor)
-            cl_theor = theor.get_prediction(params, trc_combs=plot_pairs, datatype=cl_type)
+            cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
         indices = []
         if plot_comb == 'all':
@@ -248,12 +248,16 @@ class PSpecPlotter(PipelineStage) :
             saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
             logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
 
-            logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
-            for tr_i, tr_j in saccfile.get_tracer_combinations():
-                ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
-                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
-            logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+            if self.ell_max_dict is not None:
+                logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if tr_i in self.config['tracers'] and tr_j in self.config['tracers']:
+                        ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+                        logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+                logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
         ntracers_arr = np.array([len(saccfile.tracers) for saccfile in saccfiles])
         ntracers_unique = np.unique(ntracers_arr)[::-1]
@@ -293,7 +297,7 @@ class PSpecPlotter(PipelineStage) :
         invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
         mean_coadd = np.dot(invcov_coadd, tempsacc.mean)
 
-        assert set(tempsacc_tracers) == set(self.config['tracers']), 'Different tracers requested than present in largest ' \
+        assert set(self.config['tracers']) <= set(tempsacc_tracers), 'Larger tracer set requested than present in largest ' \
                                                                      'saccfile. Aborting.'
 
         for i, saccfile in enumerate(sacc_coadds[1:]):
