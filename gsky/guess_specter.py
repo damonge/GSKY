@@ -10,7 +10,6 @@ from .flatmaps import read_flat_map
 from .types import FitsFile, DummyFile, SACCFile
 import sacc
 from theory.predict_theory import GSKYPrediction
-import gsky.sacc_utils as sutils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
