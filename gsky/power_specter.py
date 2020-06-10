@@ -1197,7 +1197,11 @@ class PowerSpecter(PipelineStage) :
         :param verbose: do you want to print out information about the SACC file?
         """
 
-        cls = np.zeros((self.nmaps, self.nmaps, self.nbands))
+        tracers = list(saccfile.tracers.keys())
+
+        nell = np.unique(np.array(saccfile.get_tag('ell', tracers=(tracers[0], tracers[0])))).shape[0]
+
+        cls = np.zeros((self.nmaps, self.nmaps, nell))
 
         map_i = 0
         for tr_i in range(self.ntracers):
