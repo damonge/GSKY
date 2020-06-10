@@ -302,22 +302,22 @@ class GuessSpecter(PipelineStage) :
 
         if self.get_input("saccfile_noise") != 'NONE':
             if self.config['cpl_cl']:
-                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_guess_spectra_cpld', ext='sacc'),
+                saccfile_guess_spec.save_fits(self.get_output_fname('guess_spectra_cpld', ext='sacc'),
                                               overwrite=True)
-                logger.info('Written {}.'.format(self.get_output_fname('saccfile_guess_spectra_cpld', ext='sacc')))
+                logger.info('Written {}.'.format(self.get_output_fname('guess_spectra_cpld', ext='sacc')))
             else:
-                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_guess_spectra_dcpld', ext='sacc'),
+                saccfile_guess_spec.save_fits(self.get_output_fname('guess_spectra_dcpld', ext='sacc'),
                                               overwrite=True)
-                logger.info('Written {}.'.format(self.get_output_fname('saccfile_guess_spectra_dcpld', ext='sacc')))
+                logger.info('Written {}.'.format(self.get_output_fname('guess_spectra_dcpld', ext='sacc')))
         else:
             if self.config['cpl_cl']:
-                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_noise-free_guess_spectra_cpld',
+                saccfile_guess_spec.save_fits(self.get_output_fname('noise-free_guess_spectra_cpld',
                                                                     ext='sacc'), overwrite=True)
-                logger.info('Written {}.'.format('saccfile_noise-free_guess_spectra_cpld', ext='sacc'))
+                logger.info('Written {}.'.format('noise-free_guess_spectra_cpld', ext='sacc'))
             else:
-                saccfile_guess_spec.save_fits(self.get_output_fname('saccfile_noise-free_guess_spectra_dcpld',
+                saccfile_guess_spec.save_fits(self.get_output_fname('noise-free_guess_spectra_dcpld',
                                                                     ext='sacc'), overwrite=True)
-                logger.info('Written {}.'.format('saccfile_noise-free_guess_spectra_dcpld', ext='sacc'))
+                logger.info('Written {}.'.format('noise-free_guess_spectra_dcpld', ext='sacc'))
 
         # Permissions on NERSC
         os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')

@@ -504,7 +504,7 @@ class PowerSpecter(PipelineStage) :
             l_use = ell_theor
             cl_theory_arr = self.convert_sacc_to_clarr(theory_sacc, sacc_t)
             cl_use = cl_theory_arr
-            if cl_use.shape != (self.nmaps, self.nmaps, self.nbands):
+            if cl_use.shape != (self.nmaps, self.nmaps, ell_theor.shape[0]):
                 raise ValueError("Theory power spectra have a wrong shape.")
         #Interpolate
         lth=np.arange(2,self.lmax+1)
