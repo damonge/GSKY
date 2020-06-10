@@ -874,8 +874,9 @@ class PowerSpecter(PipelineStage) :
             self.output_dir+=self.config['output_run_dir']+'/'
         if not os.path.isdir(self.output_dir):
             os.mkdir(self.output_dir)
-        if (self.config['noise_bias_type']!='analytic') and (self.config['noise_bias_type']!='pois_sim') :
-            raise ValueError('Noise bias calculation must be either \'analytic\' or \'pois_sim\'')
+        if 'noise_bias_type' in self.config.keys():
+            if (self.config['noise_bias_type']!='analytic') and (self.config['noise_bias_type']!='pois_sim') :
+                raise ValueError('Noise bias calculation must be either \'analytic\' or \'pois_sim\'')
         if self.config['guess_spectrum']!='NONE' :
             if not os.path.isfile(self.config['guess_spectrum']) :
                 raise ValueError('Guess spectrum must be either \'NONE\' or an existing ASCII file')
