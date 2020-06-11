@@ -74,6 +74,13 @@ class PSpecPlotter(PipelineStage) :
             theor = GSKYPrediction(saccfile, ell_theor)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
+            delta = saccfile.mean - cl_theor
+            if noise_saccfile is not None:
+                delta -= noise_saccfile.mean
+            invcov = np.linalg.inv(saccfile.covariance.covmat)
+            chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+            logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
+
         indices = []
         if plot_comb == 'all':
             for i in range(ntracers):

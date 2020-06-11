@@ -624,17 +624,17 @@ class CovGauss(PowerSpecter) :
         # Write covariances into existing sacc
         if os.path.isfile(self.get_output_fname('power_spectra_wodpj',ext='sacc')):
             logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
-            logger.info('Adding deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
+            logger.info('Adding non-deprojected covariance matrix to {}.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
             self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj', ext='sacc'), tracers_sacc,
                                       cls_wodpj, ell_eff, windows, covar=cov_wodpj)
-            logger.info('Written deprojected covariance matrix.')
+            logger.info('Written non-deprojected covariance matrix.')
         else:
             logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wodpj',ext='sacc')))
-            logger.info('Writing deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wodpj',ext='sacc')))
+            logger.info('Writing non-deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wodpj',ext='sacc')))
             s_wodpj = sacc.Sacc()
             s_wodpj.add_covariance(cov_wodpj)
             s_wodpj.save_fits(self.get_output_fname('cov_wodpj',ext='sacc'), overwrite=True)
-            logger.info('Written deprojected covariance matrix.')
+            logger.info('Written non-deprojected covariance matrix.')
 
         if os.path.isfile(self.get_output_fname('power_spectra_wdpj',ext='sacc')):
             logger.info('{} provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
@@ -644,7 +644,7 @@ class CovGauss(PowerSpecter) :
             logger.info('Written deprojected covariance matrix.')
         else:
             logger.info('{} not provided.'.format(self.get_output_fname('power_spectra_wdpj',ext='sacc')))
-            logger.info('Writing non deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wdpj',ext='sacc')))
+            logger.info('Writing deprojected covariance matrix to {}.'.format(self.get_output_fname('cov_wdpj',ext='sacc')))
             s_wdpj = sacc.Sacc()
             s_wdpj.add_covariance(cov_wdpj)
             s_wdpj.save_fits(self.get_output_fname('cov_wdpj',ext='sacc'), overwrite=True)
