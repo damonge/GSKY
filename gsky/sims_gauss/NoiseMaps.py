@@ -5,6 +5,7 @@ import numpy as np
 import copy
 from astropy.io import fits
 import pymaster as nmt
+import sacc
 from ..map_utils import createSpin2Map
 from ..flatmaps import read_flat_map
 
@@ -312,12 +313,21 @@ class NoiseMaps(object):
                     raise NotImplementedError('Probes other than galaxy_density, galaxy_shear not implemented at the moment. Aborting.')
 
             else:
-                assert 'path2noisecls' in self.params, 'Requesting theretical noise model but path2noisecls parameter not provided. Aborting.'
+                assert 'noise_sacc' in self.params, 'Requesting theretical noise model but path2noisecls parameter not provided. Aborting.'
 
                 data[tracer] = {}
 
-                data[tracer]['noisecls'] = np.genfromtxt(self.params['path2noisecls'][i], usecols={1})
-                logger.info('Read {}.'.format(self.params['path2noisecls'][i]))
+                noise_sacc = sacc.Sacc.load_fits(self.params['noise_sacc'])
+                logger.info('Read {}.'.format(self.params['noise_sacc'][i]))
+
+                if self.params['spins'] == 0:
+                    _, cls_noise_temp = noise_sacc.get_ell_cl('cl_00', tracer, tracer, return_cov=False)
+                elif self.params['spins'] == 2:
+                    _, cls_noise_temp = noise_sacc.get_ell_cl('cl_ee', tracer, tracer, return_cov=False)
+                else:
+                    raise NotImplementedError()
+
+                data[tracer]['noisecls'] = cls_noise_temp
                 data[tracer]['fsk'] = fsk
 
         return data
