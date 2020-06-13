@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 NOISEPARAMS_KEYS = ['probes', 'tracers', 'noisemodel', 'posfromshearcat',
-                    'shearrot', 'mask_type', 'Ngal', 'path2noisecls']
+                    'shearrot', 'mask_type', 'Ngal', 'noise_sacc']
 SIMPARAMS_KEYS = ['probes', 'tracers', 'spins', 'theory_sacc', 'nrealiz',
                   'ell_bpws', 'pixwindow', 'nell_theor']
 
