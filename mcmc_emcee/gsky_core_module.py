@@ -22,7 +22,8 @@ def get_params(params, paramtype):
         KEYS = ['HODmod', 'massdef', 'pprof', 'corr_halo_mod',
                 'mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro',
                 'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
-                'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3']
+                'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
+                'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3']
     else:
         return
 
