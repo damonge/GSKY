@@ -74,12 +74,12 @@ class PSpecPlotter(PipelineStage) :
             theor = GSKYPrediction(saccfile, ell_theor)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
-            delta = saccfile.mean - cl_theor
-            if noise_saccfile is not None:
-                delta -= noise_saccfile.mean
-            invcov = np.linalg.inv(saccfile.covariance.covmat)
-            chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
-            logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
+            # delta = saccfile.mean - cl_theor
+            # if noise_saccfile is not None:
+            #     delta -= noise_saccfile.mean
+            # invcov = np.linalg.inv(saccfile.covariance.covmat)
+            # chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+            # logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
 
         indices = []
         if plot_comb == 'all':
@@ -366,6 +366,18 @@ class PSpecPlotter(PipelineStage) :
                         logger.info('Removing kappa_0 from {}.'.format(self.config['saccdirs'][i]))
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
+
+            if self.ell_max_dict is not None:
+                logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if tr_i in self.config['tracers'] and tr_j in self.config['tracers']:
+                        ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
+                        logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+                logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+                
             if i == 0:
                 coadd_mean = saccfile.mean
                 if self.config['plot_errors']:
