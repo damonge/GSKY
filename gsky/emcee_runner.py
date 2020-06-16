@@ -67,66 +67,6 @@ if 'ell_max_trc' in config.keys():
 else:
     ell_max_dict = None
 
-saccfiles = []
-for saccdir in config['saccdirs']:
-    if config['output_run_dir'] != 'NONE':
-        path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + 'power_spectra_wodpj')
-    sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
-    logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
-    assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
-        get_output_fname(config, path2sacc, 'sacc'))
-    saccfiles.append(sacc_curr)
-
-if config['noisesacc_filename'] != 'NONE':
-    logger.info('Reading provided noise saccfile.')
-    noise_saccfiles = []
-    for i, saccdir in enumerate(config['saccdirs']):
-        if config['output_run_dir'] != 'NONE':
-            path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
-        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
-        logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
-        if noise_sacc_curr.covariance is None:
-            logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-        noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict)
-else:
-    logger.info('No noise saccfile provided.')
-    noise_saccfile_coadd = None
-    noise_saccfiles = None
-
-# Need to coadd saccfiles after adding covariance to noise saccfiles
-saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict)
-
-fit_params = config['fit_params']
-if 'theory' in config.keys():
-    if 'cosmo' in config['theory'].keys():
-        cosmo_params = config['theory']['cosmo']
-        cosmo_fit_params = get_params(fit_params, 'cosmo')
-        cosmo_default_params = get_params(config['constants'], 'cosmo')
-        assert cosmo_params.keys() <= set(list(cosmo_fit_params.keys()) + list(cosmo_default_params.keys())), \
-            'Provided cosmology params contain keys not specified in fit_params and constants. Aborting.'
-        cosmo = ccl.Cosmology(**cosmo_params)
-    else:
-        cosmo = None
-    if 'hmparams' in config['theory'].keys():
-        hmparams = config['theory']['hmparams']
-        hmparams_fit = get_params(fit_params, 'hmparams')
-        hmparams_default = get_params(config['constants'], 'hmparams')
-        assert hmparams.keys() <= set(list(hmparams_fit.keys()) + list(hmparams_default.keys())), \
-            'Provided HM params contain keys not specified in fit_params and constants. Aborting.'
-    else:
-        hmparams = None
-else:
-    cosmo = hmparams = None
-
-param_mapping = {}
-nparams = len(fit_params.keys())
-params = np.zeros((nparams, 4))
-for key in fit_params.keys():
-    param_mapping[key] = fit_params[key][0]
-    params[fit_params[key][0], :] = fit_params[key][1:]
-
 tracers = config['tracers']
 
 trc_combs = []
@@ -172,6 +112,67 @@ else:
     raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
 
 logger.info('Fitting tracer combination = {}.'.format(trc_combs))
+
+saccfiles = []
+for saccdir in config['saccdirs']:
+    if config['output_run_dir'] != 'NONE':
+        path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+    sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+    logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
+    assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
+        get_output_fname(config, path2sacc, 'sacc'))
+    saccfiles.append(sacc_curr)
+
+if config['noisesacc_filename'] != 'NONE':
+    logger.info('Reading provided noise saccfile.')
+    noise_saccfiles = []
+    for i, saccdir in enumerate(config['saccdirs']):
+        if config['output_run_dir'] != 'NONE':
+            path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
+        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+        logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
+        if noise_sacc_curr.covariance is None:
+            logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
+            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
+        noise_saccfiles.append(noise_sacc_curr)
+    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+                                              trc_combs=trc_combs)
+else:
+    logger.info('No noise saccfile provided.')
+    noise_saccfile_coadd = None
+    noise_saccfiles = None
+
+# Need to coadd saccfiles after adding covariance to noise saccfiles
+saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict, trc_combs=trc_combs)
+
+fit_params = config['fit_params']
+if 'theory' in config.keys():
+    if 'cosmo' in config['theory'].keys():
+        cosmo_params = config['theory']['cosmo']
+        cosmo_fit_params = get_params(fit_params, 'cosmo')
+        cosmo_default_params = get_params(config['constants'], 'cosmo')
+        assert cosmo_params.keys() <= set(list(cosmo_fit_params.keys()) + list(cosmo_default_params.keys())), \
+            'Provided cosmology params contain keys not specified in fit_params and constants. Aborting.'
+        cosmo = ccl.Cosmology(**cosmo_params)
+    else:
+        cosmo = None
+    if 'hmparams' in config['theory'].keys():
+        hmparams = config['theory']['hmparams']
+        hmparams_fit = get_params(fit_params, 'hmparams')
+        hmparams_default = get_params(config['constants'], 'hmparams')
+        assert hmparams.keys() <= set(list(hmparams_fit.keys()) + list(hmparams_default.keys())), \
+            'Provided HM params contain keys not specified in fit_params and constants. Aborting.'
+    else:
+        hmparams = None
+else:
+    cosmo = hmparams = None
+
+param_mapping = {}
+nparams = len(fit_params.keys())
+params = np.zeros((nparams, 4))
+for key in fit_params.keys():
+    param_mapping[key] = fit_params[key][0]
+    params[fit_params[key][0], :] = fit_params[key][1:]
 
 coremod_config = copy.deepcopy(config)
 coremod_config['param_mapping'] = param_mapping

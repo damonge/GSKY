@@ -5,7 +5,7 @@ import sacc
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
+def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs=None):
     logger.info('Coadding all saccfiles weighted by inverse variance.')
 
     for saccfile in saccfiles:
@@ -24,16 +24,28 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True):
         saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
         logger.info('Size of saccfile after cuts = {}.'.format(saccfile.mean.size))
 
-        if ell_max_dict is not None:
-            logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+        logger.info('Size of saccfile before trc and ell cuts {}.'.format(saccfile.mean.size))
+        if trc_combs is not None:
+            logger.info('trc_combs provided.')
             for tr_i, tr_j in saccfile.get_tracer_combinations():
-                if tr_i in tracers and tr_j in tracers:
-                    ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
-                    logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                    saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                if (tr_i, tr_j) in trc_combs or (tr_j, tr_i) in trc_combs:
+                    if ell_max_dict is not None:
+                        ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                        logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
                 else:
                     saccfile.remove_selection(tracers=(tr_i, tr_j))
-            logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+        else:
+            logger.info('trc_combs not provided.')
+            for tr_i, tr_j in saccfile.get_tracer_combinations():
+                if tr_i in tracers and tr_j in tracers:
+                    if ell_max_dict is not None:
+                        ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                        logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                else:
+                    saccfile.remove_selection(tracers=(tr_i, tr_j))
+        logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
 
     ntracers_arr = np.array([len(saccfile.tracers) for saccfile in saccfiles])
     ntracers_unique = np.unique(ntracers_arr)[::-1]
@@ -264,3 +276,29 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
             saccfile_coadd.add_covariance(coadd_cov)
 
         return saccfile_coadd
+
+# def coadd_sacc_windows(saccfiles, saccfile_templ):
+#
+#     # Add tracers to sacc
+#     tempsacc = sacc.Sacc()
+#     for trc_name, trc in saccfile_templ.tracers.items():
+#         tempsacc.add_tracer_object(trc)
+#
+#     datatypes = saccfile_templ.get_data_types()
+#     trc_combs = saccfile_templ.get_tracer_combinations()
+#
+#     for tr_i, tr_j in trc_combs:
+#         for data_type in datatypes:
+#             ell_curr, cl_curr = saccfile_templ.get_ell_cl(data_type, tr_i, tr_j, return_cov=False)
+#             # Get window
+#             if cl_curr != np.array([]):
+#                 win_coadd = []
+#                 n_wins = 0
+#                 for sacc_curr in saccfiles:
+#                     win_curr = sacc_curr.get_tag('window', tracers=(tr_i, tr_j), data_type=data_type)
+#                     if win_curr != []:
+#                         if win_coadd != []:
+#                             for i, win in enumerate(win_coadd):
+#                                 win.weight += win_curr[i].weight
+#                         n_wins += 1
+#             tempsacc.add_ell_cl(data_type, tr_i, tr_j, ell_curr, cl_curr, )
