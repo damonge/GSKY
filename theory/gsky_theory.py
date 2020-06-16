@@ -369,6 +369,9 @@ class GSKYTheory(object):
         if self.params['corr_halo_mod']:
             logger.info('Correcting halo model Pk with HALOFIT ratio.')
             if not hasattr(self, 'rk_hm'):
+                if not hasattr(self, 'pM'):
+                    logger.info('Computing matter density profile.')
+                    self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
                 logger.info('Computing halo model correction.')
                 HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
                                            z_range=[0., 3.], nz=50)
