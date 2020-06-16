@@ -377,7 +377,7 @@ class PSpecPlotter(PipelineStage) :
                     else:
                         saccfile.remove_selection(tracers=(tr_i, tr_j))
                 logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
-                
+
             if i == 0:
                 coadd_mean = saccfile.mean
                 if self.config['plot_errors']:
