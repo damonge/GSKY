@@ -18,7 +18,7 @@ import gsky.sacc_utils as sutils
 
 import logging
 
-DROP_TRC_COMBS = [['y_0', 'y_0'], ['kappa_0', 'kappa_0'], ['y_0', 'kappa_0'], ['kappa_0', 'y_0']]
+DROP_TRC_COMBS = [('y_0', 'y_0'), ('kappa_0', 'kappa_0'), ('y_0', 'kappa_0'), ('kappa_0', 'y_0')]
 
 
 def get_output_fname(config, name, ext=None):
@@ -75,15 +75,15 @@ if config['fit_comb'] == 'all':
     i = 0
     for tr_i in tracers:
         for tr_j in tracers[:i + 1]:
-            if [tr_i, tr_j] not in DROP_TRC_COMBS:
+            if (tr_i, tr_j) not in DROP_TRC_COMBS:
                 # Generate the appropriate list of tracer combinations to plot
-                trc_combs.append([tr_j, tr_i])
+                trc_combs.append((tr_i, tr_j))
         i += 1
 elif config['fit_comb'] == 'auto':
     logger.info('Fitting auto-correlations of tracers.')
     for tr_i in tracers:
-        if [tr_i, tr_i] not in DROP_TRC_COMBS:
-            trc_combs.append([tr_i, tr_i])
+        if (tr_i, tr_i) not in DROP_TRC_COMBS:
+            trc_combs.append((tr_i, tr_i))
 elif config['fit_comb'] == 'cross':
     tracer_type_list = [tr.split('_')[0] for tr in tracers]
     # Get unique tracers and keep ordering
@@ -97,9 +97,9 @@ elif config['fit_comb'] == 'cross':
     for tr_i in tracers[:ntracers0]:
         for tr_j in tracers[ntracers0:]:
             if tr_i.split('_')[0] != tr_j.split('_')[0]:
-                if [tr_i, tr_j] not in DROP_TRC_COMBS:
+                if (tr_i, tr_j) not in DROP_TRC_COMBS:
                     # Generate the appropriate list of tracer combinations to plot
-                    trc_combs.append([tr_i, tr_j])
+                    trc_combs.append((tr_i, tr_j))
         i += 1
 elif isinstance(config['fit_comb'], list):
     logger.info('Fitting provided tracer combination list.')
