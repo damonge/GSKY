@@ -17,6 +17,7 @@ logger.propagate = False
 
 DEFAULT_PARAMS = {
                 'corr_halo_mod': True,
+                'use_hm_shear': True,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
@@ -29,7 +30,8 @@ DEFAULT_PARAMS = {
                 'pprof': 'Battaglia'
                 }
 
-DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof', 'massdef', 'corr_halo_mod', 'HODmod',
+DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof',
+                         'massdef', 'corr_halo_mod', 'HODmod', 'use_hm_shear',
                          'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                          'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3']
@@ -381,17 +383,24 @@ class GSKYTheory(object):
         if 'wl' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'kappa' in tr_j_name or \
                 'kappa' in tr_i_name and 'wl' in tr_j_name or 'kappa' in tr_i_name and 'kappa' in tr_j_name:
             if not hasattr(self, 'pk_MMf'):
-                if not self.params['corr_halo_mod']:
-                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
-                                            lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                if self.params['use_hm_shear']:
+                    logger.info('Using halomodel for cosmic shear.')
+                    if not self.params['corr_halo_mod']:
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
+                                                lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
+                    else:
+                        Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
+                                                                  self.pM, normprof1=True)
+                        Pk_arr *= self.rk_hm
+                        Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
+                                      cosmo=self.cosmo, is_logp=False)
+                    self.pk_MMf = Pk
                 else:
-                    Pk_arr = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.pM, normprof1=True)
-                    Pk_arr *= self.rk_hm
+                    logger.info('Using halofit for cosmic shear.')
+                    Pk_arr = np.array([ccl.nonlin_matter_power(self.cosmo, GSKYTheory.k_arr, a) for a in GSKYTheory.a_arr])
                     Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
                                   cosmo=self.cosmo, is_logp=False)
-                self.pk_MMf = Pk
-
+                    self.pk_MMf = Pk
             else:
                 Pk = self.pk_MMf
         elif 'wl' in tr_i_name and 'y' in tr_j_name or 'y' in tr_i_name and 'wl' in tr_j_name or \
