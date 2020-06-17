@@ -19,7 +19,7 @@ def get_params(params, paramtype):
                 'transfer_function', 'matter_power_spectrum', 'baryons_power_spectrum', 'mass_function',
                 'halo_concentration', 'emulator_neutrinos']
     elif paramtype == 'hmparams':
-        KEYS = ['HODmod', 'massdef', 'pprof', 'corr_halo_mod',
+        KEYS = ['HODmod', 'massdef', 'pprof', 'corr_halo_mod', 'use_hm_shear',
                 'mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro',
                 'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                 'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
