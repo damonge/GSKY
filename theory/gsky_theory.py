@@ -369,7 +369,7 @@ class GSKYTheory(object):
         """ typ - is a two character string gg, gs,ss, sy, sk etc...
             i,j are indices for g and s"""
 
-        if self.params['corr_halo_mod']:
+        if self.params['use_hm_shear'] and self.params['corr_halo_mod']:
             logger.info('Correcting halo model Pk with HALOFIT ratio.')
             if not hasattr(self, 'rk_hm'):
                 if not hasattr(self, 'pM'):
