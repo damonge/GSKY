@@ -307,7 +307,7 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
                         if win_coadd != []:
                             win_coadd.weight += win_curr.weight
                         else:
-                            win_coadd.weight = win_curr.weight
+                            win_coadd = win_curr.weight
                         n_wins += 1
 
                 logger.info('Subsampling windows with deltal = 14.')
