@@ -209,7 +209,7 @@ class GSKYTheory(object):
                 logger.info('Using Battaglia profile.')
                 self.py = sz.HaloProfileBattaglia()
             else:
-                raise NotImplementedError('Only pressure profiles Arnaud and Battaglia implemented.')
+                raise RuntimeWarning('Only pressure profiles Arnaud and Battaglia implemented.')
         if 'galaxy_density' in self.tracer_quantities or 'delta_g' in self.tracer_quantities:
             if 'delta_g' in self.tracer_quantities:
                 logger.warning('tracer quantity delta_g will be deprecated soon.')
