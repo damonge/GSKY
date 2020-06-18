@@ -135,7 +135,15 @@ if config['noisesacc_filename'] != 'NONE':
             logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
             noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
         noise_saccfiles.append(noise_sacc_curr)
-    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+    if 'conv_win' in config.keys():
+        if config['conv_win']:
+            noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+                                                      trc_combs=trc_combs, trim_sacc=False)
+        else:
+            noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+                                                      trc_combs=trc_combs)
+    else:
+        noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
                                               trc_combs=trc_combs)
 else:
     logger.info('No noise saccfile provided.')
@@ -143,7 +151,15 @@ else:
     noise_saccfiles = None
 
 # Need to coadd saccfiles after adding covariance to noise saccfiles
-saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict, trc_combs=trc_combs)
+if 'conv_win' in config.keys():
+    if config['conv_win']:
+        saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+                                            trc_combs=trc_combs, trim_sacc=False)
+    else:
+        saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
+                                            trc_combs=trc_combs)
+else:
+    saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict, trc_combs=trc_combs)
 
 # Now update trc_combs with sacc ordering
 if trc_combs != saccfile_coadd.get_tracer_combinations():
