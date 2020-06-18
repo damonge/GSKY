@@ -146,7 +146,9 @@ else:
 saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict, trc_combs=trc_combs)
 
 # Now update trc_combs with sacc ordering
-trc_combs = saccfile_coadd.get_tracer_combinations()
+if trc_combs != saccfile_coadd.get_tracer_combinations():
+    logger.info('Making tr_combs consistent with saccfile ordering.')
+    trc_combs = saccfile_coadd.get_tracer_combinations()
 
 fit_params = config['fit_params']
 if 'theory' in config.keys():

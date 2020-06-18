@@ -97,38 +97,35 @@ class GSKYCore(object):
                 else:
                     datatype = 'cl_ee'
 
-                if self.ells != 'NONE':
-                    if self.conv_win:
-                        # Get window
-                        win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
-                        if type(win) is list:
-                            win = win[0]
-                        ell_max = win.values.shape[0]
-                        itp = ClInterpolator(self.ells, np.amax(ell_max))
-                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                indx_curr = self.saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
+                if indx_curr != np.array([]):
+                    if self.ells != 'NONE':
+                        if self.conv_win:
+                            # Get window
+                            win_curr = self.saccfile.get_bandpower_windows(indx_curr)
+                            ell_max = np.amax(win_curr.values)
+                            itp = ClInterpolator(self.ells, ell_max)
+                            cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                        else:
+                            cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
                     else:
-                        cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
+                        ells_curr, _ = self.saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+                        if self.conv_win:
+                            # Get window
+                            win_curr = self.saccfile.get_bandpower_windows(indx_curr)
+                            ell_max = np.amax(win_curr.values)
+                            itp = ClInterpolator(ells_curr, ell_max)
+                            cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                        else:
+                            cl_temp = gskytheor.getCls(tr_i, tr_j, ells_curr)
+
+                    if self.conv_win:
+                        cl_temp = tutil.interp_and_convolve(cl_temp, win_curr, itp)
+
+                    cls[indx_curr] = cl_temp
+
                 else:
-                    ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
-                    if ells_curr == np.array([]):
-                        logger.warning('Empty tracer combination. Check tracer order.')
-                    if self.conv_win:
-                        # Get window
-                        win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
-                        if type(win) is list:
-                            win = win[0]
-                        ell_max = win.values.shape[0]
-                        itp = ClInterpolator(self.ells, np.amax(ell_max))
-                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
-                    else:
-                        cl_temp = gskytheor.getCls(tr_i, tr_j, ells_curr)
-
-                indx = self.saccfile.indices(datatype, (tr_i, tr_j))
-
-                if self.conv_win:
-                    cl_temp = tutil.convolve(cl_temp, win, itp)
-
-                cls[indx] = cl_temp
+                    logger.warning('Empty tracer combination. Check tracer order.')
 
             del gskytheor
 

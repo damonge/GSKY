@@ -130,7 +130,7 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
     saccfile_coadd.add_covariance(cov_coadd)
 
     if trim_sacc:
-        logger.info('Trimming sacc - removing windows and covariance.')
+        logger.info('Trimming sacc - removing windows.')
         saccfile_coadd_trimmed = sacc.Sacc()
         for trc_name in saccfile_coadd.tracers.keys():
             saccfile_coadd_trimmed.add_tracer_object(saccfile_coadd.tracers[trc_name])
@@ -144,6 +144,9 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
         assert np.all(saccfile_coadd.mean == saccfile_coadd_trimmed.mean), 'Error while trimming sacc, means not equal. Aborting.'
         saccfile_coadd_trimmed.add_covariance(cov_coadd)
         saccfile_coadd = saccfile_coadd_trimmed
+    else:
+        logger.info('Not trimming sacc.')
+        saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd)
 
     return saccfile_coadd
 
@@ -277,28 +280,48 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
 
         return saccfile_coadd
 
-# def coadd_sacc_windows(saccfiles, saccfile_templ):
-#
-#     # Add tracers to sacc
-#     tempsacc = sacc.Sacc()
-#     for trc_name, trc in saccfile_templ.tracers.items():
-#         tempsacc.add_tracer_object(trc)
-#
-#     datatypes = saccfile_templ.get_data_types()
-#     trc_combs = saccfile_templ.get_tracer_combinations()
-#
-#     for tr_i, tr_j in trc_combs:
-#         for data_type in datatypes:
-#             ell_curr, cl_curr = saccfile_templ.get_ell_cl(data_type, tr_i, tr_j, return_cov=False)
-#             # Get window
-#             if cl_curr != np.array([]):
-#                 win_coadd = []
-#                 n_wins = 0
-#                 for sacc_curr in saccfiles:
-#                     win_curr = sacc_curr.get_tag('window', tracers=(tr_i, tr_j), data_type=data_type)
-#                     if win_curr != []:
-#                         if win_coadd != []:
-#                             for i, win in enumerate(win_coadd):
-#                                 win.weight += win_curr[i].weight
-#                         n_wins += 1
-#             tempsacc.add_ell_cl(data_type, tr_i, tr_j, ell_curr, cl_curr, )
+def coadd_sacc_windows(saccfiles, saccfile_coadd):
+
+    logger.info('Coadding window functions.')
+
+    # Add tracers to sacc
+    tempsacc = sacc.Sacc()
+    for trc_name, trc in saccfile_coadd.tracers.items():
+        tempsacc.add_tracer_object(trc)
+
+    datatypes = saccfile_coadd.get_data_types()
+    trc_combs = saccfile_coadd.get_tracer_combinations()
+
+    for tr_i, tr_j in trc_combs:
+        for data_type in datatypes:
+            ell_coadd_curr, cl_coadd_curr = saccfile_coadd.get_ell_cl(data_type, tr_i, tr_j, return_cov=False)
+            # Get window
+            if cl_coadd_curr != np.array([]):
+                win_coadd = []
+                n_wins = 0
+                for sacc_curr in saccfiles:
+                    # Query windows from indices
+                    ind_curr = sacc_curr.indices(data_type=data_type, tracers=(tr_i, tr_j))
+                    if ind_curr != []:
+                        win_curr = sacc_curr.get_bandpower_windows(ind_curr)
+                        if win_coadd != []:
+                            win_coadd.weight += win_curr.weight
+                        else:
+                            win_coadd.weight = win_curr.weight
+                        n_wins += 1
+
+                logger.info('Subsampling windows with deltal = 14.')
+                subsamp_winds_band = 14
+                n_ell = win_coadd.weight.shape[0]
+                n_bands = win_coadd.weight.shape[1]
+                n_subsamp = n_ell // subsamp_winds_band
+
+                win_coadd.weight /= n_wins
+                win_coadd_subsamp = win_coadd.weight.reshape((n_bands, n_subsamp, subsamp_winds_band))
+                win_coadd_subsamp = np.mean(win_coadd_subsamp, axis=-1)
+                ell_subsamp = np.mean(win_coadd.values.reshape(subsamp_winds_band, -1), axis=-1)
+
+                win_coadd_subsamp = sacc.BandpowerWindow(ell_subsamp, win_coadd_subsamp.T)
+                tempsacc.add_ell_cl(data_type, tr_i, tr_j, ell_coadd_curr, cl_coadd_curr, window=win_coadd_subsamp)
+
+    return tempsacc

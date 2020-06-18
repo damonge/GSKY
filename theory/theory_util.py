@@ -80,16 +80,17 @@ class ClInterpolator(object):
         return clret
 
 
-def convolve(cl, win, itp):
+def interp_and_convolve(cl, win, itp):
 
     weight = win.weight
+    ell = win.values
     nbands = weight.shape[0]
     # Extrapolate at high ell
-    cls = itp.interpolate_and_extrapolate(np.arange(weight.shape[1]), cl)
+    cls = itp.interpolate_and_extrapolate(ell, cl)
 
     cl_conv = np.zeros(nbands)
     # Convolve with windows
     for j in range(nbands):
-        cl_conv[j] = np.sum(weight * cls)
+        cl_conv[j] = np.sum(weight[:, j] * cls)
 
     return cl_conv
