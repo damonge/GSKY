@@ -305,21 +305,22 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
                     if ind_curr != []:
                         win_curr = sacc_curr.get_bandpower_windows(ind_curr)
                         if win_coadd != []:
-                            win_coadd.weight += win_curr.weight
+                            win_coadd += win_curr.weight
                         else:
                             win_coadd = win_curr.weight
+                            ell_coadd = win_curr.values
                         n_wins += 1
 
                 logger.info('Subsampling windows with deltal = 14.')
                 subsamp_winds_band = 14
-                n_ell = win_coadd.weight.shape[0]
-                n_bands = win_coadd.weight.shape[1]
+                n_ell = win_coadd.shape[0]
+                n_bands = win_coadd.shape[1]
                 n_subsamp = n_ell // subsamp_winds_band
 
-                win_coadd.weight /= n_wins
-                win_coadd_subsamp = win_coadd.weight.reshape((n_bands, n_subsamp, subsamp_winds_band))
+                win_coadd /= n_wins
+                win_coadd_subsamp = win_coadd.reshape((n_bands, n_subsamp, subsamp_winds_band))
                 win_coadd_subsamp = np.mean(win_coadd_subsamp, axis=-1)
-                ell_subsamp = np.mean(win_coadd.values.reshape(subsamp_winds_band, -1), axis=-1)
+                ell_subsamp = np.mean(ell_coadd.reshape(subsamp_winds_band, -1), axis=-1)
 
                 win_coadd_subsamp = sacc.BandpowerWindow(ell_subsamp, win_coadd_subsamp.T)
                 tempsacc.add_ell_cl(data_type, tr_i, tr_j, ell_coadd_curr, cl_coadd_curr, window=win_coadd_subsamp)
