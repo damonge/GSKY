@@ -320,7 +320,7 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
                 win_coadd /= n_wins
                 win_coadd_subsamp = win_coadd.reshape((n_bands, n_subsamp, subsamp_winds_band))
                 win_coadd_subsamp = np.mean(win_coadd_subsamp, axis=-1)
-                ell_subsamp = np.mean(ell_coadd.reshape(subsamp_winds_band, -1), axis=-1)
+                ell_subsamp = np.mean(ell_coadd.reshape(n_subsamp, -1), axis=-1)
 
                 win_coadd_subsamp = sacc.BandpowerWindow(ell_subsamp, win_coadd_subsamp.T)
                 tempsacc.add_ell_cl(data_type, tr_i, tr_j, ell_coadd_curr, cl_coadd_curr, window=win_coadd_subsamp)
