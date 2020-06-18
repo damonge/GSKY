@@ -147,6 +147,7 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
     else:
         logger.info('Not trimming sacc.')
         saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd)
+        saccfile_coadd.add_covariance(cov_coadd)
 
     return saccfile_coadd
 
