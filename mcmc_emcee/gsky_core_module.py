@@ -103,7 +103,7 @@ class GSKYCore(object):
                         if self.conv_win:
                             # Get window
                             win_curr = self.saccfile.get_bandpower_windows(indx_curr)
-                            ell_max = np.amax(win_curr.values)
+                            ell_max = int(np.ceil(np.amax(win_curr.values)))
                             itp = ClInterpolator(self.ells, ell_max)
                             cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                         else:
@@ -113,7 +113,7 @@ class GSKYCore(object):
                         if self.conv_win:
                             # Get window
                             win_curr = self.saccfile.get_bandpower_windows(indx_curr)
-                            ell_max = np.amax(win_curr.values)
+                            ell_max = int(np.ceil(np.amax(win_curr.values)))
                             itp = ClInterpolator(ells_curr, ell_max)
                             cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                         else:
