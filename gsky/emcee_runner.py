@@ -214,7 +214,8 @@ def lnprob(p):
         try:
             cl_theory = th.computeTheory(p)
             lnP = lik.computeLikelihood(cl_theory)
-        except:
+        except BaseException as e:
+            logger.error('{} for parameter set {}.'.format(e, p))
             lnP = -np.inf
     else:
         lnP = -np.inf

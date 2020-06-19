@@ -75,67 +75,60 @@ class GSKYCore(object):
         cosmo_params = get_params(params, 'cosmo')
         HMparams = get_params(params, 'hmparams')
 
-        try:
-            if (cosmo_params.keys() & self.mapping.keys()) != set([]):
-                cosmo = ccl.Cosmology(**cosmo_params)
+        if (cosmo_params.keys() & self.mapping.keys()) != set([]):
+            cosmo = ccl.Cosmology(**cosmo_params)
+        else:
+            cosmo = self.fid_cosmo
+        if (HMparams.keys() & self.mapping.keys()) == set([]):
+            HMparams = self.fid_HMparams
+
+        gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
+
+        cls = np.zeros_like(self.saccfile.mean)
+
+        for tr_i, tr_j in self.trc_combs:
+            logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
+
+            if 'wl' not in tr_i and 'wl' not in tr_j:
+                datatype = 'cl_00'
+            elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
+                datatype = 'cl_0e'
             else:
-                cosmo = self.fid_cosmo
-            if (HMparams.keys() & self.mapping.keys()) == set([]):
-                HMparams = self.fid_HMparams
+                datatype = 'cl_ee'
 
-            gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
-
-            cls = np.zeros_like(self.saccfile.mean)
-
-            for tr_i, tr_j in self.trc_combs:
-                logger.info('Computing theory prediction for tracers {}, {}.'.format(tr_i, tr_j))
-
-                if 'wl' not in tr_i and 'wl' not in tr_j:
-                    datatype = 'cl_00'
-                elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
-                    datatype = 'cl_0e'
-                else:
-                    datatype = 'cl_ee'
-
-                indx_curr = self.saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
-                if indx_curr != np.array([]):
-                    if self.ells != 'NONE':
-                        if self.conv_win:
-                            # Get window
-                            win_curr = self.saccfile.get_bandpower_windows(indx_curr)
-                            ell_max = int(np.ceil(np.amax(win_curr.values)))
-                            itp = ClInterpolator(self.ells, ell_max)
-                            cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
-                        else:
-                            cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
-                    else:
-                        ells_curr, _ = self.saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
-                        if self.conv_win:
-                            # Get window
-                            win_curr = self.saccfile.get_bandpower_windows(indx_curr)
-                            ell_max = int(np.ceil(np.amax(win_curr.values)))
-                            itp = ClInterpolator(ells_curr, ell_max)
-                            cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
-                        else:
-                            cl_temp = gskytheor.getCls(tr_i, tr_j, ells_curr)
-
+            indx_curr = self.saccfile.indices(data_type=datatype, tracers=(tr_i, tr_j))
+            if indx_curr != np.array([]):
+                if self.ells != 'NONE':
                     if self.conv_win:
-                        cl_temp = tutil.interp_and_convolve(cl_temp, win_curr, itp)
-
-                    cls[indx_curr] = cl_temp
-
+                        # Get window
+                        win_curr = self.saccfile.get_bandpower_windows(indx_curr)
+                        ell_max = int(np.ceil(np.amax(win_curr.values)))
+                        itp = ClInterpolator(self.ells, ell_max)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                    else:
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, self.ells)
                 else:
-                    logger.warning('Empty tracer combination. Check tracer order.')
+                    ells_curr, _ = self.saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
+                    if self.conv_win:
+                        # Get window
+                        win_curr = self.saccfile.get_bandpower_windows(indx_curr)
+                        ell_max = np.amax(win_curr.values)
+                        itp = ClInterpolator(ells_curr, ell_max)
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
+                    else:
+                        cl_temp = gskytheor.getCls(tr_i, tr_j, ells_curr)
 
-            del gskytheor
+                if self.conv_win:
+                    cl_temp = tutil.interp_and_convolve(cl_temp, win_curr, itp)
 
-            return cls
+                cls[indx_curr] = cl_temp
 
-        except BaseException as e:
-            logger.error('{} for parameter set {}.'.format(e, p))
-            del gskytheor
+            else:
+                logger.warning('Empty tracer combination. Check tracer order.')
 
-            raise Exception()
+        del gskytheor
+
+        return cls
 
     def setup(self):
 
