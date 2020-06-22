@@ -319,8 +319,8 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
                 n_subsamp = n_ell // subsamp_winds_band
 
                 win_coadd /= n_wins
-                win_coadd_subsamp = win_coadd.reshape((n_bands, n_subsamp, subsamp_winds_band))
-                win_coadd_subsamp = np.mean(win_coadd_subsamp, axis=-1)
+                win_coadd_subsamp = win_coadd.T.reshape((n_bands, n_subsamp, subsamp_winds_band))
+                win_coadd_subsamp = np.sum(win_coadd_subsamp, axis=-1)
                 ell_subsamp = np.mean(ell_coadd.reshape(n_subsamp, -1), axis=-1)
 
                 win_coadd_subsamp = sacc.BandpowerWindow(ell_subsamp, win_coadd_subsamp.T)
