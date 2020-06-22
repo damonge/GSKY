@@ -210,6 +210,7 @@ class GSKYTheory(object):
                 logger.info('Using Battaglia profile.')
                 self.py = sz.HaloProfileBattaglia()
             else:
+                self.py = None
                 warnings.warn('Only pressure profiles Arnaud and Battaglia implemented.', RuntimeWarning)
         if 'galaxy_density' in self.tracer_quantities or 'delta_g' in self.tracer_quantities:
             if 'delta_g' in self.tracer_quantities:
