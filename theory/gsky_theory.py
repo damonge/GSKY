@@ -385,8 +385,8 @@ class GSKYTheory(object):
         if 'wl' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'kappa' in tr_j_name or \
                 'kappa' in tr_i_name and 'wl' in tr_j_name or 'kappa' in tr_i_name and 'kappa' in tr_j_name:
             if not hasattr(self, 'pk_MMf'):
-                if self.params['use_hm_shear']:
-                    logger.info('Using halomodel for cosmic shear.')
+                if self.params['use_hm_matter']:
+                    logger.info('Using halomodel for matter power spectra.')
                     if not self.params['corr_halo_mod']:
                         Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
                                                 lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr)
@@ -398,7 +398,7 @@ class GSKYTheory(object):
                                       cosmo=self.cosmo, is_logp=False)
                     self.pk_MMf = Pk
                 else:
-                    logger.info('Using halofit for cosmic shear.')
+                    logger.info('Using halofit for matter power spectra.')
                     Pk_arr = np.array([ccl.nonlin_matter_power(self.cosmo, GSKYTheory.k_arr, a) for a in GSKYTheory.a_arr])
                     Pk = ccl.Pk2D(a_arr=GSKYTheory.a_arr, lk_arr=np.log(GSKYTheory.k_arr), pk_arr=Pk_arr,
                                   cosmo=self.cosmo, is_logp=False)
