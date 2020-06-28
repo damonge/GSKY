@@ -18,7 +18,7 @@ logger.propagate = False
 
 DEFAULT_PARAMS = {
                 'corr_halo_mod': True,
-                'use_hm_shear': True,
+                'use_hm_matter': True,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
@@ -32,7 +32,7 @@ DEFAULT_PARAMS = {
                 }
 
 DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof',
-                         'massdef', 'corr_halo_mod', 'HODmod', 'use_hm_shear',
+                         'massdef', 'corr_halo_mod', 'HODmod', 'use_hm_matter',
                          'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                          'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3']
@@ -371,7 +371,7 @@ class GSKYTheory(object):
         """ typ - is a two character string gg, gs,ss, sy, sk etc...
             i,j are indices for g and s"""
 
-        if self.params['use_hm_shear'] and self.params['corr_halo_mod']:
+        if self.params['corr_halo_mod']:
             logger.info('Correcting halo model Pk with HALOFIT ratio.')
             if not hasattr(self, 'rk_hm'):
                 if not hasattr(self, 'pM'):
