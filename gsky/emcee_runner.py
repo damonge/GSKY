@@ -213,14 +213,14 @@ if 'gauss_prior' in config.keys():
     logger.info('Setting up Gauss prior.')
     assert 'mean' in config['gauss_prior'].keys(), 'Gauss prior requested but no mean supplied. Aborting.'
     assert 'priorcov_filename' in config['gauss_prior'].keys(), 'Gauss prior requested but no priorcov_filename supplied. Aborting.'
-    path2cov = os.path.join('inputs', config['output_run_dir'] + '/' + ch_config_params['priorcov_filename'])
+    path2cov = os.path.join('inputs', config['output_run_dir'] + '/' + config['gauss_prior']['priorcov_filename'])
     path2cov = get_output_fname(config, path2cov + '.npy')
     cov = np.load(path2cov)
 
     paramIndx = None
     if 'paramIndx' in config['gauss_prior'].keys():
-        if config['paramIndx'] != 'NONE':
-            paramIndx = config['paramIndx']
+        if config['gauss_prior']['paramIndx'] != 'NONE':
+            paramIndx = config['gauss_prior']['paramIndx']
     else:
         assert config['gauss_prior']['mean'].shape[0] == nparams, 'No paramIndx supplied. Aborting.'
 
