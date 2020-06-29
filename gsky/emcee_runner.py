@@ -10,6 +10,7 @@ import pyccl as ccl
 import emcee
 from mcmc_emcee.gsky_core_module import GSKYCore, get_params
 from mcmc_emcee.gsky_like_mcmc import GSKYLike
+from mcmc_emcee.gauss_prior_like import GaussLike
 from mcmc_emcee.InitializeFromChain import InitializeFromChain
 from mcmc_emcee.SampleFileUtil import SampleFileUtil
 from mcmc_emcee.SampleBallPositionGenerator import SampleBallPositionGenerator
@@ -206,6 +207,25 @@ th.setup()
 lik = GSKYLike(saccfile_coadd, noise_saccfile_coadd)
 lik.setup()
 
+gauss_prior = False
+if 'gauss_prior' in config.keys():
+    gauss_prior = True
+    logger.info('Setting up Gauss prior.')
+    assert 'mean' in config['gauss_prior'].keys(), 'Gauss prior requested but no mean supplied. Aborting.'
+    assert 'priorcov_filename' in config['gauss_prior'].keys(), 'Gauss prior requested but no priorcov_filename supplied. Aborting.'
+    path2cov = os.path.join('inputs', config['output_run_dir'] + '/' + ch_config_params['priorcov_filename'])
+    path2cov = get_output_fname(config, path2cov + '.npy')
+    cov = np.load(path2cov)
+
+    paramIndx = None
+    if 'paramIndx' in config['gauss_prior'].keys():
+        if config['paramIndx'] != 'NONE':
+            paramIndx = config['paramIndx']
+    else:
+        assert config['gauss_prior']['mean'].shape[0] == nparams, 'No paramIndx supplied. Aborting.'
+
+    gauss_prior_lik = GaussLike(config['gauss_prior']['mean'], cov, paramIndx=paramIndx)
+
 def inrange(p):
     return np.all((p<=params[:, 2]) & (p>=params[:, 1]))
 
@@ -214,6 +234,8 @@ def lnprob(p):
         try:
             cl_theory = th.computeTheory(p)
             lnP = lik.computeLikelihood(cl_theory)
+            if gauss_prior:
+                lnP += gauss_prior_lik.computeLikelihood(p)
         except BaseException as e:
             logger.error('{} for parameter set {}.'.format(e, p))
             lnP = -np.inf
