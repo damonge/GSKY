@@ -74,12 +74,18 @@ class PSpecPlotter(PipelineStage) :
             theor = GSKYPrediction(saccfile, ell_theor)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
-            # delta = saccfile.mean - cl_theor
-            # if noise_saccfile is not None:
-            #     delta -= noise_saccfile.mean
-            # invcov = np.linalg.inv(saccfile.covariance.covmat)
-            # chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
-            # logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
+            # Compute reduced chi2
+            indx_temp = np.hstack([saccfile.indices(cl_type, (tr_i_temp, tr_j_temp)) for
+                                  (tr_i_temp, tr_j_temp) in plot_pairs])
+            cl_theor_temp = cl_theor[indx_temp]
+            cl_temp = saccfile.mean[indx_temp]
+            delta = cl_temp - cl_theor_temp
+            if noise_saccfile is not None:
+                delta -= noise_saccfile.mean[indx_temp]
+            cov_temp = saccfile.covariance.covmat[np.ix_(indx_temp, indx_temp)]
+            invcov = np.linalg.inv(cov_temp)
+            chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+            logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
 
         indices = []
         if plot_comb == 'all':
@@ -189,6 +195,11 @@ class PSpecPlotter(PipelineStage) :
                     else:
                         ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], lw=2.4,
                                 zorder=-32)
+
+                # delta = cl_curr - cl_theor_curr
+                # invcov = np.linalg.inv(cov_curr)
+                # chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+                # logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
 
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:

@@ -103,12 +103,12 @@ elif config['fit_comb'] == 'cross':
                     trc_combs.append((tr_i, tr_j))
         i += 1
 elif isinstance(config['fit_comb'], list):
+    trc_combs = [tuple(config['fit_comb'][i]) for i in range(len(config['fit_comb']))]
     logger.info('Fitting provided tracer combination list.')
-    list_intersec = [config['fit_comb'][i] for i in range(len(config['fit_comb'])) if config['fit_comb'][i] in DROP_TRC_COMBS]
+    list_intersec = [trc_combs[i] for i in range(len(trc_combs)) if trc_combs[i] in DROP_TRC_COMBS]
     if list_intersec != []:
         logger.info('Dropping unsupported tracer combinations.')
-        trc_combs_trim = [config['fit_comb'][i] for i in range(len(config['fit_comb'])) if config['fit_comb'][i] not in DROP_TRC_COMBS]
-    trc_combs = config['fit_comb']
+        trc_combs = [trc_combs[i] for i in range(len(trc_combs)) if trc_combs[i] not in DROP_TRC_COMBS]
 else:
     raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
 
