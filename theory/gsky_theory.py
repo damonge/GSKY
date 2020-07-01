@@ -247,14 +247,21 @@ class GSKYTheory(object):
                         logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer.name))
                         bias_tup = (tracer.z, np.ones_like(tracer.z))
                     # z_shift parameter
-                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and (
-                            'zwidth_bin{}'.format(tracer_no) in p.keys()):
+                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and ('zwidth_bin{}'.format(tracer_no) in p.keys()):
                         zbins = (tracer.z - self.z_c['zwidth_bin{}'.format(tracer_no)]) * (
                                 1 + p['zwidth_bin{}'.format(tracer_no)]) + \
                                 p['zshift_bin{}'.format(tracer_no)] + self.z_c['zwidth_bin{}'.format(tracer_no)]
 
+                    elif ('zshift_g_bin{}'.format(tracer_no) in p.keys()) and ('zwidth_g_bin{}'.format(tracer_no) in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_g_bin{}'.format(tracer_no)]) * (
+                                1 + p['zwidth_g_bin{}'.format(tracer_no)]) + \
+                                p['zshift_g_bin{}'.format(tracer_no)] + self.z_c['zwidth_g_bin{}'.format(tracer_no)]
+
                     elif 'zshift_bin{}'.format(tracer_no) in p.keys():
                         zbins = tracer.z + p['zshift_bin{}'.format(tracer_no)]
+
+                    elif 'zshift_g_bin{}'.format(tracer_no) in p.keys():
+                        zbins = tracer.z + p['zshift_g_bin{}'.format(tracer_no)]
 
                     else:
                         zbins = tracer.z
@@ -268,14 +275,19 @@ class GSKYTheory(object):
                         logger.info('Galaxy bias array not provided for {}. Setting to unity.'.format(tracer.name))
                         bias_tup = (tracer.z, np.ones_like(tracer.z))
                     # z_shift parameter
-                    if ('zshift_bin' in p.keys()) and (
-                            'zwidth_bin' in p.keys()):
-                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (
-                                1 + p['zwidth_bin']) + \
+                    if ('zshift_bin' in p.keys()) and ('zwidth_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (1 + p['zwidth_bin']) + \
                                 p['zshift_bin'] + self.z_c['zwidth_bin']
+
+                    elif ('zshift_g_bin' in p.keys()) and ('zwidth_g_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_g_bin']) * (1 + p['zwidth_bin']) + \
+                                p['zshift_g_bin'] + self.z_c['zwidth_g_bin']
 
                     elif 'zshift_bin' in p.keys():
                         zbins = tracer.z + p['zshift_bin']
+
+                    elif 'zshift_g_bin' in p.keys():
+                        zbins = tracer.z + p['zshift_g_bin']
 
                     else:
                         zbins = tracer.z
@@ -319,28 +331,40 @@ class GSKYTheory(object):
                 if len(split_name) == 2:
                     tracer_no = split_name[1]
                     # z_shift parameter
-                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and (
-                            'zwidth_bin{}'.format(tracer_no) in p.keys()):
+                    if ('zshift_bin{}'.format(tracer_no) in p.keys()) and ('zwidth_bin{}'.format(tracer_no) in p.keys()):
                         zbins = (tracer.z - self.z_c['zwidth_bin{}'.format(tracer_no)]) * (
                                 1 + p['zwidth_bin{}'.format(tracer_no)]) + \
                                 p['zshift_bin{}'.format(tracer_no)] + self.z_c['zwidth_bin{}'.format(tracer_no)]
 
+                    elif ('zshift_wl_bin{}'.format(tracer_no) in p.keys()) and ('zwidth_wl_bin{}'.format(tracer_no) in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_wl_bin{}'.format(tracer_no)]) * (
+                                1 + p['zwidth_wl_bin{}'.format(tracer_no)]) + \
+                                p['zshift_wl_bin{}'.format(tracer_no)] + self.z_c['zwidth_wl_bin{}'.format(tracer_no)]
+
                     elif 'zshift_bin{}'.format(tracer_no) in p.keys():
                         zbins = tracer.z + p['zshift_bin{}'.format(tracer_no)]
+
+                    elif 'zshift_wl_bin{}'.format(tracer_no) in p.keys():
+                        zbins = tracer.z + p['zshift_wl_bin{}'.format(tracer_no)]
 
                     else:
                         zbins = tracer.z
 
                 else:
                     # z_shift parameter
-                    if ('zshift_bin' in p.keys()) and (
-                            'zwidth_bin' in p.keys()):
-                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (
-                                1 + p['zwidth_bin']) + \
+                    if ('zshift_bin' in p.keys()) and ('zwidth_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_bin']) * (1 + p['zwidth_bin']) + \
                                 p['zshift_bin'] + self.z_c['zwidth_bin']
+
+                    elif ('zshift_wl_bin' in p.keys()) and ('zwidth_wl_bin' in p.keys()):
+                        zbins = (tracer.z - self.z_c['zwidth_wl_bin']) * (1 + p['zwidth_wl_bin']) + \
+                                p['zshift_wl_bin'] + self.z_c['zwidth_wl_bin']
 
                     elif 'zshift_bin' in p.keys():
                         zbins = tracer.z + p['zshift_bin']
+
+                    elif 'zshift_wl_bin' in p.keys():
+                        zbins = tracer.z + p['zshift_wl_bin']
 
                     else:
                         zbins = tracer.z
