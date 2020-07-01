@@ -404,7 +404,7 @@ class GSKYTheory(object):
                 logger.info('Computing halo model correction.')
                 HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
                                            z_range=[0., 3.], nz=50)
-                self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)
+                self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)[::-1]
 
         if 'wl' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'kappa' in tr_j_name or \
                 'kappa' in tr_i_name and 'wl' in tr_j_name or 'kappa' in tr_i_name and 'kappa' in tr_j_name:
