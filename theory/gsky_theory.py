@@ -43,7 +43,7 @@ class GSKYTheory(object):
     k_arr = np.geomspace(1E-4,1E2,256)
     a_arr = np.linspace(0.2,1,32)
 
-    def __init__ (self, saccfile, params=None, cosmo=None):
+    def __init__ (self, saccfile, params=None, cosmo=None, cosmo_fid=None):
         """ Nz -- list of (zarr,Nzarr) """
 
         if params is not None:
@@ -69,6 +69,18 @@ class GSKYTheory(object):
         # Setup tracers
         tracer_list = list(saccfile.tracers.values())
         self.tracer_list = tracer_list
+
+        if cosmo_fid is not None:
+            logger.info('Fiducial cosmology object provided.')
+            logger.info('Cosmology = {}.'.format(cosmo_fid))
+            self.cosmo_fid = cosmo_fid
+        else:
+            self.cosmo_fid = cosmo_fid
+            if 'corr_halo_mod_cosmo_fid' in self.params:
+                if self.params['corr_halo_mod_cosmo_fid']:
+                    logger.info('Requested fiducial cosmolofy for halo model correction but no fiducial cosmology provided. Setting to default.')
+                    logger.info('Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96')
+                    self.cosmo_fid = ccl.Cosmology(Omega_c=0.27, Omega_b=0.045, h=0.67, sigma8=0.83, n_s=0.96)
 
         del saccfile
 
@@ -402,8 +414,19 @@ class GSKYTheory(object):
                     logger.info('Computing matter density profile.')
                     self.pM = ccl.halos.profiles.HaloProfileNFW(self.cM)
                 logger.info('Computing halo model correction.')
-                HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
-                                           z_range=[0., 3.], nz=50)
+                if 'corr_halo_mod_cosmo_fid' in self.params:
+                    if self.params['corr_halo_mod_cosmo_fid']:
+                        logger.info('Using fiducial cosmology for halo model correction.')
+                        HMCorr = HaloModCorrection(self.cosmo_fid, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                                                   z_range=[0., 3.], nz=50)
+                    else:
+                        logger.info('Using current cosmology for halo model correction.')
+                        HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                                                   z_range=[0., 3.], nz=50)
+                else:
+                    logger.info('Using current cosmology for halo model correction.')
+                    HMCorr = HaloModCorrection(self.cosmo, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                                               z_range=[0., 3.], nz=50)
                 self.rk_hm = HMCorr.rk_interp(GSKYTheory.k_arr, GSKYTheory.a_arr)[::-1]
 
         if 'wl' in tr_i_name and 'wl' in tr_j_name or 'wl' in tr_i_name and 'kappa' in tr_j_name or \

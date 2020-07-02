@@ -82,7 +82,13 @@ class GSKYCore(object):
         if (HMparams.keys() & self.mapping.keys()) == set([]):
             HMparams = self.fid_HMparams
 
-        gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
+        if 'corr_halo_mod_cosmo_fid' in HMparams:
+            if HMparams['corr_halo_mod_cosmo_fid']:
+                gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo, self.fid_cosmo)
+            else:
+                gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
+        else:
+            gskytheor = GSKYTheory(self.saccfile, HMparams, cosmo)
 
         cls = np.zeros_like(self.saccfile.mean)
 
