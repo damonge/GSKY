@@ -418,7 +418,13 @@ class GSKYTheory(object):
                 if 'corr_halo_mod_cosmo_fid' in self.params:
                     if self.params['corr_halo_mod_cosmo_fid']:
                         logger.info('Using fiducial cosmology for halo model correction.')
-                        HMCorr = HaloModCorrection(self.cosmo_fid, self.hmc, self.pM, k_range=[1e-4, 1e2], nlk=256,
+                        # Now we can put together HMCalculator
+                        # The Tinker 2008 mass function
+                        nM_fid = ccl.halos.MassFuncTinker08(self.cosmo_fid, mass_def=self.hm_def)
+                        # The Tinker 2010 halo bias
+                        bM_fid = ccl.halos.HaloBiasTinker10(self.cosmo_fid, mass_def=self.hm_def)
+                        hmc_fid = ccl.halos.HMCalculator(self.cosmo_fid, nM_fid, bM_fid, self.hm_def)
+                        HMCorr = HaloModCorrection(self.cosmo_fid, hmc_fid, self.pM, k_range=[1e-4, 1e2], nlk=256,
                                                    z_range=[0., 3.], nz=50)
                     else:
                         logger.info('Using current cosmology for halo model correction.')
