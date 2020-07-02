@@ -50,7 +50,7 @@ class GSKYCore(object):
             self.constants = {}
         if config['cosmo'] is not None:
             logger.info('Fiducial cosmology with parameters {} provided.'.format(config['cosmo']))
-            self.fid_cosmo = config['cosmo']
+            self.fid_cosmo = ccl.Cosmology(**config['cosmo'])
         else:
             self.fid_cosmo = None
         if config['hmparams'] is not None:
