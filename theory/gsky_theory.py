@@ -19,6 +19,7 @@ logger.propagate = False
 DEFAULT_PARAMS = {
                 'corr_halo_mod': True,
                 'use_hm_matter': True,
+                'corr_halo_mod_cosmo_fid': False,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
@@ -32,7 +33,7 @@ DEFAULT_PARAMS = {
                 }
 
 DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'pprof',
-                         'massdef', 'corr_halo_mod', 'HODmod', 'use_hm_matter',
+                         'massdef', 'corr_halo_mod', 'corr_halo_mod_cosmo_fid', 'HODmod', 'use_hm_matter',
                          'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                          'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3']
