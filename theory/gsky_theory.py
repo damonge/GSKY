@@ -21,6 +21,7 @@ DEFAULT_PARAMS = {
                 'use_hm_matter': True,
                 'corr_halo_mod_cosmo_fid': False,
                 'use_EHM': False,
+                'EHM_zevol':True,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
