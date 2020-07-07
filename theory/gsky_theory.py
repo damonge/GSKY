@@ -21,7 +21,7 @@ DEFAULT_PARAMS = {
                 'use_hm_matter': True,
                 'corr_halo_mod_cosmo_fid': False,
                 'use_EHM': False,
-                'EHM_zevol':True,
+                'EHM_zevol': True,
                 'HODmod': 'zevol',
                 'mmin': 12.02,
                 'mminp': -1.34,
@@ -449,8 +449,9 @@ class GSKYTheory(object):
                         ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                       z_evol=self.params['EHM_zevol'])
                         pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                        Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.pM, normprof1=True, p_of_k_a=pk_eff_2d)
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
+                                                              lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
+                                                              p_of_k_a=pk_eff_2d)
                     else:
                         if not self.params['corr_halo_mod']:
                             Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pM, normprof1=True,
@@ -477,9 +478,9 @@ class GSKYTheory(object):
                     ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                   z_evol=self.params['EHM_zevol'])
                     pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                    Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                          self.py, prof2=self.pM,
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.py, prof2=self.pM,
                                                           normprof1=False, normprof2=True,
+                                                          lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                           p_of_k_a=pk_eff_2d)
                 else:
                     if not self.params['corr_halo_mod']:
@@ -504,9 +505,9 @@ class GSKYTheory(object):
                         ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                       z_evol=self.params['EHM_zevol'])
                         pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                        Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.pg, prof2=self.pM,
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pM,
                                                               normprof1=True, normprof2=True,
+                                                              lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                               p_of_k_a=pk_eff_2d)
                     else:
                         if not self.params['corr_halo_mod']:
@@ -531,9 +532,9 @@ class GSKYTheory(object):
                     ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                   z_evol=self.params['EHM_zevol'])
                     pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                    Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                          self.ccl_tracers[tr_g_name]['prof'],
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_g_name]['prof'],
                                                           prof2=self.pM, normprof1=True, normprof2=True,
+                                                          lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                           p_of_k_a=pk_eff_2d)
                 else:
                     if not self.params['corr_halo_mod']:
@@ -554,9 +555,9 @@ class GSKYTheory(object):
                         ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                       z_evol=self.params['EHM_zevol'])
                         pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                        Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.pg, prof2=self.py,
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.py,
                                                               normprof1=True, normprof2=False,
+                                                              lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                               p_of_k_a=pk_eff_2d)
                     else:
                         if not self.params['corr_halo_mod']:
@@ -587,9 +588,9 @@ class GSKYTheory(object):
                         ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                   z_evol=self.params['EHM_zevol'])
                         pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                        Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                              self.pg, prof2=self.pg,
+                        Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.pg, prof2=self.pg,
                                                               prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
+                                                              lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                               p_of_k_a=pk_eff_2d)
                     else:
                         if not self.params['corr_halo_mod']:
@@ -611,10 +612,10 @@ class GSKYTheory(object):
                     ptc = ccl.halos.PTNLEffCalculator(self.cosmo, self.params['cs2'], self.params['R'],
                                                   z_evol=self.params['EHM_zevol'])
                     pk_eff_2d = ccl.halos.get_pt_eff_pk2d(self.cosmo, ptc)
-                    Pk = ccl.halos.halomod_power_spectrum(self.cosmo, self.hmc, GSKYTheory.k_arr, GSKYTheory.a_arr,
-                                                          self.ccl_tracers[tr_i_name]['prof'],
+                    Pk = ccl.halos.halomod_Pk2D(self.cosmo, self.hmc, self.ccl_tracers[tr_i_name]['prof'],
                                                           prof2=self.ccl_tracers[tr_j_name]['prof'],
                                                           prof_2pt=self.HOD2pt, normprof1=True, normprof2=True,
+                                                          lk_arr=np.log(GSKYTheory.k_arr), a_arr=GSKYTheory.a_arr,
                                                           p_of_k_a=pk_eff_2d)
                 else:
                     if not self.params['corr_halo_mod']:
