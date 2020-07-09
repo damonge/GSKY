@@ -1,0 +1,55 @@
+PSpecPlotter:
+    output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
+    output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj'
+#    saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
+    saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci']
+    noisesacc_filename: 'noi_bias_comb'
+    output_plot_dir: 'plots'
+    plot_fields: False
+    tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
+    ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000]
+    fig_name: ['cls_wlxwl_all_data-vs-theor_bb.pdf',
+               'cls_gcxwl_all_data-vs-theor_0b.pdf']
+    plot_tracers: [['wl_0', 'wl_1', 'wl_2', 'wl_3'],
+                   ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']]
+    plot_comb: ['all', 'cross']
+    cl_type: ['cl_bb', 'cl_0b']
+    plot_errors: True
+    plot_theory: [False, False]
+    weightpow: [-1, 1]
+    logscale_x: [True, True]
+    logscale_y: [True, False]
+    theory:
+       hmparams:
+            corr_halo_mod: True
+            use_hm_matter: False
+            massdef: 'M200m'
+            pprof: 'NONE'
+            mmin: 11.78
+            mminp: 1.34
+            m0: 11.17
+            m0p: -1.81
+            m1: 13.13
+            m1p: 3.3
+            bhydro: 0.2
+            zshift_bin0: -0.12
+            zshift_bin1: -0.1
+            zshift_bin2: -0.085
+            zshift_bin3: -0.09
+            zwidth_bin0: 0.13
+            zwidth_bin1: 0.041
+            zwidth_bin2: 0.01
+            zwidth_bin3: -0.0044
+            m_bin0: 0.0021
+            m_bin1: -0.0085
+            m_bin2: -0.0014
+            m_bin3: -0.00011
+       cosmo:
+            sigma8: 0.884
+            Omega_c: 0.247
+            Omega_b: 0.0493
+            Omega_k: 0.0
+            h: 0.6736
+            n_s: 0.9649
+            w0: -1.
+            wa: 0.
