@@ -17,7 +17,7 @@ PSpecPlotter:
     plot_errors: True
     plot_theory: [False, False]
     weightpow: [-1, 1]
-    logscale_x: [True, True]
+    logscale_x: [True, False]
     logscale_y: [True, False]
     theory:
        hmparams:

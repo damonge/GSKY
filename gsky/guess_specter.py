@@ -256,6 +256,13 @@ class GuessSpecter(PipelineStage) :
                                                              fill_value=(nl_curr[0], nl_curr[-1]))
                     nl_curr_hi = nl_curr_int(ell_theor)
                     cl_cpld_curr += nl_curr_hi
+                    if 'wl' in tr_i:
+                        l_curr, nl_curr = saccfile_noise.get_ell_cl('cl_bb', tr_i, tr_j, return_cov=False)
+                        nl_curr_int = scipy.interpolate.interp1d(l_curr, nl_curr, bounds_error=False,
+                                                                 fill_value=(nl_curr[0], nl_curr[-1]))
+                        nl_curr_bb_hi = nl_curr_int(ell_theor)
+
+                        cl_cpld_curr = np.vstack((cl_cpld_curr, nl_curr_bb_hi))
 
             cl_cpld.append(cl_cpld_curr)
 
@@ -271,10 +278,10 @@ class GuessSpecter(PipelineStage) :
                 saccfile_guess_spec.add_ell_cl('cl_0e', tr_i, tr_j, ell_theor, cl_cpld[i])
                 saccfile_guess_spec.add_ell_cl('cl_0b', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
             else:
-                saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_cpld[i])
+                saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_cpld[i][0, :])
                 saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
                 saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
-                saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
+                saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, cl_cpld[i][1, :])
 
         return saccfile_guess_spec
 
