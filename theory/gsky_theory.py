@@ -40,7 +40,8 @@ DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'p
                          'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                          'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3',
-                         'cs2', 'R']
+                         'A_IA', 'eta', 'z0_IA',            # Intrinsic alignments
+                         'cs2', 'R']                        # Effective halo model
 
 class GSKYTheory(object):
 
@@ -398,12 +399,10 @@ class GSKYTheory(object):
                 # Intrinsic alignments
                 if 'A_IA' in p.keys():
                     if 'eta' in p.keys():
-                        assert 'z_IA' in p.keys(), 'Redshift-dependent intrinsic alignments requested but z_IA not ' \
-                                                   'supplied. Aborting.'
                         assert 'z0_IA' in p.keys(), 'Redshift-dependent intrinsic alignments requested but z0_IA not ' \
                                                    'supplied. Aborting.'
-                        A_IA_z = p['A_IA']*((1. + p['z_IA'])/(1. + p['z0_IA']))**p['eta']
-                        ia_bias = (p['z_IA'], A_IA_z)
+                        A_IA_z = p['A_IA']*((1. + zbins[zbins>=0.])/(1. + p['z0_IA']))**p['eta']
+                        ia_bias = (zbins[zbins>=0.], A_IA_z)
                     else:
                         A_IA_z = p['A_IA']*np.ones_like(zbins[zbins>=0.])
                         ia_bias = (zbins[zbins>=0.], A_IA_z)
