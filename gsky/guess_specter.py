@@ -280,8 +280,8 @@ class GuessSpecter(PipelineStage) :
             else:
                 if tr_i == tr_j:
                     saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_cpld[i][0, :])
-                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
-                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i]))
+                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i][0, :]))
+                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_cpld[i][0, :]))
                     saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, cl_cpld[i][1, :])
                 else:
                     saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_cpld[i])
