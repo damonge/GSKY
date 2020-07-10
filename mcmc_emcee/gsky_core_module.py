@@ -25,7 +25,7 @@ def get_params(params, paramtype):
                 'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                 'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
                 'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3',
-                'A_IA', 'eta', 'z0_IA',  # Intrinsic alignments
+                'A_IA', 'eta_IA', 'z0_IA',  # Intrinsic alignments
                 'cs2', 'R']
     else:
         return
