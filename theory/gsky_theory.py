@@ -385,6 +385,7 @@ class GSKYTheory(object):
 
                     else:
                         zbins = tracer.z
+
                 # pz method
                 if 'pzMethod' in p.keys():
                     if p['pzMethod'] != 'COSMOS30':
@@ -394,14 +395,29 @@ class GSKYTheory(object):
                 else:
                     nz = tracer.nz
 
+                # Intrinsic alignments
+                if 'A_IA' in p.keys():
+                    if 'eta' in p.keys():
+                        assert 'z_IA' in p.keys(), 'Redshift-dependent intrinsic alignments requested but z_IA not ' \
+                                                   'supplied. Aborting.'
+                        assert 'z0_IA' in p.keys(), 'Redshift-dependent intrinsic alignments requested but z0_IA not ' \
+                                                   'supplied. Aborting.'
+                        A_IA_z = p['A_IA']*((1. + p['z_IA'])/(1. + p['z0_IA']))**p['eta']
+                        ia_bias = (p['z_IA'], A_IA_z)
+                    else:
+                        A_IA_z = p['A_IA']*np.ones_like(zbins[zbins>=0.])
+                        ia_bias = (zbins[zbins>=0.], A_IA_z)
+                else:
+                    ia_bias = None
+
                 if 'm_bin{}'.format(tracer_no) in p.keys():
                     ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
-                                                        (zbins[zbins>=0.], nz[zbins>=0.])),
+                                                        (zbins[zbins>=0.], nz[zbins>=0.]), ia_bias=ia_bias),
                                                     'prof': self.pM,
                                                     'm': p['m_bin{}'.format(tracer_no)]}
                 else:
                     ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
-                                                        (zbins[zbins >= 0.], nz[zbins >= 0.])),
+                                                        (zbins[zbins >= 0.], nz[zbins >= 0.]), ia_bias=ia_bias),
                                                     'prof': self.pM}
             else:
                 raise NotImplementedError('Only tracers galaxy_density, cmb_tSZ, cmb_convergence and galaxy_shear supported. Aborting.')
