@@ -68,7 +68,7 @@ MockGen:
     output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
 
 GuessSpecter:
-  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
+  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj_FourierCosmicShear
   cpl_cl: True
   ellmax: 30000
   hmparams:
@@ -111,7 +111,7 @@ CovGauss:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: True
-  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
+  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj_FourierCosmicShear
 
 
 CwspCalc:
