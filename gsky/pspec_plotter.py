@@ -41,7 +41,10 @@ class PSpecPlotter(PipelineStage) :
         if not os.path.isdir(self.output_plot_dir):
             os.makedirs(self.output_plot_dir)
 
-        self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+        if 'ell_max_trc' in self.config:
+            self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+        if 'ell_min_trc' in self.config:
+            self.ell_min_dict = dict(zip(self.config['tracers'], self.config['ell_min_trc']))
 
         return
 
@@ -86,6 +89,7 @@ class PSpecPlotter(PipelineStage) :
             invcov = np.linalg.inv(cov_temp)
             chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
             logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
+            logger.info('dof = {}.'.format(delta.shape[0]))
 
         indices = []
         if plot_comb == 'all':
@@ -196,10 +200,11 @@ class PSpecPlotter(PipelineStage) :
                         ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], lw=2.4,
                                 zorder=-32)
 
-                # delta = cl_curr - cl_theor_curr
-                # invcov = np.linalg.inv(cov_curr)
-                # chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
-                # logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
+                delta = cl_curr - cl_theor_curr
+                invcov = np.linalg.inv(cov_curr)
+                chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+                logger.info('{} {}: Reduced chi2 = chi2/dof = {}.'.format(tr_i, tr_j, chi2_red))
+                logger.info('dof = {}.'.format(delta.shape[0]))
 
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
@@ -273,6 +278,17 @@ class PSpecPlotter(PipelineStage) :
                         ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
                         logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                         saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+                logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+
+            if self.ell_min_dict is not None:
+                logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if tr_i in self.config['tracers'] and tr_j in self.config['tracers']:
+                        ell_min_curr = max(self.ell_min_dict[tr_i], self.ell_min_dict[tr_j])
+                        logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                     else:
                         saccfile.remove_selection(tracers=(tr_i, tr_j))
                 logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
@@ -385,6 +401,17 @@ class PSpecPlotter(PipelineStage) :
                         ell_max_curr = min(self.ell_max_dict[tr_i], self.ell_max_dict[tr_j])
                         logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                         saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+                logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+
+            if self.ell_min_dict is not None:
+                logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if tr_i in self.config['tracers'] and tr_j in self.config['tracers']:
+                        ell_min_curr = max(self.ell_min_dict[tr_i], self.ell_min_dict[tr_j])
+                        logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                     else:
                         saccfile.remove_selection(tracers=(tr_i, tr_j))
                 logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))

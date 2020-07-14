@@ -162,6 +162,20 @@ if 'conv_win' in config.keys():
 else:
     saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict, trc_combs=trc_combs)
 
+if 'path2NGcov' in config.keys():
+    logger.info('path2NGcov provided. Adding NG covariance.')
+    cov_NG = np.load(config['path2NGcov'])
+    assert cov_NG.shape == saccfile_coadd.covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
+    logger.info('Read {}.'.format(config['path2NGcov']))
+    saccfile_coadd.covariance.covmat += cov_NG
+
+if noise_saccfile_coadd is not None and 'path2NGcov' in config.keys():
+    logger.info('path2NGcov provided. Adding NG covariance.')
+    cov_NG = np.load(config['path2NGcov'])
+    assert cov_NG.shape == noise_saccfile_coadd.covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
+    logger.info('Read {}.'.format(config['path2NGcov']))
+    noise_saccfile_coadd.covariance.covmat += cov_NG
+
 # Now update trc_combs with sacc ordering
 if trc_combs != saccfile_coadd.get_tracer_combinations():
     logger.info('Making tr_combs consistent with saccfile ordering.')
