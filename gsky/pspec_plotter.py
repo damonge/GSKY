@@ -215,9 +215,9 @@ class PSpecPlotter(PipelineStage) :
                 dof = delta.shape[0] - self.config['n_fitparams']
                 chi2_red = chi2 / dof
                 logger.info('{} {}: Reduced chi2 = chi2/dof = {}.'.format(tr_i, tr_j, chi2_red))
-                logger.info('{} {}: dof = {}.'.format(delta.shape[0]))
+                logger.info('{} {}: dof = {}.'.format(tr_i, tr_j, delta.shape[0]))
                 pte = scipy.stats.chi2.sf(chi2, dof)
-                logger.info('{} {}: PTE = {}.'.format(pte))
+                logger.info('{} {}: PTE = {}.'.format(tr_i, tr_j, pte))
 
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
