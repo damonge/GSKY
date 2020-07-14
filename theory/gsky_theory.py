@@ -39,6 +39,10 @@ DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'p
                          'use_hm_matter', 'use_EHM', 'EHM_zevol',
                          'zshift_bin0', 'zshift_bin1', 'zshift_bin2', 'zshift_bin3',
                          'zwidth_bin0', 'zwidth_bin1', 'zwidth_bin2', 'zwidth_bin3',
+                         'zshift_wl_bin0', 'zshift_wl_bin1', 'zshift_wl_bin2', 'zshift_wl_bin3',
+                         'zwidth_wl_bin0', 'zwidth_wl_bin1', 'zwidth_wl_bin2', 'zwidth_wl_bin3',
+                         'zshift_g_bin0', 'zshift_g_bin1', 'zshift_g_bin2', 'zshift_g_bin3',
+                         'zwidth_g_bin0', 'zwidth_g_bin1', 'zwidth_g_bin2', 'zwidth_g_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3',
                          'A_IA', 'eta_IA', 'z0_IA',            # Intrinsic alignments
                          'cs2', 'R']                        # Effective halo model

@@ -1,0 +1,60 @@
+modules: gsky
+
+launcher: local
+
+stages: 
+    - name: ReduceCat
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: SystMapper
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: PDFMatch
+      nprocess: 1
+      partition: regular
+      walltime: 60
+    - name: COSMOSWeight
+      nprocess: 1
+      partition: debug
+      walltime: 30
+    - name: GalMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: ShearMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+    - name: ACTMapper
+      nprocess: 1
+      partition: debug
+      walltime: 10
+#    - name: MapDiagnoser
+#      nprocess: 1
+#      partition: debug
+#      walltime: 10
+#    - name: PowerSpecter
+#      nprocess: 1
+#      partition: regular
+#      walltime: 120
+
+
+inputs:
+    raw_data: ./gsky_params/input_list_xmm.txt
+    frames_data: /global/cscratch1/sd/damonge/GSKY/HSC_data/S16A_WIDE_frames.fits
+    pdf_dir: /global/cscratch1/sd/damonge/GSKY/HSC_data/pzs/XMM/
+    cosmos_data: /global/cscratch1/sd/damonge/GSKY/HSC_data/COSMOS2015_Laigle+_v1.1.fits
+    cosmos_hsc: /global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_DEEP_COSMOS.fits
+    syst_masking_file: ./gsky_params/systematic_cuts/WIDE_XMM_syst_cuts.txt
+
+config: ./gsky_params/yaml_files/xmm_config.yml
+
+resume: True
+
+output_dir: /global/cscratch1/sd/damonge/GSKY/outputs/XMM_ceci/
+
+log_dir: /global/cscratch1/sd/damonge/GSKY/outputs/XMM_ceci/log.txt
+
+pipeline_log: /global/cscratch1/sd/damonge/GSKY/outputs/XMM_ceci/log.txt
