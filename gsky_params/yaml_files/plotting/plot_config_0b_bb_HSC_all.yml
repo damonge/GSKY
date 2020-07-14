@@ -1,13 +1,15 @@
 PSpecPlotter:
-    output_dir: '/global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed'
+    output_dir: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs'
     output_run_dir: 'CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj'
 #    saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci', 'HECTOMAP_ceci', 'AEGIS_ceci']
     saccdirs: ['GAMA15H_ceci', 'GAMA09H_ceci', 'WIDE12H_ceci', 'VVDS_ceci', 'XMM_ceci']
     noisesacc_filename: 'noi_bias_comb'
     output_plot_dir: 'plots'
     plot_fields: False
+    coadd_mode: 'separate'
     tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3', 'wl_0', 'wl_1', 'wl_2', 'wl_3']
-    ell_max_trc: [2000, 2000, 3000, 3000, 3000, 3000, 3000, 3000]
+    ell_max_trc: [2000, 2000, 3000, 3000, 2000, 2000, 2000, 2000]
+    ell_min_trc: [300, 300, 300, 300, 300, 300, 300, 300]
     fig_name: ['cls_wlxwl_all_data-vs-theor_bb.pdf',
                'cls_gcxwl_all_data-vs-theor_0b.pdf']
     plot_tracers: [['wl_0', 'wl_1', 'wl_2', 'wl_3'],
@@ -15,10 +17,11 @@ PSpecPlotter:
     plot_comb: ['all', 'cross']
     cl_type: ['cl_bb', 'cl_0b']
     plot_errors: True
-    plot_theory: [False, False]
+    plot_theory: [True, True]
+    n_fitparams: 0
     weightpow: [-1, 1]
-    logscale_x: [True, False]
-    logscale_y: [True, False]
+    logscale_x: [False, False]
+    logscale_y: [False, False]
     theory:
        hmparams:
             corr_halo_mod: True
