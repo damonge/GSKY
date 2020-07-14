@@ -2,6 +2,7 @@ from ceci import PipelineStage
 import logging
 import numpy as np
 import os
+import scipy.stats
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sacc
@@ -43,8 +44,12 @@ class PSpecPlotter(PipelineStage) :
 
         if 'ell_max_trc' in self.config:
             self.ell_max_dict = dict(zip(self.config['tracers'], self.config['ell_max_trc']))
+        else:
+            self.ell_max_dict = None
         if 'ell_min_trc' in self.config:
             self.ell_min_dict = dict(zip(self.config['tracers'], self.config['ell_min_trc']))
+        else:
+            self.ell_min_dict = None
 
         return
 
@@ -87,9 +92,13 @@ class PSpecPlotter(PipelineStage) :
                 delta -= noise_saccfile.mean[indx_temp]
             cov_temp = saccfile.covariance.covmat[np.ix_(indx_temp, indx_temp)]
             invcov = np.linalg.inv(cov_temp)
-            chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+            chi2 = np.einsum('i,ij,j', delta, invcov, delta)
+            dof = delta.shape[0] - self.config['n_fitparams']
+            chi2_red = chi2/dof
             logger.info('Reduced chi2 = chi2/dof = {}.'.format(chi2_red))
             logger.info('dof = {}.'.format(delta.shape[0]))
+            pte = scipy.stats.chi2.sf(chi2, dof)
+            logger.info('PTE = {}.'.format(pte))
 
         indices = []
         if plot_comb == 'all':
@@ -202,9 +211,13 @@ class PSpecPlotter(PipelineStage) :
 
                 delta = cl_curr - cl_theor_curr
                 invcov = np.linalg.inv(cov_curr)
-                chi2_red = np.einsum('i,ij,j', delta, invcov, delta) / (delta.shape[0] - self.config['n_fitparams'])
+                chi2 = np.einsum('i,ij,j', delta, invcov, delta)
+                dof = delta.shape[0] - self.config['n_fitparams']
+                chi2_red = chi2 / dof
                 logger.info('{} {}: Reduced chi2 = chi2/dof = {}.'.format(tr_i, tr_j, chi2_red))
-                logger.info('dof = {}.'.format(delta.shape[0]))
+                logger.info('{} {}: dof = {}.'.format(delta.shape[0]))
+                pte = scipy.stats.chi2.sf(chi2, dof)
+                logger.info('{} {}: PTE = {}.'.format(pte))
 
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
