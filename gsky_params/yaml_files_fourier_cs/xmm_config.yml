@@ -94,22 +94,22 @@ GuessSpecter:
     m1: 13.27
     m1p: -0.3
     bhydro: 0.2
-    zshift_bin0: -0.0117
-    m_bin0: -0.00339
-    zshift_bin1: -0.00228
-    m_bin1: 0.000482
-    zshift_bin2: 0.02
-    m_bin2: 0.00112
-    zshift_bin3: -0.00706
-    m_bin3: 0.00348
+#    zshift_bin0: -0.0117
+#    m_bin0: -0.00339
+#    zshift_bin1: -0.00228
+#    m_bin1: 0.000482
+#    zshift_bin2: 0.02
+#    m_bin2: 0.00112
+#    zshift_bin3: -0.00706
+#    m_bin3: 0.00348
 
   cosmo:
     Omega_b: 0.0493
     Omega_k: 0.0
-    sigma8: 1.14
+    sigma8: 0.8111
     h: 0.6736
     n_s: 0.9649
-    Omega_c: 0.0967
+    Omega_c: 0.264
     w0: -1.
     wa: 0.
 
