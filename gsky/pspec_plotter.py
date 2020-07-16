@@ -100,6 +100,11 @@ class PSpecPlotter(PipelineStage) :
             pte = scipy.stats.chi2.sf(chi2, dof)
             logger.info('PTE = {}.'.format(pte))
 
+            tracer_names = []
+            dofs = []
+            chi2s = []
+            ptes = []
+
         indices = []
         if plot_comb == 'all':
             for i in range(ntracers):
@@ -219,6 +224,11 @@ class PSpecPlotter(PipelineStage) :
                 pte = scipy.stats.chi2.sf(chi2, dof)
                 logger.info('{} {}: PTE = {}.'.format(tr_i, tr_j, pte))
 
+                tracer_names.append(tr_i+'x'+tr_j)
+                dofs.append(dof)
+                chi2s.append(chi2)
+                ptes.append(pte)
+
             ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
                 elltext = ''
@@ -246,6 +256,14 @@ class PSpecPlotter(PipelineStage) :
                 ax.set_xscale('log')
             if logscale_y:
                 ax.set_yscale('log')
+
+        out = np.zeros(len(tracer_names), dtype=[('name', 'U6'), ('chi2', float), ('dof', float), ('pte', float)])
+        out['name'] = tracer_names
+        out['chi2'] = chi2s
+        out['dof'] = dofs
+        out['pte'] = ptes
+        np.savetxt(os.path.join(self.output_plot_dir, 'chi2s-'+fig_name)[:-4], out.T, fmt="%10s %10.3f %10.3f %10.3f",
+                   header='name, chi2, dof, pte')
 
         if fig_name != 'NONE':
             logger.info('Saving figure to {}.'.format(os.path.join(self.output_plot_dir, fig_name)))
