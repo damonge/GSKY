@@ -262,7 +262,7 @@ class PSpecPlotter(PipelineStage) :
         out['chi2'] = chi2s
         out['dof'] = dofs
         out['pte'] = ptes
-        np.savetxt(os.path.join(self.output_plot_dir, 'chi2s-'+fig_name)[:-4], out.T, fmt="%10s %10.3f %10.3f %10.3f",
+        np.savetxt(os.path.join(self.output_plot_dir, 'chi2s-'+fig_name[:-4]+'.txt'), out.T, fmt="%10s %10.3f %10.3f %10.3f",
                    header='name, chi2, dof, pte')
 
         if fig_name != 'NONE':
