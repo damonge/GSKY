@@ -257,7 +257,7 @@ class PSpecPlotter(PipelineStage) :
             if logscale_y:
                 ax.set_yscale('log')
 
-        out = np.zeros(len(tracer_names), dtype=[('name', 'U6'), ('chi2', float), ('dof', float), ('pte', float)])
+        out = np.zeros(len(tracer_names), dtype=[('name', '<U9'), ('chi2', float), ('dof', float), ('pte', float)])
         out['name'] = tracer_names
         out['chi2'] = chi2s
         out['dof'] = dofs
