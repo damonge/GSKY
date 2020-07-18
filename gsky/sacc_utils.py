@@ -223,7 +223,7 @@ def coadd_sacc_means(saccfiles, config):
 
     return saccfile_coadd
 
-def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is_noisesacc=False):
+def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, trc_combs=None, is_noisesacc=False, trim_sacc=True):
 
         logger.info('Coadding saccfiles with common probes.')
 
@@ -248,16 +248,28 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
 
-                if ell_max_dict is not None:
-                    logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
+                logger.info('Size of saccfile before trc and ell cuts {}.'.format(saccfile.mean.size))
+                if trc_combs is not None:
+                    logger.info('trc_combs provided.')
                     for tr_i, tr_j in saccfile.get_tracer_combinations():
-                        if tr_i in tracers and tr_j in tracers:
-                            ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
-                            logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                        if (tr_i, tr_j) in trc_combs or (tr_j, tr_i) in trc_combs:
+                            if ell_max_dict is not None:
+                                ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
                         else:
                             saccfile.remove_selection(tracers=(tr_i, tr_j))
-                    logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
+                else:
+                    logger.info('trc_combs not provided.')
+                    for tr_i, tr_j in saccfile.get_tracer_combinations():
+                        if tr_i in tracers and tr_j in tracers:
+                            if ell_max_dict is not None:
+                                ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                        else:
+                            saccfile.remove_selection(tracers=(tr_i, tr_j))
+                logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
 
             if i == 0:
                 coadd_mean = weights[i]*saccfile.mean
@@ -277,6 +289,27 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, is
         # Set mean of new saccfile to coadded mean
         saccfile_coadd.mean = coadd_mean
         if not is_noisesacc:
+            saccfile_coadd.add_covariance(coadd_cov)
+
+        if trim_sacc:
+            logger.info('Trimming sacc - removing windows.')
+            saccfile_coadd_trimmed = sacc.Sacc()
+            for trc_name in saccfile_coadd.tracers.keys():
+                saccfile_coadd_trimmed.add_tracer_object(saccfile_coadd.tracers[trc_name])
+            datatypes = saccfile_coadd.get_data_types()
+            for datatype in datatypes:
+                tracer_combs = saccfile_coadd.get_tracer_combinations(data_type=datatype)
+                for tr_i1, tr_j1 in tracer_combs:
+                    ell, cl = saccfile_coadd.get_ell_cl(datatype, tr_i1, tr_j1, return_cov=False)
+
+                    saccfile_coadd_trimmed.add_ell_cl(datatype, tr_i1, tr_j1, ell, cl)
+            assert np.all(
+                saccfile_coadd.mean == saccfile_coadd_trimmed.mean), 'Error while trimming sacc, means not equal. Aborting.'
+            saccfile_coadd_trimmed.add_covariance(coadd_cov)
+            saccfile_coadd = saccfile_coadd_trimmed
+        else:
+            logger.info('Not trimming sacc.')
+            saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd)
             saccfile_coadd.add_covariance(coadd_cov)
 
         return saccfile_coadd
