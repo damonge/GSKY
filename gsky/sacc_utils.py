@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import sacc
+import copy
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,8 +64,8 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
         logger.info('Found {} saccfiles of length {}.'.format(nsacc_curr, len_curr))
         for j, saccfile in enumerate(saccs_list[i]):
             if j == 0:
-                coadd_mean = saccfile.mean
-                coadd_cov = saccfile.covariance.covmat
+                coadd_mean = copy.deepcopy(saccfile.mean)
+                coadd_cov = copy.deepcopy(saccfile.covariance.covmat)
             else:
                 coadd_mean += saccfile.mean
                 coadd_cov += saccfile.covariance.covmat
@@ -79,7 +80,7 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
         saccfile_coadd.add_covariance(coadd_cov)
         sacc_coadds[i] = saccfile_coadd
 
-    tempsacc = sacc_coadds[0]
+    tempsacc = sacc_coadds[0].copy()
     tempsacc_tracers = tempsacc.tracers.keys()
     datatypes = tempsacc.get_data_types()
     invcov_coadd = np.linalg.inv(tempsacc.covariance.covmat)
@@ -383,6 +384,13 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, tr
             saccfile.remove_selection(data_type='cl_be')
             saccfile.remove_selection(data_type='cl_bb')
             saccfile.remove_selection(data_type='cl_0b')
+            logger.info('Removing yxy.')
+            saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'y_0'))
+            logger.info('Removing kappaxkappa.')
+            saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'kappa_0'))
+            logger.info('Removing kappaxy.')
+            saccfile.remove_selection(data_type='cl_00', tracers=('kappa_0', 'y_0'))
+            saccfile.remove_selection(data_type='cl_00', tracers=('y_0', 'kappa_0'))
             if not any('y_' in s for s in tracers) and not any('kappa_' in s for s in tracers):
                 if any('y_' in key for key in saccfile.tracers.keys()):
                     for t in saccfile.tracers:
@@ -395,28 +403,28 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, tr
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
 
-                logger.info('Size of saccfile before trc and ell cuts {}.'.format(saccfile.mean.size))
-                if trc_combs is not None:
-                    logger.info('trc_combs provided.')
-                    for tr_i, tr_j in saccfile.get_tracer_combinations():
-                        if (tr_i, tr_j) in trc_combs or (tr_j, tr_i) in trc_combs:
-                            if ell_max_dict is not None:
-                                ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
-                                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
-                        else:
-                            saccfile.remove_selection(tracers=(tr_i, tr_j))
-                else:
-                    logger.info('trc_combs not provided.')
-                    for tr_i, tr_j in saccfile.get_tracer_combinations():
-                        if tr_i in tracers and tr_j in tracers:
-                            if ell_max_dict is not None:
-                                ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
-                                logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
-                                saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
-                        else:
-                            saccfile.remove_selection(tracers=(tr_i, tr_j))
-                logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
+            logger.info('Size of saccfile before trc and ell cuts {}.'.format(saccfile.mean.size))
+            if trc_combs is not None:
+                logger.info('trc_combs provided.')
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if (tr_i, tr_j) in trc_combs or (tr_j, tr_i) in trc_combs:
+                        if ell_max_dict is not None:
+                            ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                            logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+            else:
+                logger.info('trc_combs not provided.')
+                for tr_i, tr_j in saccfile.get_tracer_combinations():
+                    if tr_i in tracers and tr_j in tracers:
+                        if ell_max_dict is not None:
+                            ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
+                            logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
+                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    else:
+                        saccfile.remove_selection(tracers=(tr_i, tr_j))
+            logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
 
             if i == 0:
                 coadd_mean = weights[i]*saccfile.mean

@@ -63,125 +63,182 @@ logger.info('Read config from {}.'.format(args.path2config))
 
 parse_input(config)
 
-if 'ell_max_trc' in config.keys():
-    ell_max_dict = dict(zip(config['tracers'], config['ell_max_trc']))
+if type(config['saccdirs'][0]) == list:
+    logger.info('Running with multiple likelihoods.')
+    n_likes = len(config['saccdirs'])
+    assert type(config['tracers'][0]) == list, 'Multiple likelihoods requested but tracers is not list. Aborting.'
+    assert type(config['ell_max_trc'][0]) == list, 'Multiple likelihoods requested but ell_max_trc is not list. Aborting.'
+    assert type(config['ells']) == list, 'Multiple likelihoods requested but ells is not list. Aborting.'
+    assert type(config['fit_comb']) == list, 'Multiple likelihoods requested but fit_comb is not list. Aborting.'
+    assert type(config['noisesacc_filename']) == list, 'Multiple likelihoods requested but noisesacc_filename is not list. Aborting.'
+    # Weights for sacc coaddition
+    if 'weights' in config.keys():
+        assert type(config['weights']) == list, 'Multiple likelihoods requested but weights is not list. Aborting.'
+        logger.info('Using cooadd weights = {}.'.format(config['weights']))
+        weights = config['weights']
+    else:
+        logger.info('No weights provided.')
+        weights = [None for i in range(n_likes)]
+    if 'path2NGcov' in config.keys():
+        assert type(config['path2NGcov']) == list, 'Multiple likelihoods requested but path2NGcov is not list. Aborting.'
+    saccfiles = [[] for i in range(n_likes)]
+    trc_combs = [[] for i in range(n_likes)]
 else:
-    ell_max_dict = None
+    logger.info('Running with one likelihood.')
+    n_likes = 1
+    config['saccdirs'] = [config['saccdirs']]
+    config['tracers'] = [config['tracers']]
+    config['ell_max_trc'] = [config['ell_max_trc']]
+    config['ells'] = [config['ells']]
+    config['fit_comb'] = [config['fit_comb']]
+    config['noisesacc_filename'] = [config['noisesacc_filename']]
+    saccfiles = [[]]
+    trc_combs = [[]]
+    # Weights for sacc coaddition
+    if 'weights' in config.keys():
+        logger.info('Using cooadd weights = {}.'.format(config['weights']))
+        weights = [config['weights']]
+    else:
+        logger.info('No weights provided.')
+        weights = [None for i in range(n_likes)]
+    if 'path2NGcov' in config.keys():
+        config['path2NGcov'] = [config['path2NGcov']]
 
-tracers = config['tracers']
+if 'ell_max_trc' in config.keys():
+    ell_max_dict = [dict(zip(config['tracers'][i], config['ell_max_trc'][i])) for i in range(n_likes)]
+else:
+    ell_max_dict = [None for i in range(n_likes)]
 
-trc_combs = []
-if config['fit_comb'] == 'all':
-    logger.info('Fitting auto- and cross-correlations of tracers.')
-    i = 0
-    for tr_i in tracers:
-        for tr_j in tracers[:i + 1]:
-            if (tr_i, tr_j) not in DROP_TRC_COMBS:
-                # Generate the appropriate list of tracer combinations to plot
-                trc_combs.append((tr_i, tr_j))
-        i += 1
-elif config['fit_comb'] == 'auto':
-    logger.info('Fitting auto-correlations of tracers.')
-    for tr_i in tracers:
-        if (tr_i, tr_i) not in DROP_TRC_COMBS:
-            trc_combs.append((tr_i, tr_i))
-elif config['fit_comb'] == 'cross':
-    tracer_type_list = [tr.split('_')[0] for tr in tracers]
-    # Get unique tracers and keep ordering
-    unique_trcs = []
-    [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
-    ntracers0 = tracer_type_list.count(unique_trcs[0])
-    ntracers1 = tracer_type_list.count(unique_trcs[1])
-    ntracers = np.array([ntracers0, ntracers1])
-    logger.info('Fitting cross-correlations of tracers.')
-    i = 0
-    for tr_i in tracers[:ntracers0]:
-        for tr_j in tracers[ntracers0:]:
-            if tr_i.split('_')[0] != tr_j.split('_')[0]:
+for trcs_i in range(len(config['tracers'])):
+    tracers = config['tracers'][trcs_i]
+
+    if config['fit_comb'][trcs_i] == 'all':
+        logger.info('Fitting auto- and cross-correlations of tracers.')
+        i = 0
+        for tr_i in tracers:
+            for tr_j in tracers[:i + 1]:
                 if (tr_i, tr_j) not in DROP_TRC_COMBS:
                     # Generate the appropriate list of tracer combinations to plot
-                    trc_combs.append((tr_i, tr_j))
-        i += 1
-elif isinstance(config['fit_comb'], list):
-    trc_combs = [tuple(config['fit_comb'][i]) for i in range(len(config['fit_comb']))]
-    logger.info('Fitting provided tracer combination list.')
-    list_intersec = [trc_combs[i] for i in range(len(trc_combs)) if trc_combs[i] in DROP_TRC_COMBS]
-    if list_intersec != []:
-        logger.info('Dropping unsupported tracer combinations.')
-        trc_combs = [trc_combs[i] for i in range(len(trc_combs)) if trc_combs[i] not in DROP_TRC_COMBS]
-else:
-    raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
+                    trc_combs[trcs_i].append((tr_i, tr_j))
+            i += 1
+    elif config['fit_comb'][trcs_i] == 'auto':
+        logger.info('Fitting auto-correlations of tracers.')
+        for tr_i in tracers:
+            if (tr_i, tr_i) not in DROP_TRC_COMBS:
+                trc_combs[trcs_i].append((tr_i, tr_i))
+    elif config['fit_comb'][trcs_i] == 'cross':
+        tracer_type_list = [tr.split('_')[0] for tr in tracers]
+        # Get unique tracers and keep ordering
+        unique_trcs = []
+        [unique_trcs.append(tr) for tr in tracer_type_list if tr not in unique_trcs]
+        ntracers0 = tracer_type_list.count(unique_trcs[0])
+        ntracers1 = tracer_type_list.count(unique_trcs[1])
+        ntracers = np.array([ntracers0, ntracers1])
+        logger.info('Fitting cross-correlations of tracers.')
+        i = 0
+        for tr_i in tracers[:ntracers0]:
+            for tr_j in tracers[ntracers0:]:
+                if tr_i.split('_')[0] != tr_j.split('_')[0]:
+                    if (tr_i, tr_j) not in DROP_TRC_COMBS:
+                        # Generate the appropriate list of tracer combinations to plot
+                        trc_combs[trcs_i].append((tr_i, tr_j))
+            i += 1
+    elif isinstance(config['fit_comb'][trcs_i], list):
+        trc_combs[trcs_i] = [tuple(config['fit_comb'][trcs_i][i]) for i in range(len(config['fit_comb'][trcs_i]))]
+        logger.info('Fitting provided tracer combination list.')
+        list_intersec = [trc_combs[trcs_i][i] for i in range(len(trc_combs[trcs_i])) if trc_combs[trcs_i][i] in DROP_TRC_COMBS]
+        if list_intersec != []:
+            logger.info('Dropping unsupported tracer combinations.')
+            trc_combs[trcs_i] = [trc_combs[trcs_i][i] for i in range(len(trc_combs[trcs_i])) if trc_combs[trcs_i][i] not in DROP_TRC_COMBS]
+    else:
+        raise NotImplementedError('Only fit_comb = all, auto and cross supported. Aborting.')
 
-logger.info('Fitting tracer combination = {}.'.format(trc_combs))
+    logger.info('Likelihood no = {}.'.format(trcs_i))
+    logger.info('Fitting tracer combination = {}.'.format(trc_combs[trcs_i]))
 
-# Weights for sacc coaddition
-if 'weights' in config.keys():
-    logger.info('Using cooadd weights = {}.'.format(config['weights']))
-    weights = config['weights']
-else:
-    logger.info('No weights provided.')
-    weights = None
-
-saccfiles = []
-for saccdir in config['saccdirs']:
-    if config['output_run_dir'] != 'NONE':
-        path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + 'power_spectra_wodpj')
-    sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
-    logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
-    assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
-        get_output_fname(config, path2sacc, 'sacc'))
-    saccfiles.append(sacc_curr)
-
-if config['noisesacc_filename'] != 'NONE':
-    logger.info('Reading provided noise saccfile.')
-    noise_saccfiles = []
-    for i, saccdir in enumerate(config['saccdirs']):
+for i in range(n_likes):
+    for saccdir in config['saccdirs'][i]:
         if config['output_run_dir'] != 'NONE':
-            path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'])
-        noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+            path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+        sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
         logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
-        if noise_sacc_curr.covariance is None:
-            logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
-            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-        noise_saccfiles.append(noise_sacc_curr)
-    if 'conv_win' in config.keys():
-        if config['conv_win']:
-            if 'coadd_mode' in config.keys():
-                if config['coadd_mode'] == 'inv':
-                    logger.info('Performing inverse-variance sacc coaddition.')
-                    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                              trc_combs=trc_combs, trim_sacc=False)
+        assert sacc_curr.covariance is not None, 'saccfile {} does not contain covariance matrix. Aborting.'.format(
+            get_output_fname(config, path2sacc, 'sacc'))
+        saccfiles[i].append(sacc_curr)
+
+if type(config['saccdirs']) == list:
+    noise_saccfiles = [[] for i in range(n_likes)]
+    noise_saccfile_coadd = [None for i in range(n_likes)]
+else:
+    noise_saccfiles = [[]]
+    noise_saccfile_coadd = [None]
+
+for i in range(n_likes):
+    if config['noisesacc_filename'] != 'NONE':
+        logger.info('Reading provided noise saccfile.')
+        for ii, saccdir in enumerate(config['saccdirs'][i]):
+            if config['output_run_dir'] != 'NONE':
+                path2sacc = os.path.join(saccdir, config['output_run_dir'] + '/' + config['noisesacc_filename'][i])
+            noise_sacc_curr = sacc.Sacc.load_fits(get_output_fname(config, path2sacc, 'sacc'))
+            logger.info('Read {}.'.format(get_output_fname(config, path2sacc, 'sacc')))
+            if noise_sacc_curr.covariance is None:
+                logger.info('noise sacc has no covariance. Adding covariance matrix to noise sacc.')
+                noise_sacc_curr.add_covariance(saccfiles[i][ii].covariance.covmat)
+            noise_saccfiles[i].append(noise_sacc_curr)
+        # Coadd noise saccs
+        if 'conv_win' in config.keys():
+            if config['conv_win']:
+                if 'coadd_mode' in config.keys():
+                    if config['coadd_mode'] == 'inv':
+                        logger.info('Performing inverse-variance sacc coaddition.')
+                        noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                                  trc_combs=trc_combs[i], trim_sacc=False)
+                    else:
+                        logger.info('Performing weighted sacc coaddition.')
+                        noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
+                                                                  ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                                  trc_combs=trc_combs[i], trim_sacc=False)
                 else:
-                    logger.info('Performing weighted sacc coaddition.')
-                    noise_saccfile_coadd = sutils.coadd_saccs_separate(noise_saccfiles, config['tracers'],
-                                                              ell_max_dict=ell_max_dict, weights=weights,
-                                                              trc_combs=trc_combs, trim_sacc=False)
+                    logger.info('Performing inverse-variance sacc coaddition.')
+                    noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
+                                                                 ell_max_dict=ell_max_dict[i],
+                                                                 trc_combs=trc_combs[i], trim_sacc=False)
+            else:
+                if 'coadd_mode' in config.keys():
+                    if config['coadd_mode'] == 'inv':
+                        logger.info('Performing inverse-variance sacc coaddition.')
+                        noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                                  trc_combs=trc_combs[i])
+                    else:
+                        logger.info('Performing weighted sacc coaddition.')
+                        noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
+                                                                           ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                                           trc_combs=trc_combs[i])
+                else:
+                    logger.info('Performing inverse-variance sacc coaddition.')
+                    noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
+                                                                 ell_max_dict=ell_max_dict[i],
+                                                                 trc_combs=trc_combs[i], trim_sacc=False)
         else:
             if 'coadd_mode' in config.keys():
                 if config['coadd_mode'] == 'inv':
                     logger.info('Performing inverse-variance sacc coaddition.')
-                    noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                              trc_combs=trc_combs)
+                    noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                              trc_combs=trc_combs[i])
                 else:
                     logger.info('Performing weighted sacc coaddition.')
-                    noise_saccfile_coadd = sutils.coadd_saccs_separate(noise_saccfiles, config['tracers'],
-                                                                       ell_max_dict=ell_max_dict, weights=weights,
-                                                                       trc_combs=trc_combs)
-    else:
-        if 'coadd_mode' in config.keys():
-            if config['coadd_mode'] == 'inv':
-                logger.info('Performing inverse-variance sacc coaddition.')
-                noise_saccfile_coadd = sutils.coadd_saccs(noise_saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                          trc_combs=trc_combs)
+                    noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
+                                                                       ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                                       trc_combs=trc_combs[i])
             else:
-                logger.info('Performing weighted sacc coaddition.')
-                noise_saccfile_coadd = sutils.coadd_saccs_separate(noise_saccfiles, config['tracers'],
-                                                                   ell_max_dict=ell_max_dict, weights=weights,
-                                                                   trc_combs=trc_combs)
-else:
-    logger.info('No noise saccfile provided.')
-    noise_saccfile_coadd = None
-    noise_saccfiles = None
+                logger.info('Performing inverse-variance sacc coaddition.')
+                noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
+                                                             ell_max_dict=ell_max_dict[i],
+                                                             trc_combs=trc_combs[i], trim_sacc=False)
+    else:
+        logger.info('No noise saccfile provided.')
+        noise_saccfiles[i] = None
+        noise_saccfile_coadd[i] = None
 
 # Need to coadd saccfiles after adding covariance to noise saccfiles
 if 'conv_win' in config.keys():
@@ -189,54 +246,72 @@ if 'conv_win' in config.keys():
         if 'coadd_mode' in config.keys():
             if config['coadd_mode'] == 'inv':
                 logger.info('Performing inverse-variance sacc coaddition.')
-                saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                    trc_combs=trc_combs, trim_sacc=False)
+                saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                    trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
             else:
                 logger.info('Performing weighted sacc coaddition.')
-                saccfile_coadd = sutils.coadd_saccs_separate(saccfiles, config['tracers'],
-                                                             ell_max_dict=ell_max_dict, weights=weights,
-                                                             trc_combs=trc_combs, trim_sacc=False)
+                saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
+                                                             ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                             trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+        else:
+            logger.info('Performing inverse-variance sacc coaddition.')
+            saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                 trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
     else:
         if 'coadd_mode' in config.keys():
             if config['coadd_mode'] == 'inv':
                 logger.info('Performing inverse-variance sacc coaddition.')
-                saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                          trc_combs=trc_combs)
+                saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                          trc_combs=trc_combs[i]) for i in range(n_likes)]
             else:
                 logger.info('Performing weighted sacc coaddition.')
-                saccfile_coadd = sutils.coadd_saccs_separate(saccfiles, config['tracers'],
-                                                                   ell_max_dict=ell_max_dict, weights=weights,
-                                                                   trc_combs=trc_combs)
+                saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
+                                                                   ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                                   trc_combs=trc_combs[i]) for i in range(n_likes)]
+        else:
+            logger.info('Performing inverse-variance sacc coaddition.')
+            saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                 trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
 else:
     if 'coadd_mode' in config.keys():
         if config['coadd_mode'] == 'inv':
             logger.info('Performing inverse-variance sacc coaddition.')
-            saccfile_coadd = sutils.coadd_saccs(saccfiles, config['tracers'], ell_max_dict=ell_max_dict,
-                                                trc_combs=trc_combs)
+            saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                                trc_combs=trc_combs[i]) for i in range(n_likes)]
         else:
             logger.info('Performing weighted sacc coaddition.')
-            saccfile_coadd = sutils.coadd_saccs_separate(saccfiles, config['tracers'],
-                                                         ell_max_dict=ell_max_dict, weights=weights,
-                                                         trc_combs=trc_combs)
+            saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
+                                                         ell_max_dict=ell_max_dict[i], weights=weights[i],
+                                                         trc_combs=trc_combs[i]) for i in range(n_likes)]
+    else:
+        logger.info('Performing inverse-variance sacc coaddition.')
+        saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
+                                             trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
 
 if 'path2NGcov' in config.keys():
     logger.info('path2NGcov provided. Adding NG covariance.')
-    cov_NG = np.load(config['path2NGcov'])
-    assert cov_NG.shape == saccfile_coadd.covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
-    logger.info('Read {}.'.format(config['path2NGcov']))
-    saccfile_coadd.covariance.covmat += cov_NG
+    for i in range(n_likes):
+        cov_NG = np.load(config['path2NGcov'][i])
+        assert cov_NG.shape == saccfile_coadd[i].covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
+        logger.info('Read {}.'.format(config['path2NGcov'][i]))
+        saccfile_coadd[i].covariance.covmat += cov_NG
 
-if noise_saccfile_coadd is not None and 'path2NGcov' in config.keys():
-    logger.info('path2NGcov provided. Adding NG covariance.')
-    cov_NG = np.load(config['path2NGcov'])
-    assert cov_NG.shape == noise_saccfile_coadd.covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
-    logger.info('Read {}.'.format(config['path2NGcov']))
-    noise_saccfile_coadd.covariance.covmat += cov_NG
+for i in range(n_likes):
+    if noise_saccfile_coadd[i] is not None and 'path2NGcov' in config.keys():
+        logger.info('path2NGcov provided. Adding NG covariance.')
+        cov_NG = np.load(config['path2NGcov'][i])
+        assert cov_NG.shape == noise_saccfile_coadd[i].covariance.covmat.shape, 'Shapes of G and NG covariance not consistent. Aborting.'
+        logger.info('Read {}.'.format(config['path2NGcov'][i]))
+        noise_saccfile_coadd[i].covariance.covmat += cov_NG
 
 # Now update trc_combs with sacc ordering
-if trc_combs != saccfile_coadd.get_tracer_combinations():
-    logger.info('Making tr_combs consistent with saccfile ordering.')
-    trc_combs = saccfile_coadd.get_tracer_combinations()
+logger.info('Making tr_combs consistent with saccfile ordering.')
+for i in range(n_likes):
+    trc_comb_curr = saccfile_coadd[i].get_tracer_combinations()
+    for ii, (tr_i, tr_j) in enumerate(trc_combs[i]):
+        if (tr_j, tr_i) in trc_comb_curr:
+            logger.info('Switching order of {}.'.format((tr_i, tr_j)))
+            trc_combs[i][ii] = (tr_j, tr_i)
 
 fit_params = config['fit_params']
 if 'theory' in config.keys():
@@ -271,12 +346,17 @@ coremod_config = copy.deepcopy(config)
 coremod_config['param_mapping'] = param_mapping
 coremod_config['hmparams'] = hmparams
 coremod_config['cosmo'] = cosmo
-coremod_config['trc_combs'] = trc_combs
 
-th = GSKYCore(saccfile_coadd, coremod_config)
-th.setup()
-lik = GSKYLike(saccfile_coadd, noise_saccfile_coadd)
-lik.setup()
+th = [None for i in range(n_likes)]
+lik = [None for i in range(n_likes)]
+for i in range(n_likes):
+    coremod_config_curr = copy.deepcopy(coremod_config)
+    coremod_config_curr['trc_combs'] = trc_combs[i]
+    coremod_config_curr['ells'] = coremod_config['ells'][i]
+    th[i] = GSKYCore(saccfile_coadd[i], coremod_config_curr)
+    th[i].setup()
+    lik[i] = GSKYLike(saccfile_coadd[i], noise_saccfile_coadd[i])
+    lik[i].setup()
 
 gauss_prior = False
 if 'gauss_prior' in config.keys():
@@ -302,9 +382,11 @@ def inrange(p):
 
 def lnprob(p):
     if inrange(p):
+        lnP = 0.
         try:
-            cl_theory = th.computeTheory(p)
-            lnP = lik.computeLikelihood(cl_theory)
+            for i in range(n_likes):
+                cl_theory = th[i].computeTheory(p)
+                lnP += lik[i].computeLikelihood(cl_theory)
             if gauss_prior:
                 lnP += gauss_prior_lik.computeLikelihood(p)
         except BaseException as e:
