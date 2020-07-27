@@ -109,16 +109,37 @@ class GuessSpecter(PipelineStage) :
 
     def guess_spectra_dcpld(self, params, saccfile_signal, saccfile_noise=None):
 
+        trc_combs = saccfile_signal.get_tracer_combinations()
+
         ell_theor = np.arange(self.config['ellmax'])
         theor = GSKYPrediction(saccfile_signal, ells=ell_theor)
 
         cl_theor = theor.get_prediction(params)
 
-        saccfile_guess_spec = copy.deepcopy(saccfile_signal)
-        if saccfile_noise is not None:
-            saccfile_guess_spec.mean = saccfile_noise.mean + cl_theor
-        else:
-            saccfile_guess_spec.mean = cl_theor
+        # Add tracers to sacc
+        saccfile_guess_spec = sacc.Sacc()
+        for trc_name, trc in saccfile_signal.tracers.items():
+            saccfile_guess_spec.add_tracer_object(trc)
+
+        for i, (tr_i, tr_j) in enumerate(trc_combs):
+            if 'wl' not in tr_i and 'wl' not in tr_j:
+                saccfile_guess_spec.add_ell_cl('cl_00', tr_i, tr_j, ell_theor, cl_theor[i])
+            elif ('wl' in tr_i and 'wl' not in tr_j) or ('wl' not in tr_i and 'wl' in tr_j):
+                saccfile_guess_spec.add_ell_cl('cl_0e', tr_i, tr_j, ell_theor, cl_theor[i])
+                saccfile_guess_spec.add_ell_cl('cl_0b', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+            else:
+                if tr_i == tr_j:
+                    saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_theor[i][0, :])
+                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i][0, :]))
+                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i][0, :]))
+                    saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, cl_theor[i][1, :])
+                else:
+                    saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_theor[i])
+                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+                    saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+
+        return saccfile_guess_spec
 
         return saccfile_guess_spec
 
