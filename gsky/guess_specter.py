@@ -109,7 +109,8 @@ class GuessSpecter(PipelineStage) :
 
     def guess_spectra_dcpld(self, params, saccfile_signal, saccfile_noise=None):
 
-        theor = GSKYPrediction(saccfile_signal)
+        ell_theor = np.arange(self.config['ellmax'])
+        theor = GSKYPrediction(saccfile_signal, ells=ell_theor)
 
         cl_theor = theor.get_prediction(params)
 
