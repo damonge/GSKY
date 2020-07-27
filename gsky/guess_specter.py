@@ -129,17 +129,15 @@ class GuessSpecter(PipelineStage) :
                 saccfile_guess_spec.add_ell_cl('cl_0b', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
             else:
                 if tr_i == tr_j:
-                    saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_theor[i][0, :])
-                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i][0, :]))
-                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i][0, :]))
-                    saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, cl_theor[i][1, :])
+                    saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_theor[i])
+                    saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+                    saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
+                    saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, cl_theor[i])
                 else:
                     saccfile_guess_spec.add_ell_cl('cl_ee', tr_i, tr_j, ell_theor, cl_theor[i])
                     saccfile_guess_spec.add_ell_cl('cl_eb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
                     saccfile_guess_spec.add_ell_cl('cl_be', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
                     saccfile_guess_spec.add_ell_cl('cl_bb', tr_i, tr_j, ell_theor, np.zeros_like(cl_theor[i]))
-
-        return saccfile_guess_spec
 
         return saccfile_guess_spec
 
