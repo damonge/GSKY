@@ -2,7 +2,7 @@ from ceci import PipelineStage
 from .types import FitsFile, ASCIIFile
 import numpy as np
 from .flatmaps import read_flat_map
-from .map_utils import createSpin2Map, createWQUMap
+from .map_utils import createSpin2Map, createW2QU2Map
 from astropy.io import fits
 import os
 from .plot_utils import plot_map, plot_curves
@@ -94,13 +94,13 @@ class ShearMapper(PipelineStage):
         for ibin in range(self.nbins):
             msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
             subcat = cat[msk_bin]
-            wemaps = createWQUMap(subcat['ra'],
+            w2e2maps = createW2QU2Map(subcat['ra'],
                                                    subcat['dec'],
                                                    subcat['ishape_hsm_regauss_e1_calib'],
                                                    subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
                                                    weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
 
-            w2e2_curr = 0.5*(np.mean(wemaps[0]**2) + np.mean(wemaps[1]**2))
+            w2e2_curr = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
             w2e2.append(w2e2_curr)
 
         return np.array(w2e2)
