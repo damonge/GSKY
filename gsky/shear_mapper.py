@@ -40,8 +40,11 @@ class ShearMapper(PipelineStage):
         maps = []
 
         # Tomographic maps
-        for ibin in range(self.nbins):
-            msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+        for ibin in self.bin_indxs:
+            if ibin != -1:
+                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+            else:
+                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
             subcat = cat[msk_bin]
             gammamaps, gammamasks = createSpin2Map(subcat['ra'],
                                                    subcat['dec'],
@@ -51,18 +54,6 @@ class ShearMapper(PipelineStage):
                                                    shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
             maps.append(maps_combined)
-
-        # Non-tomographic map (needed for PSF tests)
-        msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
-        subcat = cat[msk_bin]
-        gammamaps, gammamasks = createSpin2Map(subcat['ra'],
-                                               subcat['dec'],
-                                               subcat['ishape_hsm_regauss_e1_calib'],
-                                               subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
-                                               weights=subcat['ishape_hsm_regauss_derived_shape_weight'],
-                                               shearrot=self.config['shearrot'])
-        maps_combined = [gammamaps, gammamasks]
-        maps.append(maps_combined)
 
         return maps
 
@@ -78,8 +69,11 @@ class ShearMapper(PipelineStage):
                                'calibrated shear catalog. Aborting.')
         e2rms_arr = []
 
-        for ibin in range(self.nbins):
-            msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+        for ibin in self.bin_indxs:
+            if ibin != -1:
+                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+            else:
+                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
             subcat = cat[msk_bin]
             e1_2rms = np.average(subcat['ishape_hsm_regauss_e1_calib']**2,
                                  weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
@@ -104,8 +98,11 @@ class ShearMapper(PipelineStage):
                                'calibrated shear catalog. Aborting.')
         w2e2 = []
 
-        for ibin in range(self.nbins):
-            msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+        for ibin in self.bin_indxs:
+            if ibin != -1:
+                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+            else:
+                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
             subcat = cat[msk_bin]
             w2e2maps = createW2QU2Map(subcat['ra'],
                                                    subcat['dec'],
@@ -184,10 +181,15 @@ class ShearMapper(PipelineStage):
         z1 = z_all[1:]
         zm = 0.5*(z0+z1)
         pzs = []
-        for i in range(self.nbins):
-            msk_good = ((cat['tomo_bin'] == i) &
-                        pdfgood &
-                        cat['shear_cat'])
+        for i in self.bin_indxs:
+            if i != -1:
+                msk_good = ((cat['tomo_bin'] == i) &
+                            pdfgood &
+                            cat['shear_cat'])
+            else:
+                msk_good = ((cat['tomo_bin'] >= 0) &
+                            pdfgood &
+                            cat['shear_cat'])
             hz_orig = np.sum(weights[msk_good][:, None] * p[msk_good],
                              axis=0)
             hz_orig /= np.sum(hz_orig)
@@ -209,6 +211,10 @@ class ShearMapper(PipelineStage):
         logger.info("Reading masked fraction from {}.".format(self.get_input("masked_fraction")))
         self.fsk, _ = read_flat_map(self.get_input("masked_fraction"))
         self.nbins = len(self.config['pz_bins'])-1
+        if 'ntomo_bins' in self.config:
+            self.bin_indxs = self.config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
 
         logger.info("Reading calibrated shear catalog from {}.".format(self.get_input('clean_catalog')))
         hdul = fits.open(self.get_input('clean_catalog'))
