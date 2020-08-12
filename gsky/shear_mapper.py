@@ -39,6 +39,7 @@ class ShearMapper(PipelineStage):
                                'calibrated shear catalog. Aborting.')
         maps = []
 
+        # Tomographic maps
         for ibin in range(self.nbins):
             msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
             subcat = cat[msk_bin]
@@ -50,6 +51,18 @@ class ShearMapper(PipelineStage):
                                                    shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
             maps.append(maps_combined)
+
+        # Non-tomographic map (needed for PSF tests)
+        msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+        subcat = cat[msk_bin]
+        gammamaps, gammamasks = createSpin2Map(subcat['ra'],
+                                               subcat['dec'],
+                                               subcat['ishape_hsm_regauss_e1_calib'],
+                                               subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
+                                               weights=subcat['ishape_hsm_regauss_derived_shape_weight'],
+                                               shearrot=self.config['shearrot'])
+        maps_combined = [gammamaps, gammamasks]
+        maps.append(maps_combined)
 
         return maps
 
@@ -257,24 +270,30 @@ class ShearMapper(PipelineStage):
             else:
                 hdu = fits.ImageHDU(data=m_list[0][0].reshape(shp_mp),
                                     header=head)
+
+            if im == len(gammamaps) - 1:
+                bin_tag = 'all'
+            else:
+                bin_tag = im + 1
+
             hdus.append(hdu)
             head = header.copy()
-            head['DESCR'] = ('gamma2, bin %d' % (im+1), 'Description')
+            head['DESCR'] = ('gamma2, bin {}'.format(bin_tag), 'Description')
             hdu = fits.ImageHDU(data=m_list[0][1].reshape(shp_mp),
                                 header=head)
             hdus.append(hdu)
             head = header.copy()
-            head['DESCR'] = ('gamma weight mask, bin %d' % (im+1),
+            head['DESCR'] = ('gamma weight mask, bin {}'.format(bin_tag),
                              'Description')
             hdu = fits.ImageHDU(data=m_list[1][0].reshape(shp_mp),
                                 header=head)
             hdus.append(hdu)
-            head['DESCR'] = ('gamma binary mask, bin %d' % (im+1),
+            head['DESCR'] = ('gamma binary mask, bin {}'.format(bin_tag),
                              'Description')
             hdu = fits.ImageHDU(data=m_list[1][1].reshape(shp_mp),
                                 header=head)
             hdus.append(hdu)
-            head['DESCR'] = ('counts map (shear sample), bin %d' % (im+1),
+            head['DESCR'] = ('counts map (shear sample), bin {}'.format(bin_tag),
                              'Description')
             hdu = fits.ImageHDU(data=m_list[1][2].reshape(shp_mp),
                                 header=head)

@@ -117,6 +117,9 @@ def createWQUMap(ra, dec, q, u, fsk, weights=None):
     flatmap = fsk.pos2pix(ra, dec)
     id_good = flatmap >= 0
 
+    if weights is None:
+        weights = np.ones_like(q)
+
     wqmap = np.bincount(flatmap[id_good],
                        weights=q[id_good]*weights[id_good],
                        minlength=fsk.get_size())
@@ -144,6 +147,9 @@ def createW2QU2Map(ra, dec, q, u, fsk, weights=None):
 
     flatmap = fsk.pos2pix(ra, dec)
     id_good = flatmap >= 0
+
+    if weights is None:
+        weights = np.ones_like(q)
 
     w2q2map = np.bincount(flatmap[id_good],
                        weights=q[id_good]**2*weights[id_good]**2,

@@ -324,10 +324,15 @@ class MockSurvey(object):
         # We therefore generate different noise maps for each realisation so that
         # we can then compute the noise power spectrum from these noise realisations
         if self.params['signal'] and self.params['noise']:
-            # Determine the noise bias on the auto power spectrum for each realisation
-            # For the cosmic shear, we now add the shear from the noisefree signal maps to the
-            # data i.e. we simulate how we would do it in real life
-            noisemaps = self.noisemaps.generate_maps(signalmaps)
+            if self.params['add_cs_sig']:
+                # Determine the noise bias on the auto power spectrum for each realisation
+                # For the cosmic shear, we now add the shear from the noisefree signal maps to the
+                # data i.e. we simulate how we would do it in real life
+                logger.info('Adding cosmic shear signal to noise maps.')
+                noisemaps = self.noisemaps.generate_maps(signalmaps)
+            else:
+                logger.info('Not adding cosmic shear signal to noise maps.')
+                noisemaps = self.noisemaps.generate_maps()
             for j, probe in enumerate(self.params['probes']):
                 logger.info('Computing the noise power spectrum for {}.'.format(probe))
                 if self.params['spins'][j] == 2:

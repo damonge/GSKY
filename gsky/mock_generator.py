@@ -159,10 +159,16 @@ class MockGen(PipelineStage) :
 
         if self.config['theory_sacc'] != 'NONE':
             logger.info('theory_sacc provided. Adding signal to noise maps.')
-            simparams = {key: self.config[key] for key in SIMPARAMS_KEYS}
         else:
             logger.info('theory_sacc not provided. Generating noise maps only.')
-            simparams = {}
+        simparams = {key: self.config[key] for key in SIMPARAMS_KEYS}
+
+        if 'add_cs_sig' in self.config.keys():
+            logger.info('add_cs_sig specified in config. Setting to provided value.')
+            simparams['add_cs_sig'] = self.config['add_cs_sig']
+        else:
+            logger.info('add_cs_sig not specified, setting to default: add_cs_sig = True.')
+            simparams['add_cs_sig'] = True
 
         mocksurvey = MockSurvey(masks, simparams, noiseparams)
 
