@@ -266,9 +266,14 @@ class ShearMapper(PipelineStage):
         hdus = []
         shp_mp = [self.fsk.ny, self.fsk.nx]
         for im, m_list in enumerate(gammamaps):
+            if im == len(gammamaps) - 1:
+                bin_tag = 'all'
+            else:
+                bin_tag = im + 1
+
             # Maps
             head = header.copy()
-            head['DESCR'] = ('gamma1, bin %d' % (im+1),
+            head['DESCR'] = ('gamma1, bin {}'.format(bin_tag),
                              'Description')
             if im == 0:
                 hdu = fits.PrimaryHDU(data=m_list[0][0].reshape(shp_mp),
@@ -276,11 +281,6 @@ class ShearMapper(PipelineStage):
             else:
                 hdu = fits.ImageHDU(data=m_list[0][0].reshape(shp_mp),
                                     header=head)
-
-            if im == len(gammamaps) - 1:
-                bin_tag = 'all'
-            else:
-                bin_tag = im + 1
 
             hdus.append(hdu)
             head = header.copy()
