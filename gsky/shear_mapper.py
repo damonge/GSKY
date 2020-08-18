@@ -85,7 +85,7 @@ class ShearMapper(PipelineStage):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat):
+    def get_w2e2(self, cat, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -97,6 +97,7 @@ class ShearMapper(PipelineStage):
             raise RuntimeError('get_gamma_maps must be called with '
                                'calibrated shear catalog. Aborting.')
         w2e2 = []
+        w2e2maps = []
 
         for ibin in self.bin_indxs:
             if ibin != -1:
@@ -104,16 +105,20 @@ class ShearMapper(PipelineStage):
             else:
                 msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
             subcat = cat[msk_bin]
-            w2e2maps = createW2QU2Map(subcat['ra'],
+            w2e2maps_curr = createW2QU2Map(subcat['ra'],
                                                    subcat['dec'],
                                                    subcat['ishape_hsm_regauss_e1_calib'],
                                                    subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
                                                    weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
 
-            w2e2_curr = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
+            w2e2_curr = 0.5*(np.mean(w2e2maps_curr[0]) + np.mean(w2e2maps_curr[1]))
             w2e2.append(w2e2_curr)
+            w2e2maps.append(w2e2maps_curr)
 
-        return np.array(w2e2)
+        if not return_maps:
+            return np.array(w2e2)
+        else:
+            return np.array(w2e2), w2e2maps
 
     def get_nz_cosmos(self):
         """
@@ -256,7 +261,10 @@ class ShearMapper(PipelineStage):
         e2rms = self.get_e2rms(cat)
 
         logger.info("Computing w2e2.")
-        w2e2 = self.get_w2e2(cat)
+        if self.get_output('w2e2_maps') != 'NONE':
+            w2e2, w2e2maps = self.get_w2e2(cat, return_maps=True)
+        else:
+            w2e2 = self.get_w2e2(cat)
 
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat)
@@ -328,6 +336,34 @@ class ShearMapper(PipelineStage):
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('gamma_maps'), overwrite=True)
 
+        if self.get_output('w2e2_maps') != 'NONE':
+            logger.info("Writing w2e2 maps to {}.".format(self.get_output('w2e2_maps')))
+            header = self.fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [self.fsk.ny, self.fsk.nx]
+            for im, m_list in enumerate(w2e2maps):
+                bin_tag = im + 1
+
+                # Maps
+                head = header.copy()
+                head['DESCR'] = ('w2e2_1, bin {}'.format(bin_tag),
+                                 'Description')
+                if im == 0:
+                    hdu = fits.PrimaryHDU(data=m_list[0].reshape(shp_mp),
+                                          header=head)
+                else:
+                    hdu = fits.ImageHDU(data=m_list[0].reshape(shp_mp),
+                                        header=head)
+
+                hdus.append(hdu)
+                head = header.copy()
+                head['DESCR'] = ('w2e2_2, bin {}'.format(bin_tag), 'Description')
+                hdu = fits.ImageHDU(data=m_list[1].reshape(shp_mp),
+                                    header=head)
+                hdus.append(hdu)
+
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('w2e2_maps'), overwrite=True)
 
         # Plotting
         for im, m_list in enumerate(gammamaps):
