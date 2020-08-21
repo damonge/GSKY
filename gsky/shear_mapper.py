@@ -18,7 +18,8 @@ class ShearMapper(PipelineStage):
               ('masked_fraction', FitsFile),
               ('cosmos_weights', FitsFile),
               ('pdf_matched', ASCIIFile)]
-    outputs = [('gamma_maps', FitsFile)]
+    outputs = [('gamma_maps', FitsFile),
+               ('w2e2_maps', FitsFile)]
     config_options = {'mask_type': 'sirius',
                       'pz_code': 'ephor_ab',
                       'pz_mark': 'best',
@@ -262,8 +263,11 @@ class ShearMapper(PipelineStage):
 
         logger.info("Computing w2e2.")
         if self.get_output('w2e2_maps') != 'NONE':
+            logger.info('Saving w2e2 maps.')
+            logger.info("Writing output to {}.".format(self.get_output('w2e2_maps')))
             w2e2, w2e2maps = self.get_w2e2(cat, return_maps=True)
         else:
+            logger.info('Not saving w2e2 maps.')
             w2e2 = self.get_w2e2(cat)
 
         logger.info("Creating shear maps and corresponding masks.")
