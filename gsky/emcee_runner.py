@@ -88,7 +88,10 @@ else:
     n_likes = 1
     config['saccdirs'] = [config['saccdirs']]
     config['tracers'] = [config['tracers']]
-    config['ell_max_trc'] = [config['ell_max_trc']]
+    if 'ell_max_trc' in config.keys():
+        config['ell_max_trc'] = [config['ell_max_trc']]
+    if 'ell_min_trc' in config.keys():
+        config['ell_min_trc'] = [config['ell_min_trc']]
     config['ells'] = [config['ells']]
     config['fit_comb'] = [config['fit_comb']]
     config['noisesacc_filename'] = [config['noisesacc_filename']]
@@ -108,6 +111,10 @@ if 'ell_max_trc' in config.keys():
     ell_max_dict = [dict(zip(config['tracers'][i], config['ell_max_trc'][i])) for i in range(n_likes)]
 else:
     ell_max_dict = [None for i in range(n_likes)]
+if 'ell_min_trc' in config.keys():
+    ell_min_dict = [dict(zip(config['tracers'][i], config['ell_min_trc'][i])) for i in range(n_likes)]
+else:
+    ell_min_dict = [None for i in range(n_likes)]
 
 for trcs_i in range(len(config['tracers'])):
     tracers = config['tracers'][trcs_i]
@@ -192,48 +199,49 @@ for i in range(n_likes):
                     if config['coadd_mode'] == 'inv':
                         logger.info('Performing inverse-variance sacc coaddition.')
                         noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                                  trc_combs=trc_combs[i], trim_sacc=False)
+                                                                  ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i], trim_sacc=False)
                     else:
                         logger.info('Performing weighted sacc coaddition.')
                         noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
                                                                   ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                                  trc_combs=trc_combs[i], trim_sacc=False)
+                                                                  ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i],
+                                                                  trim_sacc=False)
                 else:
                     logger.info('Performing inverse-variance sacc coaddition.')
                     noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
-                                                                 ell_max_dict=ell_max_dict[i],
+                                                                 ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
                                                                  trc_combs=trc_combs[i], trim_sacc=False)
             else:
                 if 'coadd_mode' in config.keys():
                     if config['coadd_mode'] == 'inv':
                         logger.info('Performing inverse-variance sacc coaddition.')
                         noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                                  trc_combs=trc_combs[i])
+                                                                  ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i])
                     else:
                         logger.info('Performing weighted sacc coaddition.')
                         noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
                                                                            ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                                           trc_combs=trc_combs[i])
+                                                                           ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i])
                 else:
                     logger.info('Performing inverse-variance sacc coaddition.')
                     noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
-                                                                 ell_max_dict=ell_max_dict[i],
+                                                                 ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
                                                                  trc_combs=trc_combs[i], trim_sacc=False)
         else:
             if 'coadd_mode' in config.keys():
                 if config['coadd_mode'] == 'inv':
                     logger.info('Performing inverse-variance sacc coaddition.')
                     noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                              trc_combs=trc_combs[i])
+                                                              ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i])
                 else:
                     logger.info('Performing weighted sacc coaddition.')
                     noise_saccfile_coadd[i] = sutils.coadd_saccs_separate(noise_saccfiles[i], config['tracers'][i],
                                                                        ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                                       trc_combs=trc_combs[i])
+                                                                       ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i])
             else:
                 logger.info('Performing inverse-variance sacc coaddition.')
                 noise_saccfile_coadd[i] = sutils.coadd_saccs(noise_saccfiles[i], config['tracers'][i],
-                                                             ell_max_dict=ell_max_dict[i],
+                                                             ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
                                                              trc_combs=trc_combs[i], trim_sacc=False)
     else:
         logger.info('No noise saccfile provided.')
@@ -247,46 +255,53 @@ if 'conv_win' in config.keys():
             if config['coadd_mode'] == 'inv':
                 logger.info('Performing inverse-variance sacc coaddition.')
                 saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                    trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+                                                    ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i],
+                                                    trim_sacc=False) for i in range(n_likes)]
             else:
                 logger.info('Performing weighted sacc coaddition.')
                 saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
-                                                             ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                             trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+                                                             ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
+                                                             weights=weights[i], trc_combs=trc_combs[i],
+                                                             trim_sacc=False) for i in range(n_likes)]
         else:
             logger.info('Performing inverse-variance sacc coaddition.')
             saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                 trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+                                                 ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i],
+                                                 trim_sacc=False) for i in range(n_likes)]
     else:
         if 'coadd_mode' in config.keys():
             if config['coadd_mode'] == 'inv':
                 logger.info('Performing inverse-variance sacc coaddition.')
                 saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                          trc_combs=trc_combs[i]) for i in range(n_likes)]
+                                                          ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i])
+                                                          for i in range(n_likes)]
             else:
                 logger.info('Performing weighted sacc coaddition.')
                 saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
-                                                                   ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                                   trc_combs=trc_combs[i]) for i in range(n_likes)]
+                                                                   ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
+                                                                   weights=weights[i], trc_combs=trc_combs[i])
+                                                                   for i in range(n_likes)]
         else:
             logger.info('Performing inverse-variance sacc coaddition.')
             saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                 trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+                                                 ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i],
+                                                 trim_sacc=False) for i in range(n_likes)]
 else:
     if 'coadd_mode' in config.keys():
         if config['coadd_mode'] == 'inv':
             logger.info('Performing inverse-variance sacc coaddition.')
             saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                                trc_combs=trc_combs[i]) for i in range(n_likes)]
+                                                ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i]) for i in range(n_likes)]
         else:
             logger.info('Performing weighted sacc coaddition.')
             saccfile_coadd = [sutils.coadd_saccs_separate(saccfiles[i], config['tracers'][i],
-                                                         ell_max_dict=ell_max_dict[i], weights=weights[i],
-                                                         trc_combs=trc_combs[i]) for i in range(n_likes)]
+                                                         ell_max_dict=ell_max_dict[i], ell_min_dict=ell_min_dict[i],
+                                                         weights=weights[i], trc_combs=trc_combs[i]) for i in range(n_likes)]
     else:
         logger.info('Performing inverse-variance sacc coaddition.')
         saccfile_coadd = [sutils.coadd_saccs(saccfiles[i], config['tracers'][i], ell_max_dict=ell_max_dict[i],
-                                             trc_combs=trc_combs[i], trim_sacc=False) for i in range(n_likes)]
+                                             ell_min_dict=ell_min_dict[i], trc_combs=trc_combs[i],
+                                             trim_sacc=False) for i in range(n_likes)]
 
 if 'path2NGcov' in config.keys():
     logger.info('path2NGcov provided. Adding NG covariance.')

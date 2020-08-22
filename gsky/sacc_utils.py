@@ -6,7 +6,7 @@ import copy
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs=None):
+def coadd_saccs(saccfiles, tracers, ell_max_dict=None, ell_min_dict=None, trim_sacc=True, trc_combs=None):
     logger.info('Coadding all saccfiles weighted by inverse variance.')
 
     for saccfile in saccfiles:
@@ -34,6 +34,10 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
                         ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
                         logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                         saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    if ell_min_dict is not None:
+                        ell_min_curr = max(ell_min_dict[tr_i], ell_min_dict[tr_j])
+                        logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                 else:
                     saccfile.remove_selection(tracers=(tr_i, tr_j))
         else:
@@ -44,6 +48,10 @@ def coadd_saccs(saccfiles, tracers, ell_max_dict=None, trim_sacc=True, trc_combs
                         ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
                         logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                         saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                    if ell_min_dict is not None:
+                        ell_min_curr = max(ell_min_dict[tr_i], ell_min_dict[tr_j])
+                        logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                        saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                 else:
                     saccfile.remove_selection(tracers=(tr_i, tr_j))
         logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
@@ -371,7 +379,8 @@ def coadd_sacc_means(saccfiles, config):
 
     return saccfile_coadd
 
-def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, trc_combs=None, is_noisesacc=False, trim_sacc=True):
+def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, ell_min_dict=None, weights=None, trc_combs=None,
+                         is_noisesacc=False, trim_sacc=True):
 
         logger.info('Coadding saccfiles with common probes.')
 
@@ -412,6 +421,10 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, tr
                             ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
                             logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                             saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                        if ell_min_dict is not None:
+                            ell_min_curr = max(ell_min_dict[tr_i], ell_min_dict[tr_j])
+                            logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                     else:
                         saccfile.remove_selection(tracers=(tr_i, tr_j))
             else:
@@ -422,6 +435,10 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, weights=None, tr
                             ell_max_curr = min(ell_max_dict[tr_i], ell_max_dict[tr_j])
                             logger.info('Removing ells > {} for {}, {}.'.format(ell_max_curr, tr_i, tr_j))
                             saccfile.remove_selection(tracers=(tr_i, tr_j), ell__gt=ell_max_curr)
+                        if ell_min_dict is not None:
+                            ell_min_curr = max(ell_min_dict[tr_i], ell_min_dict[tr_j])
+                            logger.info('Removing ells < {} for {}, {}.'.format(ell_min_curr, tr_i, tr_j))
+                            saccfile.remove_selection(tracers=(tr_i, tr_j), ell__lt=ell_min_curr)
                     else:
                         saccfile.remove_selection(tracers=(tr_i, tr_j))
             logger.info('Size of saccfile after trc and ell cuts {}.'.format(saccfile.mean.size))
