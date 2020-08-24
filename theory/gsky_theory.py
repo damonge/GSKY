@@ -418,6 +418,13 @@ class GSKYTheory(object):
                                                         (zbins[zbins>=0.], nz[zbins>=0.]), ia_bias=ia_bias),
                                                     'prof': self.pM,
                                                     'm': p['m_bin{}'.format(tracer_no)]}
+                elif 'm_eff' in p.keys():
+                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                                                        (zbins[zbins >= 0.],
+                                                                                         nz[zbins >= 0.]),
+                                                                                        ia_bias=ia_bias),
+                                                    'prof': self.pM,
+                                                    'm': p['m_eff']}
                 else:
                     ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
                                                         (zbins[zbins >= 0.], nz[zbins >= 0.]), ia_bias=ia_bias),
