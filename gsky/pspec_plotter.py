@@ -125,7 +125,7 @@ class PSpecPlotter(PipelineStage) :
 
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
-            theor = GSKYPrediction(saccfile, ell_theor, conv_win)
+            theor = GSKYPrediction(saccfile=saccfile, ells=ell_theor, conv_win=conv_win)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
             # Compute reduced chi2
