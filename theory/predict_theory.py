@@ -79,14 +79,14 @@ class GSKYPrediction(object):
                 cls.append(cl_temp)
 
             else:
-                ells_curr = np.array(self.saccfile.get_tag('ell', tracers=(tr_i, tr_j), data_type=datatype))
+                ells_curr, _ = self.saccfile.get_ell_cl(datatype, tr_i, tr_j, return_cov=False)
                 if self.conv_win:
                     # Get window
                     win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
                     if type(win) is list:
                         win = win[0]
                     ell_max = win.values.shape[0]
-                    itp = ClInterpolator(self.ells, np.amax(ell_max))
+                    itp = ClInterpolator(ells_curr, np.amax(ell_max))
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                 else:
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, ells_curr)
