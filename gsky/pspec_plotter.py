@@ -100,7 +100,7 @@ class PSpecPlotter(PipelineStage) :
         return
 
     def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None,
-                     params=None, plot_indx=None):
+                     params=None, plot_indx=None, conv_win=False):
 
         if plot_indx is not None:
             weightpow = self.config['weightpow'][plot_indx]
@@ -125,7 +125,7 @@ class PSpecPlotter(PipelineStage) :
 
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
-            theor = GSKYPrediction(saccfile, ell_theor)
+            theor = GSKYPrediction(saccfile, ell_theor, conv_win)
             cl_theor = theor.get_prediction(params, trc_combs=plot_pairs)
 
             # Compute reduced chi2
@@ -807,9 +807,13 @@ class PSpecPlotter(PipelineStage) :
 
             logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
+            if 'conv_win' not in self.config:
+                conv_win = False
+            else:
+                conv_win = self.config['conv_win']
             self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd,
                               fieldsaccs=saccfiles,
-                              field_noisesaccs=noise_saccfiles, params=theory_params)
+                              field_noisesaccs=noise_saccfiles, params=theory_params, conv_win=conv_win)
 
         # Permissions on NERSC
         os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
