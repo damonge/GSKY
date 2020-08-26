@@ -100,7 +100,7 @@ class PSpecPlotter(PipelineStage) :
         return
 
     def plot_spectra(self, saccfile, ntracers, plot_pairs, noise_saccfile=None, fieldsaccs=None, field_noisesaccs=None,
-                     params=None, plot_indx=None, conv_win=False):
+                     params=None, plot_indx=None):
 
         if plot_indx is not None:
             weightpow = self.config['weightpow'][plot_indx]
@@ -112,6 +112,10 @@ class PSpecPlotter(PipelineStage) :
             logscale_x = self.config['logscale_x'][plot_indx]
             logscale_y = self.config['logscale_y'][plot_indx]
             fig_name = self.config['fig_name'][plot_indx]
+            if 'conv_win' not in self.config:
+                conv_win = False
+            else:
+                conv_win = self.config['conv_win'][plot_indx]
         else:
             weightpow = self.config['weightpow']
             plot_theory = self.config['plot_theory']
@@ -122,6 +126,10 @@ class PSpecPlotter(PipelineStage) :
             logscale_x = self.config['logscale_x']
             logscale_y = self.config['logscale_y']
             fig_name = self.config['fig_name']
+            if 'conv_win' not in self.config:
+                conv_win = False
+            else:
+                conv_win = self.config['conv_win']
 
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
@@ -807,13 +815,9 @@ class PSpecPlotter(PipelineStage) :
 
             logger.info('Plotting tracer combination = {}.'.format(plot_pairs))
 
-            if 'conv_win' not in self.config:
-                conv_win = False
-            else:
-                conv_win = self.config['conv_win']
             self.plot_spectra(saccfile_coadd, ntracers, plot_pairs, noise_saccfile=noise_saccfile_coadd,
                               fieldsaccs=saccfiles,
-                              field_noisesaccs=noise_saccfiles, params=theory_params, conv_win=conv_win)
+                              field_noisesaccs=noise_saccfiles, params=theory_params)
 
         # Permissions on NERSC
         os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
