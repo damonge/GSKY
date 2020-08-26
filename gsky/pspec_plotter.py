@@ -3,10 +3,56 @@ import logging
 import numpy as np
 import os
 import scipy.stats
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sacc
 from theory.predict_theory import GSKYPrediction
+
+matplotlib.rcParams['lines.linewidth'] = 1.
+matplotlib.rcParams['lines.linestyle'] = '-'
+matplotlib.rcParams['lines.color'] = 'black'
+
+# fonts & text
+matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['font.weight'] = 'normal'
+matplotlib.rcParams['font.size'] = 12.0
+matplotlib.rcParams['text.color'] = 'black'
+matplotlib.rcParams['text.usetex'] = True
+
+# axes & ticks
+matplotlib.rcParams['axes.edgecolor'] = 'black'
+matplotlib.rcParams['axes.linewidth'] = 1.6
+matplotlib.rcParams['axes.grid'] = False
+matplotlib.rcParams['axes.titlesize'] = 'x-large'
+matplotlib.rcParams['axes.labelsize'] = 35
+matplotlib.rcParams['axes.labelweight'] = 'normal'
+matplotlib.rcParams['axes.labelcolor'] = 'black'
+matplotlib.rcParams['axes.formatter.limits'] = [-4, 4]
+
+matplotlib.rcParams['xtick.major.size'] = 7
+matplotlib.rcParams['xtick.minor.size'] = 4
+matplotlib.rcParams['xtick.major.pad'] = 6
+matplotlib.rcParams['xtick.minor.pad'] = 6
+matplotlib.rcParams['xtick.labelsize'] = 35
+matplotlib.rcParams['xtick.minor.width'] = 1.6
+matplotlib.rcParams['xtick.major.width'] = 1.6
+
+matplotlib.rcParams['ytick.major.size'] = 7
+matplotlib.rcParams['ytick.minor.size'] = 4
+matplotlib.rcParams['ytick.major.pad'] = 6
+matplotlib.rcParams['ytick.minor.pad'] = 6
+matplotlib.rcParams['ytick.labelsize'] = 35
+matplotlib.rcParams['ytick.minor.width'] = 1.6
+matplotlib.rcParams['ytick.major.width'] = 1.6
+
+# legends
+matplotlib.rcParams['legend.numpoints'] = 1
+matplotlib.rcParams['legend.fontsize'] = 34
+matplotlib.rcParams['legend.shadow'] = False
+matplotlib.rcParams['legend.frameon'] = False
+
+matplotlib.rcParams['figure.autolayout'] = True
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -151,20 +197,20 @@ class PSpecPlotter(PipelineStage) :
             if plot_errors:
                 if weightpow != -1:
                     ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=err_curr * np.power(ell_curr, weightpow),
-                                color='k', linestyle='--', marker='o', markeredgecolor='k', linewidth=2, markersize=9,
+                                color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2, markersize=9,
                                 elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
                 else:
                     ax.errorbar(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, yerr=err_curr * ell_curr*(ell_curr+1)/2./np.pi,
-                                color='k', linestyle='--', marker='o', markeredgecolor='k', linewidth=2, markersize=9,
+                                color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2, markersize=9,
                                 elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
             else:
                 if weightpow != -1:
                     ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
-                            color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
+                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
                 else:
                     ax.plot(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, linestyle='--', marker='o',
                             markeredgecolor='k',
-                            color='k', label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
+                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
 
             # Now plot the individual fields
             if fieldsaccs is not None:
@@ -201,17 +247,17 @@ class PSpecPlotter(PipelineStage) :
                     ell = ell_theor
                 if indices[i][0] == 0 and indices[i][1] == 0:
                     if weightpow != -1:
-                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[-1], \
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], \
                                 label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
                     else:
-                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], \
+                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], \
                                 label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
 
                 else:
                     if weightpow != -1:
-                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[-1], lw=2.4, zorder=-32)
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], lw=2.4, zorder=-32)
                     else:
-                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[-1], lw=2.4,
+                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], lw=2.4,
                                 zorder=-32)
 
                 delta = cl_curr - cl_theor_curr
