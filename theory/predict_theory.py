@@ -74,7 +74,7 @@ class GSKYPrediction(object):
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, self.ells)
 
                 if self.conv_win:
-                    cl_temp = tutil.convolve(cl_temp, win, itp)
+                    cl_temp = tutil.interp_and_convolve(cl_temp, win, itp)
 
                 cls.append(cl_temp)
 
@@ -94,7 +94,7 @@ class GSKYPrediction(object):
                 indx = self.saccfile.indices(datatype, (tr_i, tr_j))
 
                 if self.conv_win:
-                    cl_temp = tutil.convolve(cl_temp, win, itp)
+                    cl_temp = tutil.interp_and_convolve(cl_temp, win, itp)
 
                 cls[indx] = cl_temp
 
