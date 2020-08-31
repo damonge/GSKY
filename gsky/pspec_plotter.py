@@ -211,6 +211,7 @@ class PSpecPlotter(PipelineStage) :
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
             if plot_eb_be and tr_i != tr_j:
                 ax_ji = plt.subplot(gs[indices[i][1], indices[i][0]])
+                cl_ji_type = cl_type[:-2] + cl_type[-1] + cl_type[-2]
 
             if plot_errors:
                 ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=True)
@@ -219,7 +220,6 @@ class PSpecPlotter(PipelineStage) :
                     logger.info('Found negative diagonal elements of covariance matrix. Setting to zero.')
                     err_curr[np.isnan(err_curr)] = 0
                 if plot_eb_be and tr_i != tr_j:
-                    cl_ji_type = cl_type[-2]+cl_type[-1]+cl_type[-2]
                     ell_ji_curr, cl_ji_curr, cov_ji_curr = saccfile.get_ell_cl(cl_ji_type, tr_i, tr_j, return_cov=True)
                     err_ji_curr = np.sqrt(np.diag(cov_ji_curr))
                     if np.any(np.isnan(err_ji_curr)):
@@ -229,7 +229,6 @@ class PSpecPlotter(PipelineStage) :
             else:
                 ell_curr, cl_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
                 if plot_eb_be and tr_i != tr_j:
-                    cl_ji_type = cl_type[:-2]+cl_type[-1]+cl_type[-2]
                     ell_ji_curr, cl_ji_curr = saccfile.get_ell_cl(cl_ji_type, tr_i, tr_j, return_cov=False)
 
             if noise_saccfile is not None:
