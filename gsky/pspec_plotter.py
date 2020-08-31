@@ -16,7 +16,7 @@ matplotlib.rcParams['lines.color'] = 'black'
 # fonts & text
 matplotlib.rcParams['font.family'] = 'serif'
 matplotlib.rcParams['font.weight'] = 'normal'
-matplotlib.rcParams['font.size'] = 12.0
+matplotlib.rcParams['font.size'] = 35.0
 matplotlib.rcParams['text.color'] = 'black'
 matplotlib.rcParams['text.usetex'] = True
 
@@ -116,6 +116,11 @@ class PSpecPlotter(PipelineStage) :
                 conv_win = False
             else:
                 conv_win = self.config['conv_win'][plot_indx]
+            if 'plot_eb_be' not in self.config:
+                plot_eb_be = False
+            else:
+                plot_eb_be = self.config['plot_eb_be'][plot_indx]
+
         else:
             weightpow = self.config['weightpow']
             plot_theory = self.config['plot_theory']
@@ -130,6 +135,13 @@ class PSpecPlotter(PipelineStage) :
                 conv_win = False
             else:
                 conv_win = self.config['conv_win']
+            if 'plot_eb_be' not in self.config:
+                plot_eb_be = False
+            else:
+                plot_eb_be = self.config['plot_eb_be']
+                if plot_eb_be:
+                    assert cl_type == 'cl_eb' or cl_type == 'cl_be', 'plot_eb_be requested but cl_type is not equal '\
+                                                                     'cl_eb or cl_be. Aborting.'
 
         if plot_theory:
             logger.info('plot_theory = True. Computing theory predictions.')
@@ -139,6 +151,17 @@ class PSpecPlotter(PipelineStage) :
             # Compute reduced chi2
             indx_temp = np.hstack([saccfile.indices(cl_type, (tr_i_temp, tr_j_temp)) for
                                   (tr_i_temp, tr_j_temp) in plot_pairs])
+
+            # indx_temp_bb = np.hstack([saccfile.indices('cl_bb', (tr_i_temp, tr_j_temp)) for
+            #                        (tr_i_temp, tr_j_temp) in plot_pairs])
+            # indx_temp_eb = np.hstack([saccfile.indices('cl_eb', (tr_i_temp, tr_j_temp)) for
+            #                           (tr_i_temp, tr_j_temp) in plot_pairs])
+            # indx_temp_be = np.hstack([saccfile.indices('cl_eb', (tr_i_temp, tr_j_temp)) for
+            #                           (tr_i_temp, tr_j_temp) in plot_pairs if tr_i_temp[-1] != tr_j_temp[-1]])
+            # indx_temp = np.hstack((indx_temp_bb, indx_temp_eb, indx_temp_be))
+            # print(indx_temp.shape[0])
+
+
             cl_theor_temp = cl_theor[indx_temp]
             cl_temp = saccfile.mean[indx_temp]
             delta = cl_temp - cl_theor_temp
@@ -186,6 +209,8 @@ class PSpecPlotter(PipelineStage) :
         for i, (tr_i, tr_j) in enumerate(plot_pairs):
 
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
+            if plot_eb_be and tr_i != tr_j:
+                ax_ji = plt.subplot(gs[indices[i][0], indices[i][1]])
 
             if plot_errors:
                 ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=True)
@@ -193,8 +218,19 @@ class PSpecPlotter(PipelineStage) :
                 if np.any(np.isnan(err_curr)):
                     logger.info('Found negative diagonal elements of covariance matrix. Setting to zero.')
                     err_curr[np.isnan(err_curr)] = 0
+                if plot_eb_be and tr_i != tr_j:
+                    cl_ji_type = cl_type[-2]+cl_type[-1]+cl_type[-2]
+                    ell_ji_curr, cl_ji_curr, cov_ji_curr = saccfile.get_ell_cl(cl_ji_type, tr_i, tr_j, return_cov=True)
+                    err_ji_curr = np.sqrt(np.diag(cov_ji_curr))
+                    if np.any(np.isnan(err_ji_curr)):
+                        logger.info('Found negative diagonal elements of covariance matrix. Setting to zero.')
+                        err_curr[np.isnan(err_ji_curr)] = 0
+
             else:
                 ell_curr, cl_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
+                if plot_eb_be and tr_i != tr_j:
+                    cl_ji_type = cl_type[-2]+cl_type[-1]+cl_type[-2]
+                    ell_ji_curr, cl_ji_curr = saccfile.get_ell_cl(cl_ji_type, tr_i, tr_j, return_cov=False)
 
             if noise_saccfile is not None:
                 if tr_i == tr_j:
@@ -206,19 +242,41 @@ class PSpecPlotter(PipelineStage) :
                 if weightpow != -1:
                     ax.errorbar(ell_curr, cl_curr * np.power(ell_curr, weightpow), yerr=err_curr * np.power(ell_curr, weightpow),
                                 color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2, markersize=9,
-                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]))
                 else:
                     ax.errorbar(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, yerr=err_curr * ell_curr*(ell_curr+1)/2./np.pi,
                                 color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2, markersize=9,
-                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j))
+                                elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]))
+                if plot_eb_be:
+                    if weightpow != -1:
+                        ax_ji.errorbar(ell_ji_curr, cl_ji_curr * np.power(ell_ji_curr, weightpow),
+                                    yerr=err_ji_curr * np.power(ell_ji_curr, weightpow),
+                                    color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2,
+                                    markersize=9, elinewidth=2, capthick=2, capsize=3.5,
+                                    label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]))
+                    else:
+                        ax_ji.errorbar(ell_ji_curr, cl_ji_curr * ell_ji_curr * (ell_ji_curr + 1) / 2. / np.pi,
+                                    yerr=err_ji_curr * ell_ji_curr * (ell_ji_curr + 1) / 2. / np.pi,
+                                    color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2,
+                                    markersize=9, elinewidth=2, capthick=2, capsize=3.5,
+                                    label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]))
             else:
                 if weightpow != -1:
                     ax.plot(ell_curr, cl_curr * np.power(ell_curr, weightpow), linestyle='--', marker='o', markeredgecolor='k',
-                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
+                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]), linewidth=2, markersize=9)
                 else:
                     ax.plot(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, linestyle='--', marker='o',
                             markeredgecolor='k',
-                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i, tr_j), linewidth=2, markersize=9)
+                            color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]), linewidth=2, markersize=9)
+                if plot_eb_be and tr_i != tr_j:
+                    if weightpow != -1:
+                        ax_ji.plot(ell_ji_curr, cl_ji_curr * np.power(ell_ji_curr, weightpow), linestyle='--', marker='o',
+                                markeredgecolor='k', color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]),
+                                linewidth=2, markersize=9)
+                    else:
+                        ax_ji.plot(ell_ji_curr, cl_ji_curr * ell_ji_curr * (ell_ji_curr + 1) / 2. / np.pi, linestyle='--', marker='o',
+                                markeredgecolor='k', color=colors[3], label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]),
+                                linewidth=2, markersize=9)
 
             # Now plot the individual fields
             if fieldsaccs is not None:
@@ -255,18 +313,41 @@ class PSpecPlotter(PipelineStage) :
                     ell = ell_theor
                 if indices[i][0] == 0 and indices[i][1] == 0:
                     if weightpow != -1:
+                        # ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], \
+                        #         label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
                         ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], \
-                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
+                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
                     else:
+                        # ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], \
+                        #         label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
                         ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], \
-                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
+                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
 
                 else:
                     if weightpow != -1:
-                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], lw=2.4, zorder=-32)
+                        # ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], lw=2.4, zorder=-32)
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], lw=2.4, zorder=-32, \
+                                linestyle='--')
                     else:
-                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], lw=2.4,
-                                zorder=-32)
+                        # ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], lw=2.4, zorder=-32)
+                        ax.plot(ell, cl_theor_curr * ell * (ell + 1) / 2. / np.pi, color=colors[5], lw=2.4, zorder=-32, \
+                                linestyle='--')
+                if plot_eb_be and tr_i != tr_j:
+                    indx_ji_curr = saccfile.indices(cl_ji_type, (tr_i, tr_j))
+                    cl_ji_theor_curr = cl_theor[indx_ji_curr]
+                    if ell_theor == 'NONE':
+                        ell_ji = ell_ji_curr
+                    else:
+                        ell_ji = ell_theor
+                    if weightpow != -1:
+                        # ax.plot(ell_ji, cl_ji_theor_curr * np.power(ell_ji, weightpow), color=colors[5], lw=2.4, zorder=-32)
+                        ax.plot(ell_ji, cl_ji_theor_curr * np.power(ell_ji, weightpow), color=colors[5], lw=2.4,
+                                zorder=-32, linestyle='--')
+                    else:
+                        # ax.plot(ell_ji, cl_ji_theor_curr * ell_ji * (ell_ji + 1) / 2. / np.pi, color=colors[5], lw=2.4,
+                        #         zorder=-32)
+                        ax.plot(ell_ji, cl_ji_theor_curr * ell_ji * (ell_ji + 1) / 2. / np.pi, color=colors[5], lw=2.4,
+                                zorder=-32, linestyle='--')
 
                 delta = cl_curr - cl_theor_curr
                 invcov = np.linalg.inv(cov_curr)
@@ -283,7 +364,8 @@ class PSpecPlotter(PipelineStage) :
                 chi2s.append(chi2)
                 ptes.append(pte)
 
-            ax.set_xlabel(r'$\ell$')
+            if indices[i][0] == 3:
+                ax.set_xlabel(r'$\ell$')
             if weightpow == 0:
                 elltext = ''
             elif weightpow == 1:
@@ -292,7 +374,8 @@ class PSpecPlotter(PipelineStage) :
                 elltext = r'$\ell (\ell+1)/(2\pi)$'
             else:
                 elltext = r'$\ell^{{{}}}$'.format(weightpow)
-            ax.set_ylabel(elltext + r'$C_{\ell}$')
+            if indices[i][1] == 0:
+                ax.set_ylabel(elltext + r'$C_{\ell}$')
 
             if indices[i][0] == 0 and indices[i][1] == 0:
                 # handles, labels = ax.get_legend_handles_labels()
@@ -301,9 +384,9 @@ class PSpecPlotter(PipelineStage) :
                 # labels = [labels[1], labels[0]]
                 #
                 # ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
-                ax.legend(loc='best', prop={'size': 16}, ncol=2, frameon=False)
+                ax.legend(loc='upper left', ncol=2, frameon=False)
             else:
-                ax.legend(loc='best', prop={'size': 16}, frameon=False)
+                ax.legend(loc='best', frameon=False)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
 
             if logscale_x:
