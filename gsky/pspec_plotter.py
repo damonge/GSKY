@@ -383,10 +383,17 @@ class PSpecPlotter(PipelineStage) :
                 # labels = [labels[1], labels[0]]
                 #
                 # ax.legend(handles, labels, loc='best', prop={'size': 16}, ncol=2, frameon=False)
-                ax.legend(loc='upper left', ncol=2, frameon=False)
+                # ax.legend(loc='upper left', ncol=2, frameon=False)
+                ax.legend(loc='upper left', frameon=False)
             else:
-                ax.legend(loc='best', frameon=False)
+                ax.legend(loc='upper left', frameon=False)
+                if plot_eb_be and tr_i != tr_j:
+                    ax_ji.legend(loc='upper left', frameon=False)
+                    ax.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_type[-2:].upper()), transform=ax.transAxes)
+                    ax_ji.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax.transAxes)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
+            if plot_eb_be and tr_i != tr_j:
+                ax_ji.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
 
             if logscale_x:
                 ax.set_xscale('log')
