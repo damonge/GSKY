@@ -210,7 +210,7 @@ class PSpecPlotter(PipelineStage) :
 
             ax = plt.subplot(gs[indices[i][0], indices[i][1]])
             if plot_eb_be and tr_i != tr_j:
-                ax_ji = plt.subplot(gs[indices[i][0], indices[i][1]])
+                ax_ji = plt.subplot(gs[indices[i][1], indices[i][0]])
 
             if plot_errors:
                 ell_curr, cl_curr, cov_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=True)
@@ -247,7 +247,7 @@ class PSpecPlotter(PipelineStage) :
                     ax.errorbar(ell_curr, cl_curr * ell_curr*(ell_curr+1)/2./np.pi, yerr=err_curr * ell_curr*(ell_curr+1)/2./np.pi,
                                 color=colors[3], linestyle='--', marker='o', markeredgecolor=colors[3], linewidth=2, markersize=9,
                                 elinewidth=2, capthick=2, capsize=3.5, label=r'$C_{{\ell}}^{{{}{}}}$'.format(tr_i[-1], tr_j[-1]))
-                if plot_eb_be:
+                if plot_eb_be and tr_i != tr_j:
                     if weightpow != -1:
                         ax_ji.errorbar(ell_ji_curr, cl_ji_curr * np.power(ell_ji_curr, weightpow),
                                     yerr=err_ji_curr * np.power(ell_ji_curr, weightpow),
