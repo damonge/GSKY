@@ -390,7 +390,7 @@ class PSpecPlotter(PipelineStage) :
                 if plot_eb_be and tr_i != tr_j:
                     ax_ji.legend(loc='upper left', frameon=False)
                     ax.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_type[-2:].upper()), transform=ax.transAxes)
-                    ax_ji.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax.transAxes)
+                    ax_ji.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax_ji.transAxes)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
             if plot_eb_be and tr_i != tr_j:
                 ax_ji.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
