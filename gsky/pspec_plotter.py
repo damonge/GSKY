@@ -229,7 +229,7 @@ class PSpecPlotter(PipelineStage) :
             else:
                 ell_curr, cl_curr = saccfile.get_ell_cl(cl_type, tr_i, tr_j, return_cov=False)
                 if plot_eb_be and tr_i != tr_j:
-                    cl_ji_type = cl_type[-2]+cl_type[-1]+cl_type[-2]
+                    cl_ji_type = cl_type[:-2]+cl_type[-1]+cl_type[-2]
                     ell_ji_curr, cl_ji_curr = saccfile.get_ell_cl(cl_ji_type, tr_i, tr_j, return_cov=False)
 
             if noise_saccfile is not None:
@@ -341,12 +341,12 @@ class PSpecPlotter(PipelineStage) :
                         ell_ji = ell_theor
                     if weightpow != -1:
                         # ax.plot(ell_ji, cl_ji_theor_curr * np.power(ell_ji, weightpow), color=colors[5], lw=2.4, zorder=-32)
-                        ax.plot(ell_ji, cl_ji_theor_curr * np.power(ell_ji, weightpow), color=colors[5], lw=2.4,
+                        ax_ji.plot(ell_ji, cl_ji_theor_curr * np.power(ell_ji, weightpow), color=colors[5], lw=2.4,
                                 zorder=-32, linestyle='--')
                     else:
                         # ax.plot(ell_ji, cl_ji_theor_curr * ell_ji * (ell_ji + 1) / 2. / np.pi, color=colors[5], lw=2.4,
                         #         zorder=-32)
-                        ax.plot(ell_ji, cl_ji_theor_curr * ell_ji * (ell_ji + 1) / 2. / np.pi, color=colors[5], lw=2.4,
+                        ax_ji.plot(ell_ji, cl_ji_theor_curr * ell_ji * (ell_ji + 1) / 2. / np.pi, color=colors[5], lw=2.4,
                                 zorder=-32, linestyle='--')
 
                 delta = cl_curr - cl_theor_curr
@@ -391,8 +391,12 @@ class PSpecPlotter(PipelineStage) :
 
             if logscale_x:
                 ax.set_xscale('log')
+                if plot_eb_be and tr_i == tr_j:
+                    ax_ji.set_xscale('log')
             if logscale_y:
                 ax.set_yscale('log')
+                if plot_eb_be and tr_i == tr_j:
+                    ax_ji.set_yscale('log')
 
         out = np.zeros(len(tracer_names), dtype=[('name', '<U9'), ('chi2', float), ('dof', float), ('pte', float)])
         out['name'] = tracer_names
