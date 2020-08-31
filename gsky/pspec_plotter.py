@@ -314,13 +314,13 @@ class PSpecPlotter(PipelineStage) :
                     if weightpow != -1:
                         # ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], \
                         #         label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
-                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5], \
-                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
+                        ax.plot(ell, cl_theor_curr * np.power(ell, weightpow), color=colors[5],
+                                lw=2.4, zorder=-32, linestyle='--')
                     else:
                         # ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], \
                         #         label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32)
-                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5], \
-                                label=r'$\mathrm{pred.}$', lw=2.4, zorder=-32, linestyle='--')
+                        ax.plot(ell, cl_theor_curr * ell*(ell+1)/2./np.pi, color=colors[5],
+                                lw=2.4, zorder=-32, linestyle='--')
 
                 else:
                     if weightpow != -1:
@@ -386,11 +386,11 @@ class PSpecPlotter(PipelineStage) :
                 # ax.legend(loc='upper left', ncol=2, frameon=False)
                 ax.legend(loc='upper left', frameon=False)
             else:
-                ax.legend(loc='upper left', frameon=False)
+                ax.legend(loc='best', frameon=False)
                 if plot_eb_be and tr_i != tr_j:
                     ax_ji.legend(loc='upper left', frameon=False)
-                    ax.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_type[-2:].upper()), transform=ax.transAxes)
-                    ax_ji.text(0.9, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax_ji.transAxes)
+                    ax.text(0.8, 0.9, r'$\mathrm{{{}}}$'.format(cl_type[-2:].upper()), transform=ax.transAxes)
+                    ax_ji.text(0.8, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax_ji.transAxes)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
             if plot_eb_be and tr_i != tr_j:
                 ax_ji.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
