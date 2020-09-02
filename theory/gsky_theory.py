@@ -701,5 +701,10 @@ class GSKYTheory(object):
         if 'wl' in tr_j_name and 'm' in self.ccl_tracers[tr_j_name].keys():
             cls *= (1. + self.ccl_tracers[tr_j_name]['m'])
 
+        if 'wl' in tr_i_name and 'm_sel' in self.ccl_tracers[tr_i_name].keys():
+            cls *= (1. + self.ccl_tracers[tr_i_name]['m_sel'] + self.ccl_tracers[tr_i_name]['m_R'])
+        if 'wl' in tr_j_name and 'm_sel' in self.ccl_tracers[tr_j_name].keys():
+            cls *= (1. + self.ccl_tracers[tr_j_name]['m_sel'] + self.ccl_tracers[tr_j_name]['m_R'])
+
         return cls
             
