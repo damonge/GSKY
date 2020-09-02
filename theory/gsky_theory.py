@@ -44,6 +44,9 @@ DEFAULT_HMPARAMS_KEYS = ['mmin', 'mminp', 'm0', 'm0p', 'm1', 'm1p', 'bhydro', 'p
                          'zshift_g_bin0', 'zshift_g_bin1', 'zshift_g_bin2', 'zshift_g_bin3',
                          'zwidth_g_bin0', 'zwidth_g_bin1', 'zwidth_g_bin2', 'zwidth_g_bin3',
                          'm_bin0', 'm_bin1', 'm_bin2', 'm_bin3',
+                         'm_eff',
+                         'm_sel_bin0', 'm_sel_bin1', 'm_sel_bin2', 'm_sel_bin3',
+                         'm_R_bin0', 'm_R_bin1', 'm_R_bin2', 'm_R_bin3',
                          'A_IA', 'eta_IA', 'z0_IA',            # Intrinsic alignments
                          'cs2', 'R']                        # Effective halo model
 
@@ -414,21 +417,50 @@ class GSKYTheory(object):
                     ia_bias = None
 
                 if 'm_bin{}'.format(tracer_no) in p.keys():
-                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
-                                                        (zbins[zbins>=0.], nz[zbins>=0.]), ia_bias=ia_bias),
-                                                    'prof': self.pM,
-                                                    'm': p['m_bin{}'.format(tracer_no)]}
+                    if 'm_sel_bin{}'.format(tracer_no) not in p.keys():
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                            (zbins[zbins>=0.], nz[zbins>=0.]), ia_bias=ia_bias),
+                                                        'prof': self.pM,
+                                                        'm': p['m_bin{}'.format(tracer_no)]}
+                    else:
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                                                            (zbins[zbins >= 0.],
+                                                                                             nz[zbins >= 0.]),
+                                                                                            ia_bias=ia_bias),
+                                                        'prof': self.pM,
+                                                        'm': p['m_bin{}'.format(tracer_no)],
+                                                        'm_sel': p['m_sel_bin{}'.format(tracer_no)],
+                                                        'm_R': p['m_R_bin{}'.format(tracer_no)]}
                 elif 'm_eff' in p.keys():
-                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
-                                                                                        (zbins[zbins >= 0.],
-                                                                                         nz[zbins >= 0.]),
-                                                                                        ia_bias=ia_bias),
-                                                    'prof': self.pM,
-                                                    'm': p['m_eff']}
+                    if 'm_sel_bin{}'.format(tracer_no) not in p.keys():
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                                                            (zbins[zbins >= 0.],
+                                                                                             nz[zbins >= 0.]),
+                                                                                            ia_bias=ia_bias),
+                                                        'prof': self.pM,
+                                                        'm': p['m_eff']}
+                    else:
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                                                            (zbins[zbins >= 0.],
+                                                                                             nz[zbins >= 0.]),
+                                                                                            ia_bias=ia_bias),
+                                                        'prof': self.pM,
+                                                        'm': p['m_eff'],
+                                                        'm_sel': p['m_sel_bin{}'.format(tracer_no)],
+                                                        'm_R': p['m_R_bin{}'.format(tracer_no)]}
                 else:
-                    ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
-                                                        (zbins[zbins >= 0.], nz[zbins >= 0.]), ia_bias=ia_bias),
-                                                    'prof': self.pM}
+                    if 'm_sel_bin{}'.format(tracer_no) not in p.keys():
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                            (zbins[zbins >= 0.], nz[zbins >= 0.]), ia_bias=ia_bias),
+                                                        'prof': self.pM}
+                    else:
+                        ccl_tracer_dict[tracer.name] = {'ccl_tracer': ccl.WeakLensingTracer(self.cosmo,
+                                                                                            (zbins[zbins >= 0.],
+                                                                                             nz[zbins >= 0.]),
+                                                                                            ia_bias=ia_bias),
+                                                        'prof': self.pM,
+                                                        'm_sel': p['m_sel_bin{}'.format(tracer_no)],
+                                                        'm_R': p['m_R_bin{}'.format(tracer_no)]}
             else:
                 raise NotImplementedError('Only tracers galaxy_density, cmb_tSZ, cmb_convergence and galaxy_shear supported. Aborting.')
 
