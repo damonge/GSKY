@@ -100,7 +100,7 @@ else:
     # Weights for sacc coaddition
     if 'weights' in config.keys():
         logger.info('Using cooadd weights = {}.'.format(config['weights']))
-        weights = [config['weights']]
+        weights = [np.array(config['weights'])]
     else:
         logger.info('No weights provided.')
         weights = [None for i in range(n_likes)]

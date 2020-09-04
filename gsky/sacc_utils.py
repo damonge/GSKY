@@ -387,6 +387,8 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, ell_min_dict=Non
         if weights is None:
             logger.info('No weights supplied. Setting to 1.')
             weights = np.ones(len(saccfiles))
+        else:
+            logger.info('weights = {} provided.'.format(weights))
 
         for i, saccfile in enumerate(saccfiles):
             logger.info('Removing B-modes.')
@@ -494,6 +496,8 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd, weights=None):
     if weights is None:
         logger.info('No weights supplied. Setting to 1.')
         weights = np.ones(len(saccfiles))
+    else:
+        logger.info('weights = {} provided.'.format(weights))
 
     # Add tracers to sacc
     tempsacc = sacc.Sacc()
