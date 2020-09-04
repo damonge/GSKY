@@ -385,6 +385,7 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, ell_min_dict=Non
         logger.info('Coadding saccfiles with common probes.')
 
         if weights is None:
+            logger.info('No weights supplied. Setting to 1.')
             weights = np.ones(len(saccfiles))
 
         for i, saccfile in enumerate(saccfiles):
@@ -481,14 +482,18 @@ def coadd_saccs_separate(saccfiles, tracers, ell_max_dict=None, ell_min_dict=Non
             saccfile_coadd = saccfile_coadd_trimmed
         else:
             logger.info('Not trimming sacc.')
-            saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd)
+            saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd, weights)
             saccfile_coadd.add_covariance(coadd_cov)
 
         return saccfile_coadd
 
-def coadd_sacc_windows(saccfiles, saccfile_coadd):
+def coadd_sacc_windows(saccfiles, saccfile_coadd, weights=None):
 
     logger.info('Coadding window functions.')
+
+    if weights is None:
+        logger.info('No weights supplied. Setting to 1.')
+        weights = np.ones(len(saccfiles))
 
     # Add tracers to sacc
     tempsacc = sacc.Sacc()
@@ -504,18 +509,16 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
             # Get window
             if cl_coadd_curr != np.array([]):
                 win_coadd = []
-                n_wins = 0
-                for sacc_curr in saccfiles:
+                for i, sacc_curr in enumerate(saccfiles):
                     # Query windows from indices
                     ind_curr = sacc_curr.indices(data_type=data_type, tracers=(tr_i, tr_j))
                     if ind_curr != []:
                         win_curr = sacc_curr.get_bandpower_windows(ind_curr)
                         if win_coadd != []:
-                            win_coadd += win_curr.weight
+                            win_coadd += weights[i]*win_curr.weight
                         else:
-                            win_coadd = win_curr.weight
+                            win_coadd = weights[i]*win_curr.weight
                             ell_coadd = win_curr.values
-                        n_wins += 1
 
                 logger.info('Subsampling windows with deltal = 14.')
                 subsamp_winds_band = 14
@@ -523,7 +526,7 @@ def coadd_sacc_windows(saccfiles, saccfile_coadd):
                 n_bands = win_coadd.shape[1]
                 n_subsamp = n_ell // subsamp_winds_band
 
-                win_coadd /= n_wins
+                win_coadd /= np.sum(weights)
                 win_coadd_subsamp = win_coadd.T.reshape((n_bands, n_subsamp, subsamp_winds_band))
                 win_coadd_subsamp = np.sum(win_coadd_subsamp, axis=-1)
                 ell_subsamp = np.mean(ell_coadd.reshape(n_subsamp, -1), axis=-1)

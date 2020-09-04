@@ -75,7 +75,7 @@ if type(config['saccdirs'][0]) == list:
     if 'weights' in config.keys():
         assert type(config['weights']) == list, 'Multiple likelihoods requested but weights is not list. Aborting.'
         logger.info('Using cooadd weights = {}.'.format(config['weights']))
-        weights = config['weights']
+        weights = [np.array(config['weights'][i] for i in range(n_likes))]
     else:
         logger.info('No weights provided.')
         weights = [None for i in range(n_likes)]
