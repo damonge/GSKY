@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sacc
 from theory.predict_theory import GSKYPrediction
+from gsky.sacc_utils import coadd_sacc_windows
 
 matplotlib.rcParams['lines.linewidth'] = 1.
 matplotlib.rcParams['lines.linestyle'] = '-'
@@ -386,9 +387,12 @@ class PSpecPlotter(PipelineStage) :
                 # ax.legend(loc='upper left', ncol=2, frameon=False)
                 ax.legend(loc='upper left', frameon=False)
             else:
-                ax.legend(loc='best', frameon=False)
+                ax.legend(loc='upper left', frameon=False)
                 if plot_eb_be and tr_i != tr_j:
-                    ax_ji.legend(loc='best', frameon=False)
+                    if (tr_i[-1] == '0' and tr_j[-1] == '2') or (tr_i[-1] == '0' and tr_j[-1] == '3'):
+                        ax_ji.legend(loc='lower left', frameon=False)
+                    else:
+                        ax_ji.legend(loc='upper left', frameon=False)
                     ax.text(0.85, 0.9, r'$\mathrm{{{}}}$'.format(cl_type[-2:].upper()), transform=ax.transAxes)
                     ax_ji.text(0.85, 0.9, r'$\mathrm{{{}}}$'.format(cl_ji_type[-2:].upper()), transform=ax_ji.transAxes)
             ax.ticklabel_format(style='sci', scilimits=(-1, 4), axis='both')
@@ -682,9 +686,15 @@ class PSpecPlotter(PipelineStage) :
 
         return saccfile_coadd
 
-    def coadd_saccs_separate(self, saccfiles, is_noisesacc=False):
+    def coadd_saccs_separate(self, saccfiles, datatype, is_noisesacc=False, weights=None):
 
         logger.info('Coadding saccfiles with common probes.')
+
+        if weights is None:
+            logger.info('No weights supplied. Setting to 1.')
+            weights = np.ones(len(saccfiles))
+        else:
+            logger.info('weights = {} provided.'.format(weights))
 
         for i, saccfile in enumerate(saccfiles):
             if not any('y_' in s for s in self.config['tracers']) and not any('kappa_' in s for s in self.config['tracers']):
@@ -698,6 +708,11 @@ class PSpecPlotter(PipelineStage) :
                         logger.info('Removing kappa_0 from {}.'.format(self.config['saccdirs'][i]))
                         saccfile.remove_selection(tracers=('kappa_0', t))
                         saccfile.remove_selection(tracers=(t, 'kappa_0'))
+
+            datatypes = saccfile.get_data_types()
+            for datatype_curr in datatypes:
+                if datatype_curr != datatype:
+                    saccfile.remove_selection(data_type=datatype_curr)
 
             if self.ell_max_dict is not None:
                 logger.info('Size of saccfile before ell cuts {}.'.format(saccfile.mean.size))
@@ -722,30 +737,29 @@ class PSpecPlotter(PipelineStage) :
                 logger.info('Size of saccfile after ell cuts {}.'.format(saccfile.mean.size))
 
             if i == 0:
-                coadd_mean = saccfile.mean
+                coadd_mean = weights[i]*saccfile.mean
                 if self.config['plot_errors']:
                     if not is_noisesacc:
-                        coadd_cov = saccfile.covariance.covmat
+                        coadd_cov = weights[i]**2*saccfile.covariance.covmat
                     else:
                         if self.config['coadd_noise']:
-                            coadd_cov = saccfile.covariance.covmat
+                            coadd_cov = weights[i]**2*saccfile.covariance.covmat
             else:
-                coadd_mean += saccfile.mean
+                coadd_mean += weights[i]*saccfile.mean
                 if self.config['plot_errors']:
                     if not is_noisesacc:
-                        coadd_cov += saccfile.covariance.covmat
+                        coadd_cov += weights[i]**2*saccfile.covariance.covmat
                     else:
                         if self.config['coadd_noise']:
-                            coadd_cov += saccfile.covariance.covmat
+                            coadd_cov += weights[i]**2*saccfile.covariance.covmat
 
-        n_saccs = len(saccfiles)
-        coadd_mean /= n_saccs
+        coadd_mean /= np.sum(weights)
         if self.config['plot_errors']:
             if not is_noisesacc:
-                coadd_cov /= n_saccs ** 2
+                coadd_cov /= np.sum(weights) ** 2
             else:
                 if self.config['coadd_noise']:
-                    coadd_cov /= n_saccs ** 2
+                    coadd_cov /= np.sum(weights) ** 2
 
         # Copy sacc
         saccfile_coadd = saccfiles[0].copy()
@@ -753,9 +767,11 @@ class PSpecPlotter(PipelineStage) :
         saccfile_coadd.mean = coadd_mean
         if self.config['plot_errors']:
             if not is_noisesacc:
+                saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd, weights)
                 saccfile_coadd.add_covariance(coadd_cov)
             else:
                 if self.config['coadd_noise']:
+                    saccfile_coadd = coadd_sacc_windows(saccfiles, saccfile_coadd, weights)
                     saccfile_coadd.add_covariance(coadd_cov)
 
         return saccfile_coadd
@@ -775,45 +791,49 @@ class PSpecPlotter(PipelineStage) :
             logger.info('No theory config provided.')
             theory_params = None
 
-        saccfiles = []
-        for saccdir in self.config['saccdirs']:
-            if self.config['output_run_dir'] != 'NONE':
-                path2sacc = os.path.join(saccdir, self.config['output_run_dir']+'/'+'power_spectra_wodpj')
-            sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-            logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
-            if self.config['plot_errors']:
-                assert sacc_curr.covariance is not None, \
-                    'plot_errors = True but saccfiles {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
-            saccfiles.append(sacc_curr)
-
-        if self.config['noisesacc_filename'] != 'NONE':
-            logger.info('Reading provided noise saccfile.')
-            noise_saccfiles = []
-            for i, saccdir in enumerate(self.config['saccdirs']):
-                if self.config['output_run_dir'] != 'NONE':
-                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config['noisesacc_filename'])
-                noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
-                if self.config['plot_errors']:
-                    if self.config['coadd_noise']:
-                        assert noise_sacc_curr.covariance is not None, \
-                            'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(self.get_output_fname(path2sacc, 'sacc'))
-                    else:
-                        if self.config['coadd_mode'] == 'invvar':
-                            logger.info('coadd_mode = invvar. Adding covariance matrix to noise sacc.')
-                            noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
-                noise_saccfiles.append(noise_sacc_curr)
-            noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True)
-        else:
-            logger.info('No noise saccfile provided.')
-            noise_saccfile_coadd = None
-            noise_saccfiles = None
-
-        saccfile_coadd = self.coadd_saccs(saccfiles)
-
         if type(self.config['cl_type']) is list:
             logger.info('Generating list of plots.')
 
-            for pl_indx in range(len(self.config['cl_type'])):
+            for pl_indx, datatype in enumerate(self.config['cl_type']):
+
+                saccfiles = []
+                for saccdir in self.config['saccdirs']:
+                    if self.config['output_run_dir'] != 'NONE':
+                        path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+                    sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                    logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
+                    if self.config['plot_errors']:
+                        assert sacc_curr.covariance is not None, \
+                            'plot_errors = True but saccfiles {} does not contain covariance matrix. Aborting.'.format(
+                                self.get_output_fname(path2sacc, 'sacc'))
+                    saccfiles.append(sacc_curr)
+
+                if self.config['noisesacc_filename'] != 'NONE':
+                    logger.info('Reading provided noise saccfile.')
+                    noise_saccfiles = []
+                    for i, saccdir in enumerate(self.config['saccdirs']):
+                        if self.config['output_run_dir'] != 'NONE':
+                            path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config[
+                                'noisesacc_filename'])
+                        noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                        if self.config['plot_errors']:
+                            if self.config['coadd_noise']:
+                                assert noise_sacc_curr.covariance is not None, \
+                                    'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(
+                                        self.get_output_fname(path2sacc, 'sacc'))
+                            else:
+                                if self.config['coadd_mode'] == 'invvar':
+                                    logger.info('coadd_mode = invvar. Adding covariance matrix to noise sacc.')
+                                    noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
+                        noise_saccfiles.append(noise_sacc_curr)
+                    noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True, datatype=datatype)
+                else:
+                    logger.info('No noise saccfile provided.')
+                    noise_saccfile_coadd = None
+                    noise_saccfiles = None
+
+                saccfile_coadd = self.coadd_saccs(saccfiles, datatype=datatype)
+
                 plot_tracer_list = self.config['plot_tracers'][pl_indx]
                 ntracers = len(plot_tracer_list)
 
@@ -863,6 +883,45 @@ class PSpecPlotter(PipelineStage) :
 
         else:
             logger.info('Generating only single plot.')
+            datatype = self.config['cl_type']
+
+            saccfiles = []
+            for saccdir in self.config['saccdirs']:
+                if self.config['output_run_dir'] != 'NONE':
+                    path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + 'power_spectra_wodpj')
+                sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                logger.info('Read {}.'.format(self.get_output_fname(path2sacc, 'sacc')))
+                if self.config['plot_errors']:
+                    assert sacc_curr.covariance is not None, \
+                        'plot_errors = True but saccfiles {} does not contain covariance matrix. Aborting.'.format(
+                            self.get_output_fname(path2sacc, 'sacc'))
+                saccfiles.append(sacc_curr)
+
+            if self.config['noisesacc_filename'] != 'NONE':
+                logger.info('Reading provided noise saccfile.')
+                noise_saccfiles = []
+                for i, saccdir in enumerate(self.config['saccdirs']):
+                    if self.config['output_run_dir'] != 'NONE':
+                        path2sacc = os.path.join(saccdir, self.config['output_run_dir'] + '/' + self.config[
+                            'noisesacc_filename'])
+                    noise_sacc_curr = sacc.Sacc.load_fits(self.get_output_fname(path2sacc, 'sacc'))
+                    if self.config['plot_errors']:
+                        if self.config['coadd_noise']:
+                            assert noise_sacc_curr.covariance is not None, \
+                                'plot_errors = True but noise saccfile {} does not contain covariance matrix. Aborting.'.format(
+                                    self.get_output_fname(path2sacc, 'sacc'))
+                        else:
+                            if self.config['coadd_mode'] == 'invvar':
+                                logger.info('coadd_mode = invvar. Adding covariance matrix to noise sacc.')
+                                noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
+                    noise_saccfiles.append(noise_sacc_curr)
+                noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True, datatype=datatype)
+            else:
+                logger.info('No noise saccfile provided.')
+                noise_saccfile_coadd = None
+                noise_saccfiles = None
+
+            saccfile_coadd = self.coadd_saccs(saccfiles, datatype=datatype)
 
             plot_tracer_list = self.config['plot_tracers']
             ntracers = len(plot_tracer_list)

@@ -67,7 +67,7 @@ class GSKYPrediction(object):
                     win = self.saccfile.get_tag('window', tracers=(tr_i, tr_j), data_type=datatype)
                     if type(win) is list:
                         win = win[0]
-                    ell_max = win.values.shape[0]
+                    ell_max = int(np.ceil(np.amax(win.values)))
                     itp = ClInterpolator(self.ells, np.amax(ell_max))
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                 else:
@@ -84,7 +84,7 @@ class GSKYPrediction(object):
                 if self.conv_win:
                     # Get window
                     win = self.saccfile.get_bandpower_windows(indx)
-                    ell_max = win.values.shape[0]
+                    ell_max = int(np.ceil(np.amax(win.values)))
                     itp = ClInterpolator(ells_curr, np.amax(ell_max))
                     cl_temp = self.gskytheor.getCls(tr_i, tr_j, itp.ls_eval)
                 else:
