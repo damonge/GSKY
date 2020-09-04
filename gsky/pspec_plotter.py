@@ -422,12 +422,13 @@ class PSpecPlotter(PipelineStage) :
 
             return
 
-    def coadd_saccs(self, saccfiles, is_noisesacc=False):
+    def coadd_saccs(self, saccfiles, datatype, is_noisesacc=False, weights=None):
 
         if self.config['coadd_mode'] == 'invvar':
             saccfile_coadd = self.coadd_saccs_invvar(saccfiles)
         elif self.config['coadd_mode'] == 'separate':
-            saccfile_coadd = self.coadd_saccs_separate(saccfiles, is_noisesacc)
+            saccfile_coadd = self.coadd_saccs_separate(saccfiles, datatype=datatype, is_noisesacc=is_noisesacc,
+                                                       weights=weights)
         else:
             raise NotImplementedError('Only coadd_mode = invvar and separate implemented. Aborting.')
 
@@ -796,6 +797,11 @@ class PSpecPlotter(PipelineStage) :
 
             for pl_indx, datatype in enumerate(self.config['cl_type']):
 
+                if 'weights' in self.config.keys():
+                    weights = np.array(self.config['weights'])
+                else:
+                    weights = None
+
                 saccfiles = []
                 for saccdir in self.config['saccdirs']:
                     if self.config['output_run_dir'] != 'NONE':
@@ -826,13 +832,14 @@ class PSpecPlotter(PipelineStage) :
                                     logger.info('coadd_mode = invvar. Adding covariance matrix to noise sacc.')
                                     noise_sacc_curr.add_covariance(saccfiles[i].covariance.covmat)
                         noise_saccfiles.append(noise_sacc_curr)
-                    noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True, datatype=datatype)
+                    noise_saccfile_coadd = self.coadd_saccs(noise_saccfiles, is_noisesacc=True, datatype=datatype,
+                                                            weights=weights)
                 else:
                     logger.info('No noise saccfile provided.')
                     noise_saccfile_coadd = None
                     noise_saccfiles = None
 
-                saccfile_coadd = self.coadd_saccs(saccfiles, datatype=datatype)
+                saccfile_coadd = self.coadd_saccs(saccfiles, datatype=datatype, weights=weights)
 
                 plot_tracer_list = self.config['plot_tracers'][pl_indx]
                 ntracers = len(plot_tracer_list)
