@@ -19,7 +19,7 @@ matplotlib.rcParams['font.family'] = 'serif'
 matplotlib.rcParams['font.weight'] = 'normal'
 matplotlib.rcParams['font.size'] = 35.0
 matplotlib.rcParams['text.color'] = 'black'
-matplotlib.rcParams['text.usetex'] = True
+# matplotlib.rcParams['text.usetex'] = True
 
 # axes & ticks
 matplotlib.rcParams['axes.edgecolor'] = 'black'
