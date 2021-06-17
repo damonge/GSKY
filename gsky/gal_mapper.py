@@ -143,9 +143,9 @@ class GalMapper(PipelineStage):
         # data_syst = np.genfromtxt(self.get_input('pdf_matched'),
         #                           dtype=[('pzname', '|U8'),
         #                                  ('fname', '|U256')])
-        self.pdf_files = {n: fn
-                          for n, fn in zip(np.atleast_1d(data_syst['pzname']),
-                                           np.atleast_1d(data_syst['fname']))}
+        # self.pdf_files = {n: fn
+        #                   for n, fn in zip(np.atleast_1d(data_syst['pzname']),
+        #                                    np.atleast_1d(data_syst['fname']))}
 
         logger.info("Getting COSMOS N(z)s")
         pzs_cosmos = self.get_nz_cosmos()
