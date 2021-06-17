@@ -102,7 +102,7 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     self.windows_counts[:, il] = wsp[counts_indx][counts_indx].decouple_cell(wsp[counts_indx][counts_indx].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
-                                if self.config['subsampl_winds']:
+                                if self.config['subsamp_winds']:
                                     self.windows_counts = self.windows_counts.reshape((self.nbands, n_subsamp, subsamp_winds_band))
                                     self.windows_counts = np.mean(self.windows_counts, axis=-1)
                                 np.savez(self.get_output_fname('windows_l')+'_{}{}'.format(counts_indx, counts_indx)+'.npz', windows=self.windows_counts)
@@ -140,7 +140,7 @@ class PowerSpecter(PipelineStage) :
                                     t_hat[il] = 1.
                                     windows_curr[:, il] = wsp[i_curr][ii_curr].decouple_cell(wsp[i_curr][ii_curr].couple_cell(l_arr, [t_hat]))
                                     t_hat[il] = 0.
-                            if self.config['subsampl_winds']:
+                            if self.config['subsamp_winds']:
                                 windows_curr = windows_curr.reshape(
                                     (self.nbands, n_subsamp, subsamp_winds_band))
                                 windows_curr = np.mean(windows_curr, axis=-1)
@@ -174,7 +174,7 @@ class PowerSpecter(PipelineStage) :
                                 t_hat[il] = 1.
                                 windows_curr[:, il] = wsp[i][ii].decouple_cell(wsp[i][ii].couple_cell(l_arr, [t_hat]))
                                 t_hat[il] = 0.
-                        if self.config['subsampl_winds']:
+                        if self.config['subsamp_winds']:
                             windows_curr = windows_curr.reshape(
                                 (self.nbands, n_subsamp, subsamp_winds_band))
                             windows_curr = np.mean(windows_curr, axis=-1)
