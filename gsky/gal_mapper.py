@@ -139,10 +139,10 @@ class GalMapper(PipelineStage):
         self.msk *= cat['wl_fulldepth_fullcolor']
         cat = cat[self.msk]
 
-        logger.info("Reading pdf filenames")
-        data_syst = np.genfromtxt(self.get_input('pdf_matched'),
-                                  dtype=[('pzname', '|U8'),
-                                         ('fname', '|U256')])
+        # logger.info("Reading pdf filenames")
+        # data_syst = np.genfromtxt(self.get_input('pdf_matched'),
+        #                           dtype=[('pzname', '|U8'),
+        #                                  ('fname', '|U256')])
         self.pdf_files = {n: fn
                           for n, fn in zip(np.atleast_1d(data_syst['pzname']),
                                            np.atleast_1d(data_syst['fname']))}
@@ -150,10 +150,10 @@ class GalMapper(PipelineStage):
         logger.info("Getting COSMOS N(z)s")
         pzs_cosmos = self.get_nz_cosmos()
 
-        logger.info("Getting pdf stacks")
-        pzs_stack = {}
-        for n in self.pdf_files.keys():
-            pzs_stack[n] = self.get_nz_stack(cat, n)
+        # logger.info("Getting pdf stacks")
+        # pzs_stack = {}
+        # for n in self.pdf_files.keys():
+        #     pzs_stack[n] = self.get_nz_stack(cat, n)
 
         logger.info("Getting number count maps")
         n_maps = self.get_nmaps(cat)
@@ -185,10 +185,10 @@ class GalMapper(PipelineStage):
                                 format='E'),
                     fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
                                 format='E')]
-            for n in self.pdf_files.keys():
-                cols.append(fits.Column(name='nz_'+n,
-                                        array=pzs_stack[n][im, 2, :],
-                                        format='E'))
+            # for n in self.pdf_files.keys():
+            #     cols.append(fits.Column(name='nz_'+n,
+            #                             array=pzs_stack[n][im, 2, :],
+            #                             format='E'))
             hdus.append(fits.BinTableHDU.from_columns(cols))
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('ngal_maps'), overwrite=True)

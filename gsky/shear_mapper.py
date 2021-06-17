@@ -242,21 +242,21 @@ class ShearMapper(PipelineStage):
         self.msk *= cat['wl_fulldepth_fullcolor']
         cat = cat[self.msk]
 
-        logger.info("Reading pdf filenames")
-        data_syst = np.genfromtxt(self.get_input('pdf_matched'),
-                                  dtype=[('pzname', '|U8'),
-                                         ('fname', '|U256')])
-        self.pdf_files = {n: fn
-                          for n, fn in zip(np.atleast_1d(data_syst['pzname']),
-                                           np.atleast_1d(data_syst['fname']))}
+        # logger.info("Reading pdf filenames")
+        # data_syst = np.genfromtxt(self.get_input('pdf_matched'),
+        #                           dtype=[('pzname', '|U8'),
+        #                                  ('fname', '|U256')])
+        # self.pdf_files = {n: fn
+        #                   for n, fn in zip(np.atleast_1d(data_syst['pzname']),
+        #                                    np.atleast_1d(data_syst['fname']))}
 
         logger.info("Getting COSMOS N(z)s")
         pzs_cosmos = self.get_nz_cosmos()
 
-        logger.info("Getting pdf stacks")
-        pzs_stack = {}
-        for n in self.pdf_files.keys():
-            pzs_stack[n] = self.get_nz_stack(cat, n)
+        # logger.info("Getting pdf stacks")
+        # pzs_stack = {}
+        # for n in self.pdf_files.keys():
+        #     pzs_stack[n] = self.get_nz_stack(cat, n)
 
         logger.info("Computing e2rms.")
         e2rms = self.get_e2rms(cat)
@@ -325,10 +325,10 @@ class ShearMapper(PipelineStage):
                                 format='E'),
                     fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
                                 format='E')]
-            for n in self.pdf_files.keys():
-                cols.append(fits.Column(name='nz_'+n,
-                                        array=pzs_stack[n][im, 2, :],
-                                        format='E'))
+            # for n in self.pdf_files.keys():
+            #     cols.append(fits.Column(name='nz_'+n,
+            #                             array=pzs_stack[n][im, 2, :],
+            #                             format='E'))
             hdus.append(fits.BinTableHDU.from_columns(cols))
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
@@ -379,9 +379,9 @@ class ShearMapper(PipelineStage):
             z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
             nzs = [pzs_cosmos[im, 2, :]]
             names = ['COSMOS']
-            for n in self.pdf_files.keys():
-                nzs.append(pzs_stack[n][im, 2, :])
-                names.append(n)
+            # for n in self.pdf_files.keys():
+            #     nzs.append(pzs_stack[n][im, 2, :])
+            #     names.append(n)
             plot_curves(self.config, 'nz_%d' % im,
                         z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
         x = np.arange(self.nbins)
