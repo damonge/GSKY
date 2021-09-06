@@ -17,10 +17,16 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
     depth, _ = createMeanStdMaps(ra, dec,
                                  quantity=snrthreshold*flux_err,
                                  fsk=fsk)
-
     # convert from fluxes to mags
+    print("max depth", np.sum(depth))
     depth = 10.**(23+6)*depth
-    depth[~np.isnan(depth)] = -2.5*np.log10(depth[~np.isnan(depth)])+23.9
+    print("min depth", np.min(depth))
+    print("second largest depth", np.sort(depth)[-10])
+    print("Number of nans", len(depth) - sum(~np.isnan(depth)))
+    depth[depth>0] = -2.5*np.log10(depth[depth>0])+23.9
+    # depth[~np.isnan(depth)] = -2.5*np.log10(depth[~np.isnan(depth)])+23.9
+    print("min depth", np.min(depth))
+    print("second largest depth", np.sort(depth)[-2])
 
     # find the std.
     quantity = 10.**(23+6)*snrthreshold*flux_err
@@ -28,16 +34,18 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
     dontcare, depth_std = createMeanStdMaps(ra, dec,
                                             quantity=quantity,
                                             fsk=fsk)
-
     # Zeros in empty pixels
     nc = createCountsMap(ra, dec, fsk)
+    print(np.sum(nc))
     depth[nc < 1] = 0
     depth_std[nc < 1] = 0
 
     if interpolate:
         from scipy.interpolate import griddata
         idgood = np.where(nc > count_threshold)[0]
+        print(idgood)
         coords_all = np.array(fsk.pix2pos(np.arange(fsk.npix))).T
+        print(coords_all[idgood])
         depth = griddata(coords_all[idgood],
                          depth[idgood], coords_all,
                          method='nearest', fill_value=0)

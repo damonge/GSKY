@@ -1,1 +1,1 @@
-/global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_WIDE_XMM.fits
+/Users/Roohi/Documents/Princeton/Projects/s19a_clustering/XMM_no_m.fits

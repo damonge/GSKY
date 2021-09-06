@@ -26,17 +26,22 @@ class ReduceCat(PipelineStage):
     name = "ReduceCat"
     inputs = [('raw_data', FitsFile),
               ('star_catalog', FitsFile)]
+    # outputs = [('clean_catalog', FitsFile),
+    #            ('dust_map', FitsFile),
+    #            ('star_map', FitsFile),
+    #            ('bo_mask', FitsFile),
+    #            ('masked_fraction', FitsFile),
+    #            ('depth_map', FitsFile),
+    #            ('ePSF_map', FitsFile),
+    #            ('ePSFres_map', FitsFile),
+    #            ('TPSF_map', FitsFile),
+    #            ('TPSFres_map', FitsFile),
+    #            ('star_catalog_matched', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
                ('dust_map', FitsFile),
                ('star_map', FitsFile),
-               ('bo_mask', FitsFile),
                ('masked_fraction', FitsFile),
-               ('depth_map', FitsFile),
-               ('ePSF_map', FitsFile),
-               ('ePSFres_map', FitsFile),
-               ('TPSF_map', FitsFile),
-               ('TPSFres_map', FitsFile),
-               ('star_catalog_matched', FitsFile)]
+               ('depth_map', FitsFile)]
     config_options = {'plots_dir': None,
                       'min_snr': 10., 'depth_cut': 24.5,
                       'mapping': {'wcs': None, 'res': 0.0285,
@@ -44,8 +49,8 @@ class ReduceCat(PipelineStage):
                                   'projection': 'CAR'},
                       'band': 'i', 'depth_method': 'fluxerr',
                       'shearrot': 'noflip', 'mask_type': 'sirius',
-                      'ra':  'ra', 'dec':  'dec',
-                      'pz_code': 'ephor_ab', 'pz_mark': 'best',
+                      'ra':  'i_ra', 'dec':  'i_dec',
+                      'pz_code': 'dnnz', 'pz_mark': 'best',
                       'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.5]}
     bands = ['g', 'r', 'i', 'z', 'y']
 
@@ -76,9 +81,12 @@ class ReduceCat(PipelineStage):
         :param sel: mask used to select the stars to be used.
         """
         logger.info("Creating star map")
-        mstar = createCountsMap(cat[self.config['ra']][sel],
-                                cat[self.config['dec']][sel],
-                                fsk)+0.
+        # mstar = createCountsMap(cat[self.config['ra']][sel],
+        #                         cat[self.config['dec']][sel],
+        #                         fsk)+0.
+        mstar = createCountsMap(cat[self.config['ra']],
+                                cat[self.config['dec']],
+                                fsk)
         descstar = ('Stars, '+self.config['band'] +
                     '<%.2lf' % (self.config['depth_cut']))
         return mstar, descstar
@@ -116,16 +124,16 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Generating masked fraction map")
         masked = np.ones(len(cat))
-        if mask_fulldepth:
-            masked *= cat['wl_fulldepth_fullcolor']
-        if self.config['mask_type'] == 'arcturus':
-            masked *= cat['mask_Arcturus']
-        elif self.config['mask_type'] == 'sirius':
-            masked *= np.logical_not(cat['iflags_pixel_bright_object_center'])
-            masked *= np.logical_not(cat['iflags_pixel_bright_object_any'])
-        else:
-            raise ValueError('Mask type '+self.config['mask_type'] +
-                             ' not supported')
+        # if mask_fulldepth:
+        #     masked *= cat['wl_fulldepth_fullcolor']
+        # if self.config['mask_type'] == 'arcturus':
+        #     masked *= cat['mask_Arcturus']
+        # elif self.config['mask_type'] == 'sirius':
+        #     masked *= np.logical_not(cat['iflags_pixel_bright_object_center'])
+        #     masked *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+        # else:
+        #     raise ValueError('Mask type '+self.config['mask_type'] +
+        #                      ' not supported')
         masked_fraction, _ = createMeanStdMaps(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                masked, fsk)
@@ -142,16 +150,22 @@ class ReduceCat(PipelineStage):
         logger.info("Creating depth maps")
         method = self.config['depth_method']
         band = self.config['band']
-        snrs = cat['%scmodel_flux' % band]/cat['%scmodel_flux_err' % band]
+        snrs = cat['%s_psfflux_flux' % band]/cat['%s_psfflux_fluxerr' % band]
         if method == 'fluxerr':
-            arr1 = cat['%scmodel_flux_err' % band]
+            arr1 = cat['%s_psfflux_fluxerr' % band]
+            arr1_copy = arr1
+            print('min arr1', np.min(arr1_copy))
+            # convert to erg s^{-1} cm^{-2} Hz^{-1}
+            arr1_copy = np.array(arr1_copy*pow(10, -32), dtype='float64')
             arr2 = None
         else:
-            arr1 = cat['%scmodel_mag' % band]
+            arr1 = cat['%s_psfflux_mag' % band]
+            arr1_copy = np.copy(arr1)
             arr2 = snrs
-        depth, _ = get_depth(method, cat[self.config['ra']],
-                             cat[self.config['dec']],
-                             arr1=arr1, arr2=arr2,
+        print(arr1)    
+        depth, _ = get_depth(method, cat[self.config['ra']][cat['i_psfflux_mag']>21.5],
+                             cat[self.config['dec']][cat['i_psfflux_mag']>21.5],
+                             arr1=arr1_copy[cat['i_psfflux_mag']>21.5], arr2=arr2,
                              fsk=fsk, snrthreshold=self.config['min_snr'],
                              interpolate=True, count_threshold=4)
         desc = '%d-s depth, ' % (self.config['min_snr'])+band+' '+method+' mean'
@@ -334,22 +348,23 @@ class ReduceCat(PipelineStage):
         zf_arr = self.config['pz_bins'][1:]
         self.nbins = len(zi_arr)
 
-        if self.config['pz_code'] == 'ephor_ab':
-            self.pz_code = 'eab'
-        elif self.config['pz_code'] == 'frankenz':
-            self.pz_code = 'frz'
-        elif self.config['pz_code'] == 'nnpz':
-            self.pz_code = 'nnz'
+        if self.config['pz_code'] == 'dnnz':
+            self.pz_code = 'dnnz'
+        # elif self.config['pz_code'] == 'frankenz':
+        #     self.pz_code = 'frz'
+        # elif self.config['pz_code'] == 'nnpz':
+        #     self.pz_code = 'nnz'
         else:
             raise KeyError("Photo-z method "+self.config['pz_code'] +
-                           " unavailable. Choose ephor_ab, frankenz or nnpz")
+                           " unavailable. Choose dnnz")
 
         if self.config['pz_mark'] not in ['best', 'mean', 'mode', 'mc']:
             raise KeyError("Photo-z mark "+self.config['pz_mark'] +
                            " unavailable. Choose between "
                            "best, mean, mode and mc")
 
-        self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
+        # self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
+        self.column_mark = self.pz_code+'_'+'photoz_'+self.config['pz_mark']
         zs = cat[self.column_mark]
 
         # Assign all galaxies to bin -1
@@ -406,30 +421,32 @@ class ReduceCat(PipelineStage):
         cat.remove_rows(~sel)
 
         # Collect sample cuts
-        sel_area = cat['wl_fulldepth_fullcolor']
-        sel_clean = sel_area & cat['clean_photometry']
+        #sel_area = cat['wl_fulldepth_fullcolor']
+        # sel_clean = cat['clean_photometry']
+        sel_area = np.ones(len(cat), dtype=bool)
+        sel_clean = np.ones(len(cat), dtype=bool)
         sel_maglim = np.ones(len(cat), dtype=bool)
-        sel_maglim[cat['%scmodel_mag' % band] -
-                   cat['a_%s' % band] > self.config['depth_cut']] = 0
+        # sel_maglim[cat['%sc_model_mag' % band] -
+        #            cat['a_%s' % band] > self.config['depth_cut']] = 0
         # Blending
         sel_blended = np.ones(len(cat), dtype=bool)
         # abs_flux<10^-0.375
-        sel_blended[cat['iblendedness_abs_flux'] >= 0.42169650342] = 0
+        # sel_blended[cat['iblendedness_abs_flux'] >= 0.42169650342] = 0
         # S/N in i
         sel_fluxcut_i = np.ones(len(cat), dtype=bool)
-        sel_fluxcut_i[cat['icmodel_flux'] < 10*cat['icmodel_flux_err']] = 0
+        # sel_fluxcut_i[cat['i_cmodel_flux'] < 10*cat['i_cmodel_flux_err']] = 0
         # S/N in g
         sel_fluxcut_g = np.ones(len(cat), dtype=int)
-        sel_fluxcut_g[cat['gcmodel_flux'] < 5*cat['gcmodel_flux_err']] = 0
+        # sel_fluxcut_g[cat['gcmodel_flux'] < 5*cat['gcmodel_flux_err']] = 0
         # S/N in r
         sel_fluxcut_r = np.ones(len(cat), dtype=int)
-        sel_fluxcut_r[cat['rcmodel_flux'] < 5*cat['rcmodel_flux_err']] = 0
+        # sel_fluxcut_r[cat['rcmodel_flux'] < 5*cat['rcmodel_flux_err']] = 0
         # S/N in z
         sel_fluxcut_z = np.ones(len(cat), dtype=int)
-        sel_fluxcut_z[cat['zcmodel_flux'] < 5*cat['zcmodel_flux_err']] = 0
+        # sel_fluxcut_z[cat['zcmodel_flux'] < 5*cat['zcmodel_flux_err']] = 0
         # S/N in y
         sel_fluxcut_y = np.ones(len(cat), dtype=int)
-        sel_fluxcut_y[cat['ycmodel_flux'] < 5*cat['ycmodel_flux_err']] = 0
+        # sel_fluxcut_y[cat['ycmodel_flux'] < 5*cat['ycmodel_flux_err']] = 0
         # S/N in grzy (at least 2 pass)
         sel_fluxcut_grzy = (sel_fluxcut_g+sel_fluxcut_r +
                             sel_fluxcut_z+sel_fluxcut_y >= 2)
@@ -437,18 +454,18 @@ class ReduceCat(PipelineStage):
         sel_fluxcut = sel_fluxcut_i*sel_fluxcut_grzy
         # Stars
         sel_stars = np.ones(len(cat), dtype=bool)
-        sel_stars[cat['iclassification_extendedness'] > 0.99] = 0
+        # sel_stars[cat['iclassification_extendedness'] > 0.99] = 0
         # Galaxies
         sel_gals = np.ones(len(cat), dtype=bool)
-        sel_gals[cat['iclassification_extendedness'] < 0.99] = 0
+        # sel_gals[cat['iclassification_extendedness'] < 0.99] = 0
         # PSF validation set stars
         sel_psf_valid = np.ones(len(cat), dtype=bool)
-        sel_psf_valid[cat['icalib_psf_used'] == True] = 0
+        # sel_psf_valid[cat['icalib_psf_used'] == True] = 0
 
         ####
         # Generate sky projection
-        fsk = FlatMapInfo.from_coords(cat[sel_area][self.config['ra']],
-                                      cat[sel_area][self.config['dec']],
+        fsk = FlatMapInfo.from_coords(cat[self.config['ra']],
+                                      cat[self.config['dec']],
                                       self.mpp)
 
         ####
@@ -462,7 +479,13 @@ class ReduceCat(PipelineStage):
         #    This needs to be done for stars passing the same cuts as the
         #    sample (except for the s/g separator)
         # Above magnitude limit
-        mstar, descstar = self.make_star_map(cat, fsk,
+
+        if self.get_input('star_catalog') != 'NONE':
+            logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
+            hdul = fits.open(self.get_input('star_catalog'))
+            star_cat = hdul[1].data
+
+        mstar, descstar = self.make_star_map(star_cat, fsk,
                                              sel_clean *
                                              sel_maglim *
                                              sel_stars *
@@ -472,115 +495,115 @@ class ReduceCat(PipelineStage):
                            descript=descstar)
 
         # 3- e_PSF
-        if self.get_input('star_catalog') != 'NONE':
-            logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
-            hdul = fits.open(self.get_input('star_catalog'))
-            star_cat = hdul[1].data
+        # if self.get_input('star_catalog') != 'NONE':
+        #     logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
+        #     hdul = fits.open(self.get_input('star_catalog'))
+        #     star_cat = hdul[1].data
             # TODO: do these stars need to have the same cuts as our sample?
-            star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
-            logger.info('Creating e_PSF and T_PSF maps.')
-            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat_matched, fsk)
-            logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat_matched, e_plus_I, e_cross_I, fsk)
-            logger.info("Writing output to {}.".format(self.get_output('ePSF_map')))
-            header = fsk.wcs.to_header()
-            hdus = []
-            shp_mp = [fsk.ny, fsk.nx]
+            # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
+            # logger.info('Creating e_PSF and T_PSF maps.')
+            # mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat_matched, fsk)
+            # logger.info("Computing w2e2.")
+            # w2e2 = self.get_w2e2(star_cat_matched, e_plus_I, e_cross_I, fsk)
+            # logger.info("Writing output to {}.".format(self.get_output('ePSF_map')))
+            # header = fsk.wcs.to_header()
+            # hdus = []
+            # shp_mp = [fsk.ny, fsk.nx]
             # Maps
-            head = header.copy()
-            head['DESCR'] = ('e_PSF1', 'Description')
-            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
-                                      header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSF2', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSF weight mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('e_PSF binary mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            # w2e2
-            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
-            hdus.append(fits.BinTableHDU.from_columns(cols))
-            hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSF1', 'Description')
+            # hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+            #                           header=head)
+            # hdus.append(hdu)
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSF2', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSF weight mask', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head['DESCR'] = ('e_PSF binary mask', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # # w2e2
+            # cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            # hdus.append(fits.BinTableHDU.from_columns(cols))
+            # hdulist = fits.HDUList(hdus)
+            # hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
 
-            fsk.write_flat_map(self.get_output('TPSF_map'),
-                               np.array([mPSFstar[2], mPSFstar[2].astype('bool').astype('int')]),
-                               descript=['T_PSF', 'T_PSF binary mask'])
-            star_cat_matched['ishape_hsm_PSF_e1'] = e_plus_I
-            star_cat_matched['ishape_hsm_PSF_e2'] = e_cross_I
-            star_cat_matched['ishape_hsm_PSF_T'] = T_I
+            # fsk.write_flat_map(self.get_output('TPSF_map'),
+            #                    np.array([mPSFstar[2], mPSFstar[2].astype('bool').astype('int')]),
+            #                    descript=['T_PSF', 'T_PSF binary mask'])
+            # star_cat_matched['ishape_hsm_PSF_e1'] = e_plus_I
+            # star_cat_matched['ishape_hsm_PSF_e2'] = e_cross_I
+            # star_cat_matched['ishape_hsm_PSF_T'] = T_I
 
-            # 4- delta_e_PSF
-            logger.info('Creating e_PSF and T_PSF residual maps.')
-            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat_matched, fsk)
-            logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat_matched, delta_e_plus, delta_e_cross, fsk)
-            # Write e_PSFres map
-            logger.info("Writing output to {}.".format(self.get_output('ePSFres_map')))
-            header = fsk.wcs.to_header()
-            hdus = []
-            shp_mp = [fsk.ny, fsk.nx]
-            # Maps
-            head = header.copy()
-            head['DESCR'] = ('e_PSFres1', 'Description')
-            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
-                                      header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSFres2', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSFres weight mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('e_PSFres binary mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            # w2e2
-            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
-            hdus.append(fits.BinTableHDU.from_columns(cols))
-            hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
-            # Write TPSFres map
-            fsk.write_flat_map(self.get_output('TPSFres_map'),
-                               np.array([mPSFresstar[2], mPSFresstar[2].astype('bool').astype('int')]),
-                               descript=['T_PSFres', 'T_PSFres binary mask'])
-            star_cat_matched['ishape_delta_PSF_e1'] = delta_e_plus
-            star_cat_matched['ishape_delta_PSF_e2'] = delta_e_cross
-            star_cat_matched['ishape_delta_PSF_T'] = delta_T
-            star_cat_matched['ishape_hsm_e1'] = e_plus_I
-            star_cat_matched['ishape_hsm_e2'] = e_cross_I
-            star_cat_matched.write(self.get_output('star_catalog_matched'), overwrite=True)
+            # # 4- delta_e_PSF
+            # logger.info('Creating e_PSF and T_PSF residual maps.')
+            # mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat_matched, fsk)
+            # logger.info("Computing w2e2.")
+            # w2e2 = self.get_w2e2(star_cat_matched, delta_e_plus, delta_e_cross, fsk)
+            # # Write e_PSFres map
+            # logger.info("Writing output to {}.".format(self.get_output('ePSFres_map')))
+            # header = fsk.wcs.to_header()
+            # hdus = []
+            # shp_mp = [fsk.ny, fsk.nx]
+            # # Maps
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSFres1', 'Description')
+            # hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
+            #                           header=head)
+            # hdus.append(hdu)
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSFres2', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head = header.copy()
+            # head['DESCR'] = ('e_PSFres weight mask', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head['DESCR'] = ('e_PSFres binary mask', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            # hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
+            #                     header=head)
+            # hdus.append(hdu)
+            # # w2e2
+            # cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            # hdus.append(fits.BinTableHDU.from_columns(cols))
+            # hdulist = fits.HDUList(hdus)
+            # hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
+            # # Write TPSFres map
+            # fsk.write_flat_map(self.get_output('TPSFres_map'),
+            #                    np.array([mPSFresstar[2], mPSFresstar[2].astype('bool').astype('int')]),
+            #                    descript=['T_PSFres', 'T_PSFres binary mask'])
+            # star_cat_matched['ishape_delta_PSF_e1'] = delta_e_plus
+            # star_cat_matched['ishape_delta_PSF_e2'] = delta_e_cross
+            # star_cat_matched['ishape_delta_PSF_T'] = delta_T
+            # star_cat_matched['ishape_hsm_e1'] = e_plus_I
+            # star_cat_matched['ishape_hsm_e2'] = e_cross_I
+            # star_cat_matched.write(self.get_output('star_catalog_matched'), overwrite=True)
 
-        else:
-            logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
+        # else:
+        #     logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
 
         # 5- Binary BO mask
-        mask_bo, fsg = self.make_bo_mask(cat[sel_area], fsk,
-                                         mask_fulldepth=True)
-        fsg.write_flat_map(self.get_output('bo_mask'), mask_bo,
-                           descript='Bright-object mask')
+        # mask_bo, fsg = self.make_bo_mask(cat[sel_area], fsk,
+        #                                  mask_fulldepth=True)
+        # fsg.write_flat_map(self.get_output('bo_mask'), mask_bo,
+        #                    descript='Bright-object mask')
 
         # 6- Masked fraction
         masked_fraction_cont = self.make_masked_fraction(cat, fsk,
@@ -590,7 +613,7 @@ class ReduceCat(PipelineStage):
                            descript='Masked fraction')
 
         # 7- Compute depth map
-        depth, desc = self.make_depth_map(cat[sel_stars], fsk)
+        depth, desc = self.make_depth_map(star_cat, fsk)
         fsk.write_flat_map(self.get_output('depth_map'),
                            depth, descript=desc)
 
@@ -607,7 +630,7 @@ class ReduceCat(PipelineStage):
 
         ####
         # Define shear catalog
-        cat['shear_cat'] = self.shear_cut(cat)
+        # cat['shear_cat'] = self.shear_cut(cat)
 
         ####
         # Photo-z binning
@@ -615,19 +638,19 @@ class ReduceCat(PipelineStage):
 
         ####
         # Calibrated shears
-        e1c, e2c, mhat, resp = self.shear_calibrate(cat)
-        cat['ishape_hsm_regauss_e1_calib'] = e1c
-        cat['ishape_hsm_regauss_e2_calib'] = e2c
+        # e1c, e2c, mhat, resp = self.shear_calibrate(cat)
+        # cat['ishape_hsm_regauss_e1_calib'] = e1c
+        # cat['ishape_hsm_regauss_e2_calib'] = e2c
 
         ####
         # Write final catalog
         # 1- header
         logger.info("Writing output")
         hdr = fits.Header()
-        for ibin in range(self.nbins):
-            hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
-        for ibin in range(self.nbins):
-            hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
+        # for ibin in range(self.nbins):
+        #     hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
+        # for ibin in range(self.nbins):
+        #     hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
         hdr['BAND'] = self.config['band']
         hdr['DEPTH'] = self.config['depth_cut']
         prm_hdu = fits.PrimaryHDU(header=hdr)
@@ -643,23 +666,23 @@ class ReduceCat(PipelineStage):
         for i_d, d in enumerate(dustmaps):
             plot_map(self.config, fsk, d, 'dust_%d' % i_d)
         plot_map(self.config, fsk, mstar, 'Nstar')
-        if self.get_input('star_catalog') != 'NONE':
-            plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
-            plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
-            plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
-            plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
-            plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
-            plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
-            plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
-            plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
-            plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
-            plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
-        plot_map(self.config, fsg, mask_bo, 'bo_mask')
+        # if self.get_input('star_catalog') != 'NONE':
+        #     plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
+        #     plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
+        #     plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
+        #     plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
+        #     plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
+        #     plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
+        #     plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
+        #     plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
+        #     plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
+        #     plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
+        # plot_map(self.config, fsg, mask_bo, 'bo_mask')
         plot_map(self.config, fsk, masked_fraction_cont, 'masked_fraction')
         plot_map(self.config, fsk, depth, 'depth_map')
-        plot_histo(self.config, 'cmodel_mags',
-                   [cat['%scmodel_mag' % b] for b in self.bands],
-                   ['m_%s' % b for b in self.bands], bins=100, logy=True)
+        # plot_histo(self.config, 'cmodel_mags',
+        #            [cat['%s_cmodel_mag' % b] for b in self.bands],
+        #            ['m_%s' % b for b in self.bands], bins=100, logy=True)
         ####
 
         # Permissions on NERSC

@@ -1,1 +1,1 @@
-/global/cscratch1/sd/damonge/GSKY/HSC_data/HSC_WIDE_GAMA15H.fits
+/Users/Roohi/Documents/Princeton/Projects/s19a_clustering/GAMA15H_no_m.fits

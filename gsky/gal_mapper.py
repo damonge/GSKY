@@ -14,11 +14,10 @@ logger = logging.getLogger(__name__)
 
 class GalMapper(PipelineStage):
     name = "GalMapper"
-    inputs = [('clean_catalog', FitsFile), ('masked_fraction', FitsFile),
-              ('cosmos_weights', FitsFile), ('pdf_matched', ASCIIFile)]
+    inputs = [('clean_catalog', FitsFile), ('masked_fraction', FitsFile)]
     outputs = [('ngal_maps', FitsFile)]
     config_options = {'mask_type': 'sirius',
-                      'pz_code': 'ephor_ab',
+                      'pz_code': 'dnnz',
                       'pz_mark': 'best',
                       'pz_bins': [0.15, 0.50, 0.75, 1.00, 1.50],
                       'nz_bin_num': 200,
@@ -33,7 +32,7 @@ class GalMapper(PipelineStage):
         for i in range(self.nbins):
             msk_bin = cat['tomo_bin'] == i
             subcat = cat[msk_bin]
-            nmap = createCountsMap(subcat['ra'], subcat['dec'], self.fsk)
+            nmap = createCountsMap(subcat['i_ra'], subcat['i_dec'], self.fsk)
             maps.append(nmap)
         return np.array(maps)
 
@@ -44,24 +43,24 @@ class GalMapper(PipelineStage):
         zi_arr = self.config['pz_bins'][:-1]
         zf_arr = self.config['pz_bins'][1:]
 
-        if self.config['pz_code'] == 'ephor_ab':
-            pz_code = 'eab'
-        elif self.config['pz_code'] == 'frankenz':
-            pz_code = 'frz'
-        elif self.config['pz_code'] == 'nnpz':
-            pz_code = 'nnz'
+        if self.config['pz_code'] == 'dnnz':
+            pz_code = 'dnnz'
+        # elif self.config['pz_code'] == 'frankenz':
+        #     pz_code = 'frz'
+        # elif self.config['pz_code'] == 'nnpz':
+        #     pz_code = 'nnz'
         else:
             raise KeyError("Photo-z method "+self.config['pz_code'] +
-                           " unavailable. Choose ephor_ab, frankenz or nnpz")
+                           " unavailable. Choose dnnz")
 
         if self.config['pz_mark'] not in ['best', 'mean', 'mode', 'mc']:
             raise KeyError("Photo-z mark "+self.config['pz_mark'] +
                            " unavailable. Choose between best, mean, " +
                            "mode and mc")
 
-        self.column_mark = 'pz_'+self.config['pz_mark']+'_'+pz_code
+        self.column_mark = self.pz_code+'_'+'photoz_'+self.config['pz_mark']
 
-        weights_file = fits.open(self.get_input('cosmos_weights'))[1].data
+        # weights_file = fits.open(self.get_input('cosmos_weights'))[1].data
 
         pzs = []
         for zi, zf in zip(zi_arr, zf_arr):
@@ -128,16 +127,16 @@ class GalMapper(PipelineStage):
         logger.info("Reading catalog")
         cat = fits.open(self.get_input('clean_catalog'))[1].data
         # Remove masked objects
-        if self.config['mask_type'] == 'arcturus':
-            self.msk = cat['mask_Arcturus'].astype(bool)
-        elif self.config['mask_type'] == 'sirius':
-            self.msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
-            self.msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
-        else:
-            raise KeyError("Mask type "+self.config['mask_type'] +
-                           " not supported. Choose arcturus or sirius")
-        self.msk *= cat['wl_fulldepth_fullcolor']
-        cat = cat[self.msk]
+        # if self.config['mask_type'] == 'arcturus':
+        #     self.msk = cat['mask_Arcturus'].astype(bool)
+        # elif self.config['mask_type'] == 'sirius':
+        #     self.msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
+        #     self.msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+        # else:
+        #     raise KeyError("Mask type "+self.config['mask_type'] +
+        #                    " not supported. Choose arcturus or sirius")
+        # self.msk *= cat['wl_fulldepth_fullcolor']
+        # cat = cat[self.msk]
 
         # logger.info("Reading pdf filenames")
         # data_syst = np.genfromtxt(self.get_input('pdf_matched'),
@@ -147,8 +146,8 @@ class GalMapper(PipelineStage):
         #                   for n, fn in zip(np.atleast_1d(data_syst['pzname']),
         #                                    np.atleast_1d(data_syst['fname']))}
 
-        logger.info("Getting COSMOS N(z)s")
-        pzs_cosmos = self.get_nz_cosmos()
+        # logger.info("Getting COSMOS N(z)s")
+        # pzs_cosmos = self.get_nz_cosmos()
 
         # logger.info("Getting pdf stacks")
         # pzs_stack = {}
@@ -177,33 +176,33 @@ class GalMapper(PipelineStage):
             hdus.append(hdu)
 
             # Nz
-            cols = [fits.Column(name='z_i', array=pzs_cosmos[im, 0, :],
-                                format='E'),
-                    fits.Column(name='z_f', array=pzs_cosmos[im, 1, :],
-                                format='E'),
-                    fits.Column(name='nz_cosmos', array=pzs_cosmos[im, 2, :],
-                                format='E'),
-                    fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
-                                format='E')]
+            # cols = [fits.Column(name='z_i', array=pzs_cosmos[im, 0, :],
+            #                     format='E'),
+            #         fits.Column(name='z_f', array=pzs_cosmos[im, 1, :],
+            #                     format='E'),
+            #         fits.Column(name='nz_cosmos', array=pzs_cosmos[im, 2, :],
+            #                     format='E'),
+            #         fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
+            #                     format='E')]
             # for n in self.pdf_files.keys():
             #     cols.append(fits.Column(name='nz_'+n,
             #                             array=pzs_stack[n][im, 2, :],
             #                             format='E'))
-            hdus.append(fits.BinTableHDU.from_columns(cols))
+            # hdus.append(fits.BinTableHDU.from_columns(cols))
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('ngal_maps'), overwrite=True)
 
         # Plotting
         for im, m in enumerate(n_maps):
             plot_map(self.config, self.fsk, m, 'ngal_%d' % im)
-            z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
-            nzs = [pzs_cosmos[im, 2, :]]
-            names = ['COSMOS']
+            # z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
+            # nzs = [pzs_cosmos[im, 2, :]]
+            # names = ['COSMOS']
             # for n in self.pdf_files.keys():
             #     nzs.append(pzs_stack[n][im, 2, :])
             #     names.append(n)
-            plot_curves(self.config, 'nz_%d' % im,
-                        z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
+            # plot_curves(self.config, 'nz_%d' % im,
+            #             z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
 
         # Permissions on NERSC
         os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')

@@ -1,7 +1,7 @@
 global:
   depth_cut: 24.5
   mapping:
-    wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
+    #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
     res: 0.00833333333333
     pad: 0.2
     res_bo: 0.003
@@ -11,10 +11,10 @@ global:
   mask_thr: 0.5
   shearrot: noflip
   sys_collapse_type: average
-  pz_code: ephor_ab
+  pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /global/cscratch1/sd/damonge/GSKY/outputs/GAMA15H_ceci/plots
+  plots_dir: /Users/Roohi/Documents/Princeton/Projects/s19a_clustering/GSKY_outputs/GAMA15H_ceci/plots
 
 ReduceCat:
   min_snr: 10.
