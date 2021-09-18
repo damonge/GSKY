@@ -41,6 +41,20 @@ class FitsFile(DataFile):
             mode = 'rw'
         return fitsio.FITS(path, mode=mode, **kwargs)
 
+class HspFile(DataFile):
+    """
+    A data file in the FITS format.
+    Using these files requires the fitsio package.
+    """
+    suffix = 'fits'
+
+    @classmethod
+    def open(cls, path, mode, **kwargs):
+        import healsparse as hsp
+        # Fitsio doesn't have pure 'w' modes, just 'rw'.
+        # Maybe we should check if the file already exists here?
+
+        return hsp.HealSparseMap.read(path)
 
 class ASCIIFile(DataFile):
     """

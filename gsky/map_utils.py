@@ -196,6 +196,44 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
 
     return mean, std
 
+def createSumMap(ra, dec, quantity, fsk):
+    """
+    Creates maps of the sum of a given quantity
+    measured at the position of a number of objects.
+    :param ra: right ascension for each object.
+    :param dec: declination for each object.
+    :param quantity: measurements of the quantity to map for each object.
+    :param fsk: a flatmaps.FlatMapInfo object describing the geometry of
+        the output map.
+    """
+    pix_ids = fsk.pos2pix(ra, dec)
+    id_good = pix_ids >= 0
+    print('pix_ids', pix_ids)
+    mp = np.bincount(pix_ids[id_good],
+                     weights=quantity[id_good],
+                     minlength=fsk.get_size())
+
+    return mp
+
+def createMedianMap(ra, dec, quantity, fsk):
+    """
+    Creates maps of the sum of a given quantity
+    measured at the position of a number of objects.
+    :param ra: right ascension for each object.
+    :param dec: declination for each object.
+    :param quantity: measurements of the quantity to map for each object.
+    :param fsk: a flatmaps.FlatMapInfo object describing the geometry of
+        the output map.
+    """
+    pix_ids = fsk.pos2pix(ra, dec)
+    id_good = pix_ids >= 0
+    print('pix_ids', pix_ids)
+    mp = np.zeros(fsk.get_size())
+    for pix in np.unique(pix_ids[id_good]):
+        mask = pix_ids[id_good]==pix
+        mp[pix] = np.median(quantity[id_good][mask])
+
+    return mp
 
 def createMask(ra, dec, flags, flatsky_base, reso_mask):
     """
