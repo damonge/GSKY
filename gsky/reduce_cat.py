@@ -5,6 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 import numpy as np
 import os
+import healpy as hp
 from .flatmaps import FlatMapInfo
 from .map_utils import (createCountsMap,
                         createMeanStdMaps,
@@ -24,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
-    inputs = [('raw_data', FitsFile),
+    inputs = [('cut_map', FitsFile),
+              ('raw_data', FitsFile),
               ('star_catalog', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
     #            ('dust_map', FitsFile),
@@ -124,6 +126,21 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Generating masked fraction map")
         masked = np.ones(len(cat))
+        # full depth full color cut based on healpix map
+        hpfname =   "s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        mfactor =   np.pi/180.
+        indices_map =   np.where(m)[0]
+        nside   =   hp.get_nside(m)
+        phi     =   cat[self.config['ra']]*mfactor
+        theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
+        indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
+        masked *= np.in1d(indices_obj, indices_map)
+
+        # bright object mask
+        masked *= np.logical_not(cat['i_mask_brightstar_any'])
+        masked2 = masked*np.logical_not(cat['weak_lensing_flag'])
+        print("Raw data count", np.sum(masked2))
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -387,7 +404,7 @@ class ReduceCat(PipelineStage):
         self.mpp = self.config['mapping']
 
         # Read list of files
-        f = open(self.get_input('raw_data'))
+        f = open(self.get_input('cut_map'))
         files = [s.strip() for s in f.readlines()]
         f.close()
 
@@ -419,6 +436,9 @@ class ReduceCat(PipelineStage):
         logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
+
+        # Read raw catalog, for getting masked fraction
+        cat_raw = Table.read(self.get_input('raw_data'))
 
         # Collect sample cuts
         #sel_area = cat['wl_fulldepth_fullcolor']
