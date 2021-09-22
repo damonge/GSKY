@@ -138,9 +138,11 @@ class ReduceCat(PipelineStage):
         masked *= np.in1d(indices_obj, indices_map)
 
         # bright object mask
-        masked *= np.logical_not(cat['i_mask_brightstar_any'])
-        masked2 = masked*np.logical_not(cat['weak_lensing_flag'])
-        print("Raw data count", np.sum(masked2))
+        masked *= np.logical_not(cat['i_mask_brightstar_ghost'])
+        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        #masked2 = masked*np.logical_not(cat['weak_lensing_flag'])
+        #print("Raw data count", np.sum(masked2))
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -626,7 +628,7 @@ class ReduceCat(PipelineStage):
         #                    descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat_raw, fsk,
                                                          mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
