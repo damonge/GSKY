@@ -213,7 +213,7 @@ class ReduceCat(PipelineStage):
                              interpolate=True, count_threshold=4)
         desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
 
-        return depth, desc
+        return seeing, desc
 
     def match_star_cats(self, cat, sel, star_cat):
         """
