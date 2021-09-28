@@ -14,7 +14,7 @@ global:
   pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /Users/Roohi/Documents/Princeton/Projects/s19a_clustering/GSKY_outputs/XMM_ceci/plots
+  plots_dir: /tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/plots
 
 ReduceCat:
   min_snr: 10.
