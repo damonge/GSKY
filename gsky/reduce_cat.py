@@ -129,7 +129,7 @@ class ReduceCat(PipelineStage):
         logger.info("Generating masked fraction map")
         masked = np.ones(len(cat))
         # full depth full color cut based on healpix map
-        hpfname =   "s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
         m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
         mfactor =   np.pi/180.
         indices_map =   np.where(m)[0]
