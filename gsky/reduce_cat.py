@@ -14,6 +14,7 @@ from .map_utils import (createCountsMap,
                         createSpin2Map,
                         createW2QU2Map)
 from .estDepth import get_depth
+from .estDepth import get_seeing
 from .plot_utils import plot_histo, plot_map
 from astropy.io import fits
 import copy
@@ -43,7 +44,8 @@ class ReduceCat(PipelineStage):
                ('dust_map', FitsFile),
                ('star_map', FitsFile),
                ('masked_fraction', FitsFile),
-               ('depth_map', FitsFile)]
+               ('depth_map', FitsFile),
+               ('seeing_map', FitsFile)]
     config_options = {'plots_dir': None,
                       'min_snr': 10., 'depth_cut': 24.5,
                       'mapping': {'wcs': None, 'res': 0.0285,
@@ -188,6 +190,28 @@ class ReduceCat(PipelineStage):
                              fsk=fsk, snrthreshold=self.config['min_snr'],
                              interpolate=True, count_threshold=4)
         desc = '%d-s depth, ' % (self.config['min_snr'])+band+' '+method+' mean'
+
+        return depth, desc
+
+    def make_seeing_map(self, cat, fsk):
+        """
+        Produces a seeing map
+        :param cat: input catalog
+        :param fsk: FlatMapInfo object describing the
+            geometry of the output map
+        """
+        logger.info("Creating depth maps")
+        #method = self.config['depth_method']
+        #band = self.config['band']
+        psf_11 = cat['i_sdssshape_shape11']
+        psf_22 = cat['i_sdssshape_shape22']
+        arr1 = np.sqrt(0.5*(psf_11+psf_12))
+        seeing, _ = get_seeing(cat[self.config['ra']],
+                             cat[self.config['dec']],
+                             arr1=arr1,
+                             fsk=fsk,
+                             interpolate=True, count_threshold=4)
+        desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+method+' mean'
 
         return depth, desc
 
@@ -638,6 +662,10 @@ class ReduceCat(PipelineStage):
         depth, desc = self.make_depth_map(star_cat, fsk)
         fsk.write_flat_map(self.get_output('depth_map'),
                            depth, descript=desc)
+
+        seeing, seeing_desc = self.make_seeing_map(star_cat, fsk)
+        fsk.write_flat_map(self.get_output('seeing_map'),
+                           seeing, descript=seeing_desc)
 
         ####
         # Implement final cuts

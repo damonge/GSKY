@@ -54,6 +54,39 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
                              method='nearest', fill_value=0)
     return depth, depth_std
 
+def seeing_method(ra, dec, seeing, fsk,
+                   interpolate=False, count_threshold=4):
+    # 5sigma Magnitude limit= average of 5*flux_err for all
+    # objs in each pixel (and then transformed to magnitude)
+    # snrthreshold= 5 => 5sigma depth.
+    #
+    # Since want mags (mean, std) at the end, need to first
+    # run the createMeanStdMaps with 5flux_error to get the
+    # mean flux map which can be converted to fluxes.
+    # To get std mags, need to run createMeanStdMaps with
+    # 5*flux_error converted to mags and keep only the std.
+
+
+    seeing, seeing_std = createMeanStdMaps(ra, dec,
+                                            quantity=seeing,
+                                            fsk=fsk)
+    # Zeros in empty pixels
+    nc = createCountsMap(ra, dec, fsk)
+    seeing[nc < 1] = 0
+    seeing_std[nc < 1] = 0
+
+    if interpolate:
+        from scipy.interpolate import griddata
+        idgood = np.where(nc > count_threshold)[0]
+        coords_all = np.array(fsk.pix2pos(np.arange(fsk.npix))).T
+        seeing = griddata(coords_all[idgood],
+                         seeing[idgood], coords_all,
+                         method='nearest', fill_value=0)
+        seeing_std = griddata(coords_all[idgood],
+                             seeing_std[idgood], coords_all,
+                             method='nearest', fill_value=0)
+    return seeing, seeing_std
+
 
 def dr1_method(ra, dec, mags, snr, fsk, snrthreshold,
                interpolate=False, count_threshold=4):
@@ -120,5 +153,22 @@ def get_depth(method, ra, dec, arr1, arr2, fsk,
                                           count_threshold=count_threshold)
     else:
         raise KeyError("Unknown method "+method)
+
+    return depth, depth_std
+
+def get_seeing(ra, dec, arr1, fsk, interpolate=False, count_threshold=4):
+    """
+    Creates a seeing map based on the PSF moments of the star catalog objects.
+    :param ra: right ascension for each object.
+    :param dec: declination for each object.
+    :param arr1: measurement of the seeing for each object
+    :param fsk: flatmaps.FlatMapInfo object describing the geometry of the
+    output map.
+    """
+
+
+    seeing, seeing_std = seeing_method(ra, dec, seeing=arr1, fsk=fsk,
+                                          interpolate=interpolate,
+                                          count_threshold=count_threshold)
 
     return depth, depth_std
