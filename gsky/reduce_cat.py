@@ -211,7 +211,7 @@ class ReduceCat(PipelineStage):
                              arr1=arr1,
                              fsk=fsk,
                              interpolate=True, count_threshold=4)
-        desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+method+' mean'
+        desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
 
         return depth, desc
 
