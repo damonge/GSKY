@@ -206,9 +206,9 @@ class ReduceCat(PipelineStage):
         psf_11 = cat['i_sdssshape_shape11']
         psf_22 = cat['i_sdssshape_shape22']
         print("psf_11", np.min(psf_11), np.max(psf_11))
-        print(np.sum(np.isnan(psf_11))
+        print(np.sum(np.isnan(psf_11)))
         print("psf_22", np.min(psf_22), np.max(psf_22))
-        print(np.sum(np.isnan(psf_22))
+        print(np.sum(np.isnan(psf_22)))
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
         print(np.min(arr1), np.max(arr1))
         print("Mean seeing", np.mean(arr1))
