@@ -171,4 +171,4 @@ def get_seeing(ra, dec, arr1, fsk, interpolate=False, count_threshold=4):
                                           interpolate=interpolate,
                                           count_threshold=count_threshold)
 
-    return depth, depth_std
+    return seeing, seeing_std
