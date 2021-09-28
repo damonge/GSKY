@@ -202,7 +202,7 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Creating depth maps")
         #method = self.config['depth_method']
-        #band = self.config['band']
+        band = self.config['band']
         psf_11 = cat['i_sdssshape_shape11']
         psf_22 = cat['i_sdssshape_shape22']
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
