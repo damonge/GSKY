@@ -205,8 +205,10 @@ class ReduceCat(PipelineStage):
         band = self.config['band']
         # good_object_id = np.ones(len(cat))
         # good_object_id *= np.logical_not(cat['i_mask_brightstar_ghost'])
-        psf_11 = cat['i_sdssshape_shape11'][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))]
-        psf_22 = cat['i_sdssshape_shape22'][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))]
+        # psf_11 = cat['i_sdssshape_shape11'][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))]
+        # psf_22 = cat['i_sdssshape_shape22'][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))]
+        psf_11 = cat['i_sdssshape_shape11']
+        psf_22 = cat['i_sdssshape_shape22']
         print("psf_11", np.min(psf_11), np.max(psf_11))
         print(np.sum(np.isnan(psf_11)))
         print("psf_22", np.min(psf_22), np.max(psf_22))
@@ -216,7 +218,7 @@ class ReduceCat(PipelineStage):
         print("Mean seeing", np.mean(arr1))
         seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
                              cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
-                             arr1=arr1[np.logical_not(arr1>5.0)],
+                             arr1=arr1[np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
                              fsk=fsk,
                              interpolate=True, count_threshold=4)
         desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
