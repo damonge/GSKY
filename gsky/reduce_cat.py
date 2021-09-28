@@ -205,6 +205,8 @@ class ReduceCat(PipelineStage):
         band = self.config['band']
         psf_11 = cat['i_sdssshape_shape11']
         psf_22 = cat['i_sdssshape_shape22']
+        print("psf_11", psf_11)
+        print("psf_22", psf_22)
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
         print("Mean seeing", np.mean(arr1))
         seeing, _ = get_seeing(cat[self.config['ra']],
