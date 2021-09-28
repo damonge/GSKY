@@ -205,7 +205,7 @@ class ReduceCat(PipelineStage):
         #band = self.config['band']
         psf_11 = cat['i_sdssshape_shape11']
         psf_22 = cat['i_sdssshape_shape22']
-        arr1 = np.sqrt(0.5*(psf_11+psf_12))
+        arr1 = np.sqrt(0.5*(psf_11+psf_22))
         seeing, _ = get_seeing(cat[self.config['ra']],
                              cat[self.config['dec']],
                              arr1=arr1,
