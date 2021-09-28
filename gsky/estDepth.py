@@ -72,12 +72,14 @@ def seeing_method(ra, dec, seeing, fsk,
                                             fsk=fsk)
     # Zeros in empty pixels
     nc = createCountsMap(ra, dec, fsk)
+    print(np.sum(nc))
     seeing[nc < 1] = 0
     seeing_std[nc < 1] = 0
 
     if interpolate:
         from scipy.interpolate import griddata
         idgood = np.where(nc > count_threshold)[0]
+        print("Number of good pixels", np.sum(idgood))
         coords_all = np.array(fsk.pix2pos(np.arange(fsk.npix))).T
         seeing = griddata(coords_all[idgood],
                          seeing[idgood], coords_all,
