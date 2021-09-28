@@ -214,9 +214,9 @@ class ReduceCat(PipelineStage):
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
         print(np.min(arr1), np.max(arr1))
         print("Mean seeing", np.mean(arr1))
-        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))],
-                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22']))],
-                             arr1=arr1,
+        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & arr1<5.0],
+                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & arr1<5.0],
+                             arr1=arr1[arr1<5.0],
                              fsk=fsk,
                              interpolate=True, count_threshold=4)
         desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
