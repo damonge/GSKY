@@ -487,9 +487,9 @@ class ReduceCat(PipelineStage):
         print("After blendedness cut", np.sum(sel_raw))
         sel_raw *= np.logical_not(np.isnan(cat_raw['i_hsmshaperegauss_sigma']))
         print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost'])
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_ghost'])
+        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_halo'])
+        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_blooming'])
         print("After bright object mask", np.sum(sel_raw))
         hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
         m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
