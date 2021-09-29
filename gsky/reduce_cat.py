@@ -216,10 +216,9 @@ class ReduceCat(PipelineStage):
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
         print(np.min(arr1), np.max(arr1))
         print("Mean seeing", np.mean(arr1))
-        #& np.logical_not(arr1>5.0)
-        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
-                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
-                             arr1=arr1[np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
+        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
+                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
+                             arr1=arr1[np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
                              fsk=fsk,
                              interpolate=True, count_threshold=4)
         desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
@@ -478,8 +477,30 @@ class ReduceCat(PipelineStage):
         cat_raw = Table.read(self.get_input('raw_data'))
 
         logger.info("Basic cleanup of raw catalog")
-        sel_raw = np.ones(len(cat), dtype=bool)
-
+        sel_raw = np.ones(len(cat_raw), dtype=bool)
+        print("Initial size", len(cat_raw))
+        sel_raw *= cat_raw['weak_lensing_flag']
+        print("After WL flag", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat_raw['i_apertureflux_10_mag']>25.5)
+        print("After aperture mag cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat_raw['i_blendedness_abs']>=pow(10, -0.38))
+        print("After blendedness cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(np.isnan(cat_raw['i_hsmshaperegauss_sigma']))
+        print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        print("After bright object mask", np.sum(sel_raw))
+        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        mfactor =   np.pi/180.
+        indices_map =   np.where(m)[0]
+        nside   =   hp.get_nside(m)
+        phi     =   cat_raw[self.config['ra']]*mfactor
+        theta   =   np.pi/2. - cat_raw[self.config['dec']]*mfactor
+        indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
+        sel_raw *= np.in1d(indices_obj, indices_map)
+        print("after FDFC cut", np.sum(sel_raw))
 
         # Collect sample cuts
         #sel_area = cat['wl_fulldepth_fullcolor']
