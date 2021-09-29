@@ -216,9 +216,10 @@ class ReduceCat(PipelineStage):
         arr1 = np.sqrt(0.5*(psf_11+psf_22))
         print(np.min(arr1), np.max(arr1))
         print("Mean seeing", np.mean(arr1))
-        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
-                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
-                             arr1=arr1[np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logical_not(arr1>5.0)],
+        #& np.logical_not(arr1>5.0)
+        seeing, _ = get_seeing(cat[self.config['ra']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
+                             cat[self.config['dec']][np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
+                             arr1=arr1[np.logical_not(np.isnan(cat['i_sdssshape_shape11'])) & np.logical_not(np.isnan(cat['i_sdssshape_shape22'])) & np.logocal_not(cat['i_sdssshape_flag'])],
                              fsk=fsk,
                              interpolate=True, count_threshold=4)
         desc = '%d-s seeing, ' % (self.config['min_snr'])+band+' '+' mean'
@@ -475,6 +476,10 @@ class ReduceCat(PipelineStage):
 
         # Read raw catalog, for getting masked fraction
         cat_raw = Table.read(self.get_input('raw_data'))
+
+        logger.info("Basic cleanup of raw catalog")
+        sel_raw = np.ones(len(cat), dtype=bool)
+
 
         # Collect sample cuts
         #sel_area = cat['wl_fulldepth_fullcolor']
