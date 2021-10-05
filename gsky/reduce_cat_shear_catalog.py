@@ -437,8 +437,13 @@ class ReduceCat(PipelineStage):
         band = self.config['band']
         self.mpp = self.config['mapping']
 
+        # Read list of files
+        f = open(self.get_input('cut_map'))
+        files = [s.strip() for s in f.readlines()]
+        f.close()
+
         # Read catalog
-        cat_raw = Table.read(self.get_input('raw_data'))
+        cat = Table.read(files[0])
         if len(cat) > 1:
             for fname in files[1:]:
                 c = Table.read(fname)
@@ -466,17 +471,20 @@ class ReduceCat(PipelineStage):
         cat.remove_columns(isnull_names)
         cat.remove_rows(~sel)
 
+        # Read raw catalog, for getting masked fraction
+        cat_raw = Table.read(self.get_input('raw_data'))
+
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat_raw), dtype=bool)
         print("Initial size", len(cat_raw))
-        # sel_raw *= cat_raw['weak_lensing_flag']
-        # print("After WL flag", np.sum(sel_raw))
-        # sel_raw *= np.logical_not(cat_raw['i_apertureflux_10_mag']>25.5)
-        # print("After aperture mag cut", np.sum(sel_raw))
-        # sel_raw *= np.logical_not(cat_raw['i_blendedness_abs']>=pow(10, -0.38))
-        # print("After blendedness cut", np.sum(sel_raw))
-        # sel_raw *= np.logical_not(np.isnan(cat_raw['i_hsmshaperegauss_sigma']))
-        # print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
+        sel_raw *= cat_raw['weak_lensing_flag']
+        print("After WL flag", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat_raw['i_apertureflux_10_mag']>25.5)
+        print("After aperture mag cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat_raw['i_blendedness_abs']>=pow(10, -0.38))
+        print("After blendedness cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(np.isnan(cat_raw['i_hsmshaperegauss_sigma']))
+        print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
         sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_ghost'])
         sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_halo'])
         sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_blooming'])
@@ -498,16 +506,15 @@ class ReduceCat(PipelineStage):
         sel_area = np.ones(len(cat), dtype=bool)
         sel_clean = np.ones(len(cat), dtype=bool)
         sel_maglim = np.ones(len(cat), dtype=bool)
-        sel_maglim[cat['%s_cmodel_mag' % band] -
-                   cat['a_%s' % band] > self.config['depth_cut']] = 0
+        # sel_maglim[cat['%sc_model_mag' % band] -
+        #            cat['a_%s' % band] > self.config['depth_cut']] = 0
         # Blending
         sel_blended = np.ones(len(cat), dtype=bool)
         # abs_flux<10^-0.375
         # sel_blended[cat['iblendedness_abs_flux'] >= 0.42169650342] = 0
         # S/N in i
         sel_fluxcut_i = np.ones(len(cat), dtype=bool)
-        sel_fluxcut_i[cat['i_cmodel_flux'] < 10*cat['i_cmodel_fluxerr']] = 0
-        print("S/N cut removes ", len(sel_fluxcut_i)-np.sum(sel_fluxcut_i))
+        # sel_fluxcut_i[cat['i_cmodel_flux'] < 10*cat['i_cmodel_flux_err']] = 0
         # S/N in g
         sel_fluxcut_g = np.ones(len(cat), dtype=int)
         # sel_fluxcut_g[cat['gcmodel_flux'] < 5*cat['gcmodel_flux_err']] = 0
@@ -700,8 +707,8 @@ class ReduceCat(PipelineStage):
         # - S/N cut
         # - Star-galaxy separator
         # - Blending
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
-        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+        sel = ~(sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        logger.info("Will lose %d objects to depth, S/N and stars" %
                     (np.sum(sel)))
         cat.remove_rows(sel)
 
