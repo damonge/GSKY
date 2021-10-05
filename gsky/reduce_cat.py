@@ -438,10 +438,6 @@ class ReduceCat(PipelineStage):
 
         # Read catalog
         cat = Table.read(self.get_input('raw_data'))
-        if len(cat) > 1:
-            for fname in files[1:]:
-                c = Table.read(fname)
-                cat = vstack([cat, c], join_type='exact')
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
