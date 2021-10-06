@@ -12,15 +12,24 @@ logger = logging.getLogger(__name__)
 
 class SystReMapper(PipelineStage) :
     name="SystReMapper"
-    inputs=[('ccdtemp_maps',HspFile),('airmass_maps',HspFile),('exptime_maps',HspFile),
-             ('skylevel_maps',HspFile),('sigma_sky_maps',HspFile),('ellipt_maps',HspFile),
-             ('nvisit_maps',HspFile),('masked_fraction',FitsFile)]
-    outputs=[('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),('exptime_maps',FitsFile),
-             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('ellipt_maps',FitsFile),
-             ('nvisit_maps',FitsFile)]
+    # inputs=[('ccdtemp_maps',HspFile),('airmass_maps',HspFile),('exptime_maps',HspFile),
+    #          ('skylevel_maps',HspFile),('sigma_sky_maps',HspFile),('ellipt_maps',HspFile),
+    #          ('nvisit_maps',HspFile),('masked_fraction',FitsFile)]
+    # outputs=[('ccdtemp_maps',FitsFile),('airmass_maps',FitsFile),('exptime_maps',FitsFile),
+    #          ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('ellipt_maps',FitsFile),
+    #          ('nvisit_maps',FitsFile)]
+
+    inputs=[('airmass_maps',HspFile),('exptime_maps',HspFile),
+             ('skylevel_maps',HspFile),('sigma_sky_maps',HspFile),('e1_maps',HspFile),
+             ('e2_maps',HspFile),('nexp_maps',HspFile),('masked_fraction',FitsFile)]
+    outputs=[('airmass_maps',FitsFile),('exptime_maps',FitsFile),
+             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('e1_maps',FitsFile),
+             ('e2_maps',FitsFile),('nexp_maps',FitsFile)]
+
 
     def run(self) :
-        quants=['ccdtemp','airmass','exptime','skylevel','sigma_sky','ellipt']
+        quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp']
+        bands=['i']
 
         logger.info("Reading sample map")
         fsk,mp=read_flat_map(self.get_input('masked_fraction'))
@@ -32,7 +41,7 @@ class SystReMapper(PipelineStage) :
         oc_med_maps = {}
         oc_sum_maps = {}
         for q in quants:
-            if q != 'nvisit':
+            if q != 'nexp':
                 oc_mean_maps[q] = {}
                 oc_std_maps[q] = {}
                 for b in bands:
@@ -57,7 +66,7 @@ class SystReMapper(PipelineStage) :
 
         logger.info("Saving maps")
         for q in quants:
-            if q != 'nvisits':
+            if q != 'nexp':
                 # Observing conditions
                 maps_save = np.array([oc_mean_maps[q][b] for b in bands] +
                                    [oc_std_maps[q][b] for b in bands] +

@@ -1,6 +1,7 @@
 from ceci import PipelineStage  # noqa
 from .reduce_cat import ReduceCat  # noqa
 from .syst_mapper import SystMapper  # noqa
+from .syst_remapper import SystRemapper  # noqa
 from .pdf_match import PDFMatch  # noqa
 from .cosmos_weight import COSMOSWeight  # noqa
 from .gal_mapper import GalMapper  # noqa
