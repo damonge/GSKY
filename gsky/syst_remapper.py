@@ -44,6 +44,7 @@ class SystReMapper(PipelineStage) :
             if q != 'nexp' and q != 'exptime':
                 oc_mean_maps[q] = {}
                 oc_std_maps[q] = {}
+                oc_med_maps[q] = {}
                 for b in bands:
                     # TODO: Figure out naming
                     hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
