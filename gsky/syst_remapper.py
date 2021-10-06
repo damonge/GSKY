@@ -82,7 +82,7 @@ class SystReMapper(PipelineStage) :
                 maps_save = np.array([oc_sum_maps[q][b] for b in bands])
                 descripts = np.array(['sum '+q+'-'+b for b in bands])
                 print(descripts)
-                fsk.write_flat_map(self.get_output(q+'_maps_out'), maps_save, descripts)
+                fsk.write_flat_map(self.get_output(q+'_maps_out'), maps_save)
 
         # Permissions on NERSC
         # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
