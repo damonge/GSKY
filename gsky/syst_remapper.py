@@ -22,9 +22,9 @@ class SystReMapper(PipelineStage) :
     inputs=[('airmass_maps',HspFile),('exptime_maps',HspFile),
              ('skylevel_maps',HspFile),('sigma_sky_maps',HspFile),('e1_maps',HspFile),
              ('e2_maps',HspFile),('nexp_maps',HspFile),('masked_fraction',FitsFile)]
-    outputs=[('airmass_maps',FitsFile),('exptime_maps',FitsFile),
-             ('skylevel_maps',FitsFile),('sigma_sky_maps',FitsFile),('e1_maps',FitsFile),
-             ('e2_maps',FitsFile),('nexp_maps',FitsFile)]
+    outputs=[('airmass_maps_out',FitsFile),('exptime_maps_out',FitsFile),
+             ('skylevel_maps_out',FitsFile),('sigma_sky_maps_out',FitsFile),('e1_maps_out',FitsFile),
+             ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile)]
 
 
     def run(self) :
