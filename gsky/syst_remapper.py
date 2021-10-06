@@ -75,11 +75,13 @@ class SystReMapper(PipelineStage) :
                 descripts = np.array(['mean '+q+'-'+b for b in bands] +
                                    ['std '+q+'-'+b for b in bands] +
                                    ['median '+q+'-'+b for b in bands])
+                print(descripts)
                 fsk.write_flat_map(self.get_output(q+'_maps_out'),maps_save,descripts)
             else:
                 # Nvisits
                 maps_save = np.array([oc_sum_maps[q][b] for b in bands])
                 descripts = np.array(['sum '+q+'-'+b for b in bands])
+                print(descripts)
                 fsk.write_flat_map(self.get_output(q+'_maps_out'), maps_save, descripts)
 
         # Permissions on NERSC
