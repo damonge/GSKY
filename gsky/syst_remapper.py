@@ -41,7 +41,7 @@ class SystReMapper(PipelineStage) :
         oc_med_maps = {}
         oc_sum_maps = {}
         for q in quants:
-            if q != 'nexp':
+            if q != 'nexp' and q != 'exptime':
                 oc_mean_maps[q] = {}
                 oc_std_maps[q] = {}
                 for b in bands:
@@ -66,7 +66,7 @@ class SystReMapper(PipelineStage) :
 
         logger.info("Saving maps")
         for q in quants:
-            if q != 'nexp':
+            if q != 'nexp' and q != 'exptime':
                 # Observing conditions
                 maps_save = np.array([oc_mean_maps[q][b] for b in bands] +
                                    [oc_std_maps[q][b] for b in bands] +
@@ -82,8 +82,8 @@ class SystReMapper(PipelineStage) :
                 fsk.write_flat_map(self.get_output('nvisit_maps'), maps_save, descripts)
 
         # Permissions on NERSC
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
