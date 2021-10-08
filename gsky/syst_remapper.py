@@ -51,13 +51,13 @@ class SystReMapper(PipelineStage) :
                     print(type(hsp_map))
                     vals = hsp_map[hsp_map.valid_pixels]
                     ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/systematics/test_'+q, vals, ra, dec)
+                    # np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/systematics/test_'+q, vals, ra, dec)
                     # vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
-                    print(np.min(vals))
-                    print(len(vals))
-                    print(len(ra))
+                    # print(np.min(vals))
+                    # print(len(vals))
+                    # print(len(ra))
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
-                    median_map = createMedianMap(ra, dec, vals, fsk)
+                    # median_map = createMedianMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
                     oc_std_maps[q][b] = std_map
                     oc_med_maps[q][b] = median_map
