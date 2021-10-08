@@ -3,7 +3,7 @@ from .types import FitsFile, HspFile
 import numpy as np
 from .flatmaps import read_flat_map
 import os
-from .map_utils import createMeanStdMaps, createSumMap
+from .map_utils import createMeanStdMaps, createMedianMap, createSumMap
 import healsparse as hsp
 
 import logging
