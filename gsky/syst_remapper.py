@@ -49,9 +49,9 @@ class SystReMapper(PipelineStage) :
                     # TODO: Figure out naming
                     hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
                     print(type(hsp_map))
-                    # vals = hsp_map[hsp_map.valid_pixels]
-                    # ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
+                    vals = hsp_map[hsp_map.valid_pixels]
+                    ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
+                    # vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
                     print(vals)
                     print(ra)
                     print(dec)
