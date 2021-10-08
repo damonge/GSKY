@@ -49,8 +49,9 @@ class SystReMapper(PipelineStage) :
                     # TODO: Figure out naming
                     hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
                     print(type(hsp_map))
-                    vals = hsp_map[hsp_map.valid_pixels]
-                    ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
+                    # vals = hsp_map[hsp_map.valid_pixels]
+                    # ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
+                    vals, ra, dec = map2.valid_pixels_pos(return_pixels=True)
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
                     median_map = createSumMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
