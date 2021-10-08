@@ -186,7 +186,8 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
                         weights=quantity[id_good]**2,
                         minlength=fsk.get_size())
     idgood = np.where(mp > 0)[0]
-    print(np.sum(idgood))
+    test_idgood = np.ones(len(mp))
+    print(np.sum(test_idgood[mp>0]))
     mean = np.zeros(len(mp))
     std = np.zeros(len(mp))
     mean[idgood] = mpW[idgood]/mp[idgood]
