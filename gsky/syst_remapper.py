@@ -48,6 +48,7 @@ class SystReMapper(PipelineStage) :
                 for b in bands:
                     # TODO: Figure out naming
                     hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
+                    print(type(hsp_map))
                     vals = hsp_map[hsp_map.valid_pixels]
                     ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
