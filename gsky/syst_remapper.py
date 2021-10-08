@@ -54,6 +54,8 @@ class SystReMapper(PipelineStage) :
                     np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/systematics/test_'+q, vals, ra, dec)
                     # vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
                     print(np.min(vals))
+                    print(len(vals))
+                    print(len(ra))
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
                     median_map = createSumMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
