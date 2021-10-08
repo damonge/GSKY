@@ -51,7 +51,7 @@ class SystReMapper(PipelineStage) :
                     print(type(hsp_map))
                     # vals = hsp_map[hsp_map.valid_pixels]
                     # ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True)
+                    vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
                     median_map = createSumMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
