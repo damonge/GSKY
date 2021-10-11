@@ -172,7 +172,8 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     :param fsk: a flatmaps.FlatMapInfo object describing the geometry of
         the output map.
     """
-    pix_ids = fsk.pos2pix(ra, dec)
+    pix_ids_old = fsk.pos2pix(ra, dec)
+    pix_ids = np.ones(len(pix_ids_old))
     print("Len pix_ids", len(pix_ids))
     id_good = pix_ids >= 0
     print("id_good", id_good)
