@@ -174,11 +174,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     """
     pix_ids = fsk.pos2pix(ra, dec)
     print("Len pix_ids", len(pix_ids))
-    id_good_old = pix_ids >= 0
-    id_good = [True for i in range(len(pix_ids))]
-    for i in range(len(pix_ids)):
-        if pix_ids[i]<0:
-            pix_ids[i] = 1
+    id_good = pix_ids >= 0
     # print("id_good", id_good)
     print("Sum id_good", np.sum(id_good))
     print(np.min(pix_ids))
