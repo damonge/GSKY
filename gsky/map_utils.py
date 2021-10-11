@@ -203,7 +203,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     test_idbad = np.ones(len(mp))
     print("Sum test_idbad", np.sum(test_idbad[mp <= 0]))
     print(len(idbad))
-    mean[idbad] = 10.0
+    mean[idbad] = 0.0
     std[idbad] = 0
 
     return mean, std

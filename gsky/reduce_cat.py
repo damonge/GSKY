@@ -137,12 +137,12 @@ class ReduceCat(PipelineStage):
         phi     =   cat[self.config['ra']]*mfactor
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
-        masked *= np.in1d(indices_obj, indices_map)
+        # masked *= np.in1d(indices_obj, indices_map)
 
         # bright object mask
-        masked *= np.logical_not(cat['i_mask_brightstar_ghost'])
-        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_ghost'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
