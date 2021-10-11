@@ -192,7 +192,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     std = np.zeros(len(mp))
     # mean[idgood] = mpW[idgood]/mp[idgood]
     # std[idgood] = np.sqrt(np.fabs(((mpWSq[idgood]/mp[idgood]) -
-                                   mean[idgood]**2)/(mp[idgood]+0.)))
+    #                                mean[idgood]**2)/(mp[idgood]+0.)))
     mean = mpW/mp
     std = np.sqrt(np.fabs(((mpWSq/mp) -
                                    mean**2)/(mp+0.)))
