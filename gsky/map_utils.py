@@ -188,6 +188,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
                         minlength=fsk.get_size())
     idgood = np.where(mp > 0)[0]
     test_idgood = np.ones(len(mp))
+    print(len(mp))
     print("Sum test_idgood", np.sum(test_idgood[mp>0]))
     mean = np.zeros(len(mp))
     std = np.zeros(len(mp))
