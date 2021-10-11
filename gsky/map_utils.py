@@ -173,7 +173,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
         the output map.
     """
     pix_ids_old = fsk.pos2pix(ra, dec)
-    pix_ids = np.ones(len(pix_ids_old))
+    pix_ids = np.ones(len(pix_ids_old), dtype='int64')
     print("Len pix_ids", len(pix_ids))
     id_good = pix_ids >= 0
     print("id_good", id_good)
