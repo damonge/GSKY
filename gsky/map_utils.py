@@ -181,6 +181,8 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
             pix_ids[i] = 1
     # print("id_good", id_good)
     print("Sum id_good", np.sum(id_good))
+    print(np.min(pix_ids))
+    print(np.sort(pix_ids)[:20])
     mp = np.bincount(pix_ids[id_good],
                      weights=None,
                      minlength=fsk.get_size())
