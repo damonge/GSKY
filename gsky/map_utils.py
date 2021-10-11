@@ -178,7 +178,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     id_good = [True for i in range(len(pix_ids))]
     for i in range(len(pix_ids)):
         if pix_ids[i]<0:
-            pix_ids[i] = 0
+            pix_ids[i] = 1
     print("id_good", id_good)
     print("Sum id_good", np.sum(id_good))
     mp = np.bincount(pix_ids[id_good],
