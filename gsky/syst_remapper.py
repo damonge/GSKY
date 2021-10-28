@@ -41,7 +41,7 @@ class SystReMapper(PipelineStage) :
         oc_med_maps = {}
         oc_sum_maps = {}
         for q in quants:
-            print(q)
+            logger.info("In quantity loop")
             if q != 'nexp' and q != 'exptime':
                 oc_mean_maps[q] = {}
                 oc_std_maps[q] = {}
