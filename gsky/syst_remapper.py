@@ -57,7 +57,7 @@ class SystReMapper(PipelineStage) :
                     # print(len(vals))
                     # print(len(ra))
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
-                    median_map = createSumMap(ra, dec, vals, fsk)
+                    median_map = createMedianMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
                     oc_std_maps[q][b] = std_map
                     oc_med_maps[q][b] = median_map
