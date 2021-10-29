@@ -229,8 +229,9 @@ def createMedianMap(ra, dec, quantity, fsk):
     """
     pix_ids = fsk.pos2pix(ra, dec)
     id_good = pix_ids >= 0
-    print('pix_ids', pix_ids)
     mp = np.zeros(fsk.get_size())
+    logger.info("Before pixel loop")
+    logger.info(str(len(np.unique(pix_ids[id_good]))))
     for pix in np.unique(pix_ids[id_good]):
         mask = pix_ids[id_good]==pix
         mp[pix] = np.median(quantity[id_good][mask])
