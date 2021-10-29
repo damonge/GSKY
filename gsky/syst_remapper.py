@@ -41,27 +41,21 @@ class SystReMapper(PipelineStage) :
         oc_med_maps = {}
         oc_sum_maps = {}
         for q in quants:
-            logger.info("In quantity loop")
             if q != 'nexp' and q != 'exptime':
                 oc_mean_maps[q] = {}
                 oc_std_maps[q] = {}
-                oc_med_maps[q] = {}
+                # oc_med_maps[q] = {}
                 for b in bands:
                     # TODO: Figure out naming
                     hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
                     print(type(hsp_map))
                     vals = hsp_map[hsp_map.valid_pixels]
                     ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    # np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/systematics/test_'+q, vals, ra, dec)
-                    # vals, ra, dec = hsp_map.valid_pixels_pos(return_pixels=True,lonlat=True)
-                    # print(np.min(vals))
-                    # print(len(vals))
-                    # print(len(ra))
                     mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
-                    median_map = createMedianMap(ra, dec, vals, fsk)
+                    # median_map = createMedianMap(ra, dec, vals, fsk)
                     oc_mean_maps[q][b] = mean_map
                     oc_std_maps[q][b] = std_map
-                    oc_med_maps[q][b] = median_map
+                    # oc_med_maps[q][b] = median_map
             else:
                 oc_sum_maps[q] = {}
                 for b in bands:
@@ -77,11 +71,9 @@ class SystReMapper(PipelineStage) :
             if q != 'nexp' and q != 'exptime':
                 # Observing conditions
                 maps_save = np.array([oc_mean_maps[q][b] for b in bands] +
-                                   [oc_std_maps[q][b] for b in bands] +
-                                   [oc_med_maps[q][b] for b in bands])
+                                   [oc_std_maps[q][b] for b in bands])
                 descripts = np.array(['mean '+q+'-'+b for b in bands] +
-                                   ['std '+q+'-'+b for b in bands] +
-                                   ['median '+q+'-'+b for b in bands])
+                                   ['std '+q+'-'+b for b in bands])
                 print(descripts)
                 fsk.write_flat_map(self.get_output(q+'_maps_out'),maps_save,descripts)
             else:
