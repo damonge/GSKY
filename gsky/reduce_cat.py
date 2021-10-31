@@ -446,20 +446,20 @@ class ReduceCat(PipelineStage):
 
         # Clean nulls and nans
         logger.info("Basic cleanup")
-        # sel = np.ones(len(cat), dtype=bool)
-        # isnull_names = []
-        # for key in cat.keys():
-        #     if key.__contains__('isnull'):
-        #         if not key.startswith('ishape'):
-        #             sel[cat[key]] = 0
-        #         isnull_names.append(key)
-        #     else:
-        #         # Keep photo-zs and shapes even if they're NaNs
-        #         if (not key.startswith("pz_")) and (not key.startswith('ishape')):
-        #             sel[np.isnan(cat[key])] = 0
-        # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
-        # cat.remove_columns(isnull_names)
-        # cat.remove_rows(~sel)
+        sel = np.ones(len(cat), dtype=bool)
+        isnull_names = []
+        for key in cat.keys():
+            if key.__contains__('isnull'):
+                if not key.startswith('ishape'):
+                    sel[cat[key]] = 0
+                isnull_names.append(key)
+            else:
+                # Keep photo-zs and shapes even if they're NaNs
+                if (not key.startswith("pz_")) and (not key.startswith('ishape')):
+                    sel[np.isnan(cat[key])] = 0
+        logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
+        cat.remove_columns(isnull_names)
+        cat.remove_rows(~sel)
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
@@ -530,6 +530,12 @@ class ReduceCat(PipelineStage):
         # PSF validation set stars
         sel_psf_valid = np.ones(len(cat), dtype=bool)
         # sel_psf_valid[cat['icalib_psf_used'] == True] = 0
+
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        print("final size", )
+        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+                    (np.sum(sel)))
+        cat.remove_rows(sel)
 
         ####
         # Generate sky projection
@@ -696,11 +702,11 @@ class ReduceCat(PipelineStage):
         # - S/N cut
         # - Star-galaxy separator
         # - Blending
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
-        print("final size", )
-        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
-                    (np.sum(sel)))
-        cat.remove_rows(sel)
+        # sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        # print("final size", )
+        # logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+        #             (np.sum(sel)))
+        # cat.remove_rows(sel)
 
         ####
         # Define shear catalog
