@@ -493,9 +493,8 @@ class ReduceCat(PipelineStage):
         sel_area = np.ones(len(cat), dtype=bool)
         sel_clean = np.ones(len(cat), dtype=bool)
         sel_maglim = np.ones(len(cat), dtype=bool)
-        # sel_maglim[cat['%s_cmodel_mag' % band] -
-        #            cat['a_%s' % band] > self.config['depth_cut']] = 0
-        sel_maglim[cat['%s_cmodel_mag' % band] > self.config['depth_cut']] = 0
+        sel_maglim[cat['%s_cmodel_mag' % band] -
+                   cat['a_%s' % band] > self.config['depth_cut']] = 0
         print("depth cut removes ", len(sel_maglim)-np.sum(sel_maglim))
         # Blending
         sel_blended = np.ones(len(cat), dtype=bool)
