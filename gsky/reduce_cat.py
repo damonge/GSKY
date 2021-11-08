@@ -686,7 +686,7 @@ class ReduceCat(PipelineStage):
         #                    descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont = self.make_masked_fraction(cat_raw, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
                                                          mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
