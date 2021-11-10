@@ -41,48 +41,31 @@ class SystReMapper(PipelineStage) :
         oc_med_maps = {}
         oc_sum_maps = {}
         for q in quants:
-            if q != 'nexp' and q != 'exptime':
-                oc_mean_maps[q] = {}
-                oc_std_maps[q] = {}
-                # oc_med_maps[q] = {}
-                for b in bands:
-                    # TODO: Figure out naming
-                    hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
-                    print(type(hsp_map))
-                    vals = hsp_map[hsp_map.valid_pixels]
-                    ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
-                    # median_map = createMedianMap(ra, dec, vals, fsk)
-                    oc_mean_maps[q][b] = mean_map
-                    oc_std_maps[q][b] = std_map
-                    # oc_med_maps[q][b] = median_map
-            else:
-                oc_sum_maps[q] = {}
-                for b in bands:
-                    # TODO: Figure out naming
-                    hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
-                    vals = hsp_map[hsp_map.valid_pixels]
-                    ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
-                    sum_map = createSumMap(ra, dec, vals, fsk)
-                    oc_sum_maps[q][b] = sum_map
+            oc_mean_maps[q] = {}
+            oc_std_maps[q] = {}
+            # oc_med_maps[q] = {}
+            for b in bands:
+                # TODO: Figure out naming
+                hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
+                print(type(hsp_map))
+                vals = hsp_map[hsp_map.valid_pixels]
+                ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
+                mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
+                # median_map = createMedianMap(ra, dec, vals, fsk)
+                oc_mean_maps[q][b] = mean_map
+                oc_std_maps[q][b] = std_map
+                # oc_med_maps[q][b] = median_map
 
         logger.info("Saving maps")
         for q in quants:
-            if q != 'nexp' and q != 'exptime':
-                # Observing conditions
-                maps_save = np.array([oc_mean_maps[q][b] for b in bands] +
-                                   [oc_std_maps[q][b] for b in bands])
-                descripts = np.array(['mean '+q+'-'+b for b in bands] +
-                                   ['std '+q+'-'+b for b in bands])
-                print(descripts)
-                fsk.write_flat_map(self.get_output(q+'_maps_out'),maps_save,descripts)
-            else:
-                # Nvisits
-                maps_save = np.array([oc_sum_maps[q][b] for b in bands])
-                descripts = np.array(['sum '+q+'-'+b for b in bands])
-                print(descripts)
-                fsk.write_flat_map(self.get_output(q+'_maps_out'), maps_save)
-
+            # Observing conditions
+            maps_save = np.array([oc_mean_maps[q][b] for b in bands] +
+                               [oc_std_maps[q][b] for b in bands])
+            descripts = np.array(['mean '+q+'-'+b for b in bands] +
+                               ['std '+q+'-'+b for b in bands])
+            print(descripts)
+            fsk.write_flat_map(self.get_output(q+'_maps_out'),maps_save,descripts)
+                
         # Permissions on NERSC
         # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
         # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
