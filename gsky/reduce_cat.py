@@ -128,21 +128,21 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Generating masked fraction map")
         masked = np.ones(len(cat))
-        #full depth full color cut based on healpix map
-        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
-        mfactor =   np.pi/180.
-        indices_map =   np.where(m)[0]
-        nside   =   hp.get_nside(m)
-        phi     =   cat[self.config['ra']]*mfactor
-        theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
-        indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
-        masked *= np.in1d(indices_obj, indices_map)
+        # #full depth full color cut based on healpix map
+        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        # mfactor =   np.pi/180.
+        # indices_map =   np.where(m)[0]
+        # nside   =   hp.get_nside(m)
+        # phi     =   cat[self.config['ra']]*mfactor
+        # theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
+        # indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
+        # masked *= np.in1d(indices_obj, indices_map)
 
-        #bright object mask
-        masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # #bright object mask
+        # masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -686,7 +686,7 @@ class ReduceCat(PipelineStage):
         #                    descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont = self.make_masked_fraction(cat_raw, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
                                                          mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
