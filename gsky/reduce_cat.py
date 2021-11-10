@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
-    inputs = [('cut_map', FitsFile),
-              ('raw_data', FitsFile),
+    inputs = [('raw_data', FitsFile),
               ('star_catalog', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
     #            ('dust_map', FitsFile),
@@ -128,21 +127,21 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Generating masked fraction map")
         masked = np.ones(len(cat))
-        # #full depth full color cut based on healpix map
-        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
-        # mfactor =   np.pi/180.
-        # indices_map =   np.where(m)[0]
-        # nside   =   hp.get_nside(m)
-        # phi     =   cat[self.config['ra']]*mfactor
-        # theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
-        # indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
-        # masked *= np.in1d(indices_obj, indices_map)
+        # full depth full color cut based on healpix map
+        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        mfactor =   np.pi/180.
+        indices_map =   np.where(m)[0]
+        nside   =   hp.get_nside(m)
+        phi     =   cat[self.config['ra']]*mfactor
+        theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
+        indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
+        masked *= np.in1d(indices_obj, indices_map)
 
-        # #bright object mask
-        # masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # bright object mask
+        masked *= np.logical_not(cat['i_mask_brightstar_ghost'])
+        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -415,7 +414,7 @@ class ReduceCat(PipelineStage):
                            "best, mean, mode and mc")
 
         # self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
-        self.column_mark = self.pz_code+'_'+'photoz_'+self.config['pz_mark']
+        self.column_mark = 'photoz_'+self.config['pz_mark']
         zs = cat[self.column_mark]
 
         # Assign all galaxies to bin -1
@@ -437,17 +436,8 @@ class ReduceCat(PipelineStage):
         band = self.config['band']
         self.mpp = self.config['mapping']
 
-        # Read list of files
-        f = open(self.get_input('cut_map'))
-        files = [s.strip() for s in f.readlines()]
-        f.close()
-
         # Read catalog
-        cat = Table.read(files[0])
-        if len(cat) > 1:
-            for fname in files[1:]:
-                c = Table.read(fname)
-                cat = vstack([cat, c], join_type='exact')
+        cat = Table.read(self.get_input('raw_data'))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
@@ -455,47 +445,44 @@ class ReduceCat(PipelineStage):
         logger.info('Initial catalog size: %d' % (len(cat)))
 
         # Clean nulls and nans
-        logger.info("Basic cleanup")
-        sel = np.ones(len(cat), dtype=bool)
-        isnull_names = []
-        for key in cat.keys():
-            if key.__contains__('isnull'):
-                if not key.startswith('ishape'):
-                    sel[cat[key]] = 0
-                isnull_names.append(key)
-            else:
-                # Keep photo-zs and shapes even if they're NaNs
-                if (not key.startswith("pz_")) and (not key.startswith('ishape')):
-                    sel[np.isnan(cat[key])] = 0
-        logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
-        cat.remove_columns(isnull_names)
-        cat.remove_rows(~sel)
-
-        # Read raw catalog, for getting masked fraction
-        cat_raw = Table.read(self.get_input('raw_data'))
+        # logger.info("Basic cleanup")
+        # sel = np.ones(len(cat), dtype=bool)
+        # isnull_names = []
+        # for key in cat.keys():
+        #     if key.__contains__('isnull'):
+        #         if not key.startswith('i_hsmshape') and (not key.startswith('i_sdssshape')):
+        #             sel[cat[key]] = 0
+        #         isnull_names.append(key)
+        #     else:
+        #         # Keep photo-zs and shapes even if they're NaNs
+        #         if (not key.startswith("photoz_")) and (not key.startswith('i_hsmshape')) and (not key.startswith('i_sdssshape')):
+        #             sel[np.isnan(cat[key])] = 0
+        # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
+        # cat.remove_columns(isnull_names)
+        # cat.remove_rows(~sel)
 
         logger.info("Basic cleanup of raw catalog")
-        sel_raw = np.ones(len(cat_raw), dtype=bool)
-        print("Initial size", len(cat_raw))
-        sel_raw *= cat_raw['weak_lensing_flag']
-        print("After WL flag", np.sum(sel_raw))
-        sel_raw *= np.logical_not(cat_raw['i_apertureflux_10_mag']>25.5)
-        print("After aperture mag cut", np.sum(sel_raw))
-        sel_raw *= np.logical_not(cat_raw['i_blendedness_abs']>=pow(10, -0.38))
-        print("After blendedness cut", np.sum(sel_raw))
-        sel_raw *= np.logical_not(np.isnan(cat_raw['i_hsmshaperegauss_sigma']))
-        print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
-        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_ghost'])
-        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_halo'])
-        sel_raw *= np.logical_not(cat_raw['i_mask_brightstar_blooming'])
+        sel_raw = np.ones(len(cat), dtype=bool)
+        print("Initial size", len(cat))
+        # sel_raw *= cat['weak_lensing_flag']
+        # print("After WL flag", np.sum(sel_raw))
+        # sel_raw *= np.logical_not(cat['i_apertureflux_10_mag']>25.5)
+        # print("After aperture mag cut", np.sum(sel_raw))
+        # sel_raw *= np.logical_not(cat['i_blendedness_abs']>=pow(10, -0.38))
+        # print("After blendedness cut", np.sum(sel_raw))
+        # sel_raw *= np.logical_not(np.isnan(cat['i_hsmshaperegauss_sigma']))
+        # print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
         print("After bright object mask", np.sum(sel_raw))
         hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
         m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
         mfactor =   np.pi/180.
         indices_map =   np.where(m)[0]
         nside   =   hp.get_nside(m)
-        phi     =   cat_raw[self.config['ra']]*mfactor
-        theta   =   np.pi/2. - cat_raw[self.config['dec']]*mfactor
+        phi     =   cat[self.config['ra']]*mfactor
+        theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
         sel_raw *= np.in1d(indices_obj, indices_map)
         print("after FDFC cut", np.sum(sel_raw))
@@ -506,15 +493,17 @@ class ReduceCat(PipelineStage):
         sel_area = np.ones(len(cat), dtype=bool)
         sel_clean = np.ones(len(cat), dtype=bool)
         sel_maglim = np.ones(len(cat), dtype=bool)
-        # sel_maglim[cat['%sc_model_mag' % band] -
-        #            cat['a_%s' % band] > self.config['depth_cut']] = 0
+        sel_maglim[cat['%s_cmodel_mag' % band] -
+                   cat['a_%s' % band] > self.config['depth_cut']] = 0
+        print("depth cut removes ", len(sel_maglim)-np.sum(sel_maglim))
         # Blending
         sel_blended = np.ones(len(cat), dtype=bool)
         # abs_flux<10^-0.375
         # sel_blended[cat['iblendedness_abs_flux'] >= 0.42169650342] = 0
         # S/N in i
         sel_fluxcut_i = np.ones(len(cat), dtype=bool)
-        # sel_fluxcut_i[cat['i_cmodel_flux'] < 10*cat['i_cmodel_flux_err']] = 0
+        sel_fluxcut_i[cat['i_cmodel_flux'] < 10*cat['i_cmodel_fluxerr']] = 0
+        print("S/N cut removes ", len(sel_fluxcut_i)-np.sum(sel_fluxcut_i))
         # S/N in g
         sel_fluxcut_g = np.ones(len(cat), dtype=int)
         # sel_fluxcut_g[cat['gcmodel_flux'] < 5*cat['gcmodel_flux_err']] = 0
@@ -541,6 +530,12 @@ class ReduceCat(PipelineStage):
         # PSF validation set stars
         sel_psf_valid = np.ones(len(cat), dtype=bool)
         # sel_psf_valid[cat['icalib_psf_used'] == True] = 0
+
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        print("final size", )
+        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+                    (np.sum(sel)))
+        cat.remove_rows(sel)
 
         ####
         # Generate sky projection
@@ -707,10 +702,11 @@ class ReduceCat(PipelineStage):
         # - S/N cut
         # - Star-galaxy separator
         # - Blending
-        sel = ~(sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
-        logger.info("Will lose %d objects to depth, S/N and stars" %
-                    (np.sum(sel)))
-        cat.remove_rows(sel)
+        # sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        # print("final size", )
+        # logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+        #             (np.sum(sel)))
+        # cat.remove_rows(sel)
 
         ####
         # Define shear catalog
