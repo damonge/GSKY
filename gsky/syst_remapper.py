@@ -21,14 +21,14 @@ class SystReMapper(PipelineStage) :
 
     inputs=[('airmass_maps',HspFile),('exptime_maps',HspFile),
              ('skylevel_maps',HspFile),('sigma_sky_maps',HspFile),('e1_maps',HspFile),
-             ('e2_maps',HspFile),('nexp_maps',HspFile),('masked_fraction',FitsFile)]
+             ('e2_maps',HspFile),('nexp_maps',HspFile),('ccdtemp_maps',HspFile),('masked_fraction',FitsFile)]
     outputs=[('airmass_maps_out',FitsFile),('exptime_maps_out',FitsFile),
              ('skylevel_maps_out',FitsFile),('sigma_sky_maps_out',FitsFile),('e1_maps_out',FitsFile),
-             ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile)]
+             ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile),('ccdtemp_maps_out',FitsFile)]
 
 
     def run(self) :
-        quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp']
+        quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp', 'ccdtemp']
         bands=['i']
 
         logger.info("Reading sample map")
