@@ -82,7 +82,8 @@ class MapDiagnoser(PipelineStage):
                         'stars': 'Stars per pixel',
                         'depth': '5-sigma depth'}
         # Bands
-        self.bands = ['g', 'r', 'i', 'z', 'y']
+        # self.bands = ['g', 'r', 'i', 'z', 'y']
+        self.bands = ['i']
         print(self.get_output('systmap_plots'))
         os.system('mkdir -p ' + self.get_output('systmap_plots'))
 
@@ -112,8 +113,10 @@ class MapDiagnoser(PipelineStage):
         _, self.temps['depth'] = read_flat_map(self.get_input("depth_map"),
                                                i_map=0)
         # Dust
+        # _, self.temps['dust'] = read_flat_map(self.get_input("dust_map"),
+        #                                       i_map=id_band)
         _, self.temps['dust'] = read_flat_map(self.get_input("dust_map"),
-                                              i_map=id_band)
+                                              i_map=0)
         # Stars
         _, self.temps['stars'] = read_flat_map(self.get_input("star_map"),
                                                i_map=0)
@@ -121,6 +124,8 @@ class MapDiagnoser(PipelineStage):
                    'sigma_sky', 'seeing', 'ellipt', 'nvisit']:
             for i_b, b in enumerate(self.bands):
                 name = oc+'_'+b
+                # _, self.temps[name] = read_flat_map(self.get_input(oc+"_maps"),
+                #                                     i_map=i_b+5*self.sys_map_offset)
                 _, self.temps[name] = read_flat_map(self.get_input(oc+"_maps"),
                                                     i_map=i_b+5*self.sys_map_offset)
 
