@@ -53,6 +53,7 @@ class PowerSpecter(PipelineStage) :
                 temp.append(t)
         else :
             i_map=['g','r','i','z','y'].index(bandname)+5*offset
+            i_map = 0
             fskb,temp=read_flat_map(fname,i_map=i_map)
             compare_infos(self.fsk,fskb)
             temp=[temp]
