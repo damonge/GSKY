@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class PowerSpecter(PipelineStage) :
     name="PowerSpecter"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_map',FitsFile),
+            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_maps',FitsFile),
             ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
             ('airmass_maps',FitsFile),('exptime_maps',FitsFile),('skylevel_maps',FitsFile),
             ('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),('ellipt_maps',FitsFile),
@@ -53,6 +53,7 @@ class PowerSpecter(PipelineStage) :
                 temp.append(t)
         else :
             i_map=['g','r','i','z','y'].index(bandname)+5*offset
+            # RD: for temporary map format from decasu - single band
             i_map = 0
             fskb,temp=read_flat_map(fname,i_map=i_map)
             compare_infos(self.fsk,fskb)
@@ -696,7 +697,7 @@ class PowerSpecter(PipelineStage) :
                     sysmap=self.read_map_bands(self.get_input(d['name'][3:]+'_maps'),False,d['band'],
                                                offset=self.sys_map_offset)[0]
                 elif d['name']=='dust':
-                    sysmap=self.read_map_bands(self.get_input('dust_map'),False,d['band'])[0]
+                    sysmap=self.read_map_bands(self.get_input('dust_maps'),False,d['band'])[0]
                 else :
                     raise KeyError("Unknown systematic name "+d['name'])
     
@@ -839,7 +840,7 @@ class PowerSpecter(PipelineStage) :
         #Depth
         temps.append(self.mp_depth)
         #Dust
-        for t in self.read_map_bands(self.get_input('dust_map'),False,self.config['band']) :
+        for t in self.read_map_bands(self.get_input('dust_maps'),False,self.config['band']) :
             temps.append(t)
         #Stars
         fskb,t=read_flat_map(self.get_input('star_map'),i_map=0)
