@@ -26,7 +26,8 @@ class Tracer(object) :
             self.type = 'galaxy_density'
             self.spin = 0
             #Read numbers map
-            self.fsk,nmap=read_flat_map(None,hdu=hdu_list[2*i_bin])
+            #RD: changed here!
+            self.fsk,nmap=read_flat_map(None,hdu=hdu_list[i_bin])
             compare_infos(fsk,self.fsk)
 
             #Read N(z)
