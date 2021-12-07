@@ -898,8 +898,10 @@ class PowerSpecter(PipelineStage) :
 
         for i_t,t in enumerate(tracers):
             if t.type == 'galaxy_density':
-                z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
-                nz = t.nz_data['nz_cosmos']
+                # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
+                # nz = t.nz_data['nz_cosmos']
+                z = np.ones(5)
+                nz = np.ones(5)
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'gc_{}'.format(i_t),
                                                       quantity='galaxy_density',
