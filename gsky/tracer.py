@@ -31,7 +31,8 @@ class Tracer(object) :
             compare_infos(fsk,self.fsk)
 
             #Read N(z)
-            self.nz_data=hdu_list[2*i_bin+1].data.copy()
+            #RD: changed here!
+            self.nz_data=hdu_list[i_bin].data.copy()
 
             #Make sure other maps are compatible
             if not self.fsk.is_map_compatible(mask_binary) :
