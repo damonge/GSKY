@@ -323,6 +323,7 @@ class PowerSpecter(PipelineStage) :
 
         nls_all=np.zeros([self.ncross,self.nell])
         i_x=0
+        print("nbins", self.nbins)
         for i in range(self.nbins) :
             for j in range(i,self.nbins) :
                 if i==j: #Add shot noise in the auto-correlation
