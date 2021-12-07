@@ -1,1 +1,1 @@
-oc_airmass   r > 1.15
+
