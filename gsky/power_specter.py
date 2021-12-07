@@ -909,10 +909,10 @@ class PowerSpecter(PipelineStage) :
                                                       quantity='galaxy_density',
                                                       metadata={'spin': 0},
                                                       z=z,
-                                                      nz=nz,
-                                                      extra_columns={key: t.nz_data[key]
-                                                                     for key in t.nz_data.dtype.names if
-                                                                     'nz_' in key and key != 'nz_cosmos'})
+                                                      nz=nz)
+                                                      # extra_columns={key: t.nz_data[key]
+                                                      #                for key in t.nz_data.dtype.names if
+                                                      #                'nz_' in key and key != 'nz_cosmos'})
 
             elif t.type == 'cmb_tSZ':
                 if t.beam is not None:
