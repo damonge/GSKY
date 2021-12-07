@@ -735,9 +735,10 @@ class PowerSpecter(PipelineStage) :
 
         if map_type == 'ngal_maps':
             logger.info('Creating number counts tracers.')
-            if len(hdul)%2!=0 :
-                raise ValueError("Input file should have two HDUs per map")
-            nmaps=len(hdul)//2
+            # RD: changed here!
+            # if len(hdul)%2!=0 :
+            #     raise ValueError("Input file should have two HDUs per map")
+            nmaps=len(hdul)
             tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type)
                             for i in range(nmaps)]
             tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=temps, type=map_type)
