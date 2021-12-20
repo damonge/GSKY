@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class CovGauss(PowerSpecter) :
     name="CovGauss"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
-            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_map',FitsFile),
+            ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_maps',FitsFile),
             ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
             ('airmass_maps',FitsFile),('exptime_maps',FitsFile),('skylevel_maps',FitsFile),
             ('sigma_sky_maps',FitsFile),('seeing_maps',FitsFile),('ellipt_maps',FitsFile),
