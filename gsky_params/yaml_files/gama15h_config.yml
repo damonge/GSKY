@@ -14,7 +14,7 @@ global:
   pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /Users/Roohi/Documents/Princeton/Projects/s19a_clustering/GSKY_outputs/GAMA15H_ceci/plots
+  plots_dir: /tigress/rdalal/s19a_shear/GSKY_outputs/GAMA15H_ceci/plots
 
 ReduceCat:
   min_snr: 10.
@@ -58,8 +58,8 @@ PowerSpecter:
   noise_bias_type: analytic
   guess_spectrum: NONE
   mask_systematics: False
-  oc_dpj_list: []
-  oc_all_bands: True
+  oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_all_bands: False
   output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
 
 MockGen:
