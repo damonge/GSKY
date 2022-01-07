@@ -695,7 +695,7 @@ class PowerSpecter(PipelineStage) :
                                     dtype=[('name','|U32'),('band','|U4'),('gl','|U4'),('thr','<f8')])
             dummy_count=1
             for d in data_syst :
-                if dummy_count<len(data_syst)
+                if dummy_count<len(data_syst):
                     #Read systematic
                     if d['name'].startswith('oc_'):
                         sysmap=self.read_map_bands(self.get_input(d['name'][3:]+'_maps'),False,d['band'],
