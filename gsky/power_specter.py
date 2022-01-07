@@ -717,6 +717,8 @@ class PowerSpecter(PipelineStage) :
                         msk_sys_this[sysmap>d['thr']]=0
                     msk_syst*=msk_sys_this
                     fsky_post=np.sum(msk_syst)
+                    print(d)
+                    print((1-fsky_post/fsky_pre)*100)
                     print(' '+d['name']+d['gl']+'%.3lf'%(d['thr'])+
                           ' removes ~%.2lf per-cent of the available sky'%((1-fsky_post/fsky_pre)*100))
                     dummy_count+=1
