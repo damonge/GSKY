@@ -693,6 +693,7 @@ class PowerSpecter(PipelineStage) :
             data_syst=np.genfromtxt(self.get_input('syst_masking_file'),
                                     dtype=[('name','|U32'),('band','|U4'),('gl','|U4'),('thr','<f8')])
             for d in data_syst :
+                print(data_syst)
                 #Read systematic
                 if d['name'].startswith('oc_'):
                     sysmap=self.read_map_bands(self.get_input(d['name'][3:]+'_maps'),False,d['band'],
