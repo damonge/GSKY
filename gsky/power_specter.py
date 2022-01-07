@@ -691,33 +691,33 @@ class PowerSpecter(PipelineStage) :
             msk_syst=msk_bi.copy()
             #Read systematics cut data
             #Roohi change data_syst format
-            d=np.genfromtxt(self.get_input('syst_masking_file'),
+            data_syst1=np.genfromtxt(self.get_input('syst_masking_file'),
                                     dtype=[('name','|U32'),('band','|U4'),('gl','|U4'),('thr','<f8')])
-            # data_syst=[data_syst1]
-            # for d in data_syst :
+            data_syst=[data_syst1]
+            for d in data_syst :
                 #Read systematic
-            if d['name'].startswith('oc_'):
-                sysmap=self.read_map_bands(self.get_input(d['name'][3:]+'_maps'),False,d['band'],
-                                           offset=self.sys_map_offset)[0]
-            elif d['name']=='dust':
-                sysmap=self.read_map_bands(self.get_input('dust_maps'),False,d['band'])[0]
-            else :
-                raise KeyError("Unknown systematic name "+d['name'])
+                if d['name'].startswith('oc_'):
+                    sysmap=self.read_map_bands(self.get_input(d['name'][3:]+'_maps'),False,d['band'],
+                                               offset=self.sys_map_offset)[0]
+                elif d['name']=='dust':
+                    sysmap=self.read_map_bands(self.get_input('dust_maps'),False,d['band'])[0]
+                else :
+                    raise KeyError("Unknown systematic name "+d['name'])
+    
+                #Divide by mean
+                sysmean=np.sum(msk_bi*mskfrac*sysmap)/np.sum(msk_bi*mskfrac)
+                sysmap/=sysmean
 
-            #Divide by mean
-            sysmean=np.sum(msk_bi*mskfrac*sysmap)/np.sum(msk_bi*mskfrac)
-            sysmap/=sysmean
-
-            #Apply threshold
-            msk_sys_this=msk_bi.copy(); fsky_pre=np.sum(msk_syst)
-            if d['gl']=='<' :
-                msk_sys_this[sysmap<d['thr']]=0
-            else :
-                msk_sys_this[sysmap>d['thr']]=0
-            msk_syst*=msk_sys_this
-            fsky_post=np.sum(msk_syst)
-            print(' '+d['name']+d['gl']+'%.3lf'%(d['thr'])+
-                  ' removes ~%.2lf per-cent of the available sky'%((1-fsky_post/fsky_pre)*100))
+                #Apply threshold
+                msk_sys_this=msk_bi.copy(); fsky_pre=np.sum(msk_syst)
+                if d['gl']=='<' :
+                    msk_sys_this[sysmap<d['thr']]=0
+                else :
+                    msk_sys_this[sysmap>d['thr']]=0
+                msk_syst*=msk_sys_this
+                fsky_post=np.sum(msk_syst)
+                print(' '+d['name']+d['gl']+'%.3lf'%(d['thr'])+
+                      ' removes ~%.2lf per-cent of the available sky'%((1-fsky_post/fsky_pre)*100))
             print(' All systematics remove %.2lf per-cent of the sky'%((1-np.sum(msk_syst)/np.sum(msk_bi))*100))
             self.fsk.write_flat_map(self.get_output_fname("mask_syst",ext="fits"),msk_syst)
 
