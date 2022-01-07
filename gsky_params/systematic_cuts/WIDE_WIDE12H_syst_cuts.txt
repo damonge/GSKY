@@ -1,2 +1,2 @@
-oc_nvisit   i > 4
+oc_nvisit   i < 5
 dummy   i > 4
