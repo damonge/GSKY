@@ -690,9 +690,10 @@ class PowerSpecter(PipelineStage) :
             #Mask systematics
             msk_syst=msk_bi.copy()
             #Read systematics cut data
-            data_syst=np.genfromtxt(self.get_input('syst_masking_file'),
+            #Roohi change data_syst format
+            data_syst1=np.genfromtxt(self.get_input('syst_masking_file'),
                                     dtype=[('name','|U32'),('band','|U4'),('gl','|U4'),('thr','<f8')])
-            print(data_syst)
+            data_syst=[data_syst]
             for d in data_syst :
                 #Read systematic
                 if d['name'].startswith('oc_'):
