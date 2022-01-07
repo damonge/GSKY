@@ -719,6 +719,7 @@ class PowerSpecter(PipelineStage) :
                     fsky_post=np.sum(msk_syst)
                     print(' '+d['name']+d['gl']+'%.3lf'%(d['thr'])+
                           ' removes ~%.2lf per-cent of the available sky'%((1-fsky_post/fsky_pre)*100))
+                    dummy_count+=1
             print(' All systematics remove %.2lf per-cent of the sky'%((1-np.sum(msk_syst)/np.sum(msk_bi))*100))
             self.fsk.write_flat_map(self.get_output_fname("mask_syst",ext="fits"),msk_syst)
 
