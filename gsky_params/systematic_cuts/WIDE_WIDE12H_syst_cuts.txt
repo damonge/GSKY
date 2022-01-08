@@ -1,2 +1,2 @@
-oc_nvisit   i < 5
+oc_exptime   i < 1000
 dummy   i > 4
