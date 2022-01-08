@@ -706,8 +706,8 @@ class PowerSpecter(PipelineStage) :
                         raise KeyError("Unknown systematic name "+d['name'])
         
                     #Divide by mean
-                    sysmean=np.sum(msk_bi*mskfrac*sysmap)/np.sum(msk_bi*mskfrac)
-                    sysmap/=sysmean
+                    # sysmean=np.sum(msk_bi*mskfrac*sysmap)/np.sum(msk_bi*mskfrac)
+                    # sysmap/=sysmean
 
                     #Apply threshold
                     msk_sys_this=msk_bi.copy(); fsky_pre=np.sum(msk_syst)
