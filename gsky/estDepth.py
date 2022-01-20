@@ -53,6 +53,9 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
         print(np.sum(np.isnan(depth[idgood])))
         print(coords_all[idgood].shape)
         print(depth[idgood].shape)
+        print(np.max(coords_all))
+        print(np.min(coords_all))
+        print(np.sum(np.isnan(coords_all)))
         depth = griddata(coords_all[idgood],
                          depth[idgood], coords_all,
                          method='nearest', fill_value=0)
