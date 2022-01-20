@@ -146,7 +146,7 @@ CovGauss:
   guess_spectrum: NONE
   mask_systematics: False
   oc_dpj_list: []
-  oc_all_bands: True
+  oc_all_bands: False
   output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
 
 CwspCalc:
