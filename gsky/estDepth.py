@@ -45,7 +45,8 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
         idgood = np.where(nc > count_threshold)[0]
         print(idgood)
         coords_all = np.array(fsk.pix2pos(np.arange(fsk.npix))).T
-        print(coords_all[idgood])
+        print(np.max(coords_all[idgood]))
+        print(np.min(coords_all[idgood]))
         depth = griddata(coords_all[idgood],
                          depth[idgood], coords_all,
                          method='nearest', fill_value=0)
