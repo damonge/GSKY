@@ -35,6 +35,8 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
                                             quantity=quantity,
                                             fsk=fsk)
     # Zeros in empty pixels
+    print("RA NaNs", np.sum(np.isnan(ra)))
+    print("RA NaNs", np.sum(np.isnan(dec)))
     nc = createCountsMap(ra, dec, fsk)
     print(np.sum(nc))
     depth[nc < 1] = 0
