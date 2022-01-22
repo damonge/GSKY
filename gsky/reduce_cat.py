@@ -445,9 +445,10 @@ class ReduceCat(PipelineStage):
 
         logger.info('Initial catalog size: %d' % (len(cat)))
 
-        # Clean nulls and nans
-        # logger.info("Basic cleanup")
+        # Clean nans in ra and dec
+        logger.info("Basic cleanup")
         # sel = np.ones(len(cat), dtype=bool)
+        sel_nan = np.logical_and(np.isnan(cat[self.config['ra']]), np.isnan(cat[self.config['dec']]))
         # isnull_names = []
         # for key in cat.keys():
         #     if key.__contains__('isnull'):
@@ -460,7 +461,8 @@ class ReduceCat(PipelineStage):
         #             sel[np.isnan(cat[key])] = 0
         # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
         # cat.remove_columns(isnull_names)
-        # cat.remove_rows(~sel)
+        print("Number of rows removed due to NaN RA or Dec", np.sum(sel_nan))
+        cat.remove_rows(~sel_nan)
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
