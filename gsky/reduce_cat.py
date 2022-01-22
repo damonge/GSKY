@@ -464,7 +464,7 @@ class ReduceCat(PipelineStage):
         print("Number of rows removed due to NaN RA or Dec", np.sum(sel_nan))
         cat.remove_rows(~np.logical_not(sel_nan))
         print(np.mean(cat[self.config['ra']]))
-        print(np.len(cat[self.config['ra']]))
+        print(len(cat[self.config['ra']]))
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
