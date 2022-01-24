@@ -439,6 +439,11 @@ class ReduceCat(PipelineStage):
 
         # Read catalog
         cat = Table.read(self.get_input('raw_data'))
+        if 'VVDS' in self.get_input('raw_data'):
+            print("Shifting RA by -30 degrees for VVDS")
+            change_in_ra = -30.0
+            init_ra_vals = cat[self.config['ra']].copy()
+            cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
