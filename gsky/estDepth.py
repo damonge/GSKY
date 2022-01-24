@@ -48,7 +48,7 @@ def fluxerr_method(ra, dec, flux_err, fsk, snrthreshold=5,
         idgood = np.where(nc > count_threshold)[0]
         print(idgood)
         coords_all = np.array(fsk.pix2pos(np.arange(fsk.npix))).T
-        coords_all = coords_all[~numpy.isnan(coords_all)]
+        coords_all = coords_all[~np.isnan(coords_all)]
         print(np.max(coords_all[idgood]))
         print(np.min(coords_all[idgood]))
         print(np.sum(np.isnan(coords_all[idgood])))
