@@ -445,7 +445,7 @@ class ReduceCat(PipelineStage):
             change_in_ra = -30.0
             init_ra_vals = cat[self.config['ra']].copy()
             cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-            cat[self.config['ra']<0] += 360.0
+            cat[float(self.config['ra'])<0] += 360.0
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
