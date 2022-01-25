@@ -49,9 +49,9 @@ PowerSpecter:
   guess_spectrum: NONE
   mask_systematics: True
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
-  oc_dpj_list: ['seeing']
+  oc_dpj_list: ['sigma_sky']
   oc_all_bands: False
-  output_run_dir: DeprojectSeeingOnly
+  output_run_dir: DeprojectSigmaSkyOnly
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
