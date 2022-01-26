@@ -442,11 +442,13 @@ class ReduceCat(PipelineStage):
         # Roohi: move VVDS RAs to be on same side of 0 degrees
         if 'VVDS' in self.get_input('raw_data'):
             print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
+            np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/VVDS_ceci/initial_ras', cat[self.config['ra']])
             print("Shifting RA by -30 degrees for VVDS")
             change_in_ra = -30.0
             init_ra_vals = cat[self.config['ra']].copy()
             cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             cat[self.config['ra']][cat[self.config['ra']]<0] += 360.0
+            np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/VVDS_ceci/shifted_ras', cat[self.config['ra']])
             print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
 
         if band not in self.bands:
