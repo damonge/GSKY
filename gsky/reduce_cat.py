@@ -446,6 +446,7 @@ class ReduceCat(PipelineStage):
             init_ra_vals = cat[self.config['ra']].copy()
             cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             cat[self.config['ra']][cat[self.config['ra']]<0] += 360.0
+            print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
