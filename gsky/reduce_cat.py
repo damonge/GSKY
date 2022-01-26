@@ -441,6 +441,7 @@ class ReduceCat(PipelineStage):
         cat = Table.read(self.get_input('raw_data'))
         # Roohi: move VVDS RAs to be on same side of 0 degrees
         if 'VVDS' in self.get_input('raw_data'):
+            print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
             print("Shifting RA by -30 degrees for VVDS")
             change_in_ra = -30.0
             init_ra_vals = cat[self.config['ra']].copy()
