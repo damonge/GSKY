@@ -551,13 +551,14 @@ class ReduceCat(PipelineStage):
             print("Shifting RA by -30 degrees for VVDS")
             change_in_ra = -30.0
             init_ra_vals = cat[self.config['ra']].copy()
-            cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-            cat[self.config['ra']][cat[self.config['ra']]<0] += 360.0
+            shifted_ra_vals = cat[self.config['ra']].copy()
+            shifted_ra_vals = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+            shifted_ra_vals[shifted_ra_vals<0] += 360.0
             np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/VVDS_ceci/shifted_ras', cat[self.config['ra']])
-            print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
+            print("Max and Min RA", np.max(shifted_ra_vals), np.min(shifted_ra_vals))
 
         # Generate sky projection
-        fsk = FlatMapInfo.from_coords(cat[self.config['ra']],
+        fsk = FlatMapInfo.from_coords(shifted_ra_vals,
                                       cat[self.config['dec']],
                                       self.mpp)
 
