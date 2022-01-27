@@ -589,6 +589,15 @@ class ReduceCat(PipelineStage):
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
             hdul = fits.open(self.get_input('star_catalog'))
             star_cat = hdul[1].data
+            # Roohi: move VVDS RAs to be on same side of 0 degrees
+            if 'VVDS' in self.get_input('raw_data'):
+                print("Shifting star catalog RA by -30 degrees for VVDS")
+                print("Max and Min RA", np.max(star_cat[self.config['ra']]), np.min(star_cat[self.config['ra']]))
+                change_in_ra = -30.0
+                init_ra_vals = star_cat[self.config['ra']].copy()
+                star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                star_cat[self.config['ra']][star_cat[self.config['ra']]<0] += 360.0
+                print("Max and Min RA", np.max(star_cat[self.config['ra']]), np.min(star_cat[self.config['ra']]))
 
         mstar, descstar = self.make_star_map(star_cat, fsk,
                                              sel_clean *
