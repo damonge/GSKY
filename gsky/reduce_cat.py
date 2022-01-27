@@ -134,7 +134,7 @@ class ReduceCat(PipelineStage):
             init_ra_vals = cat[self.config['ra']].copy()
             reshifted_ra_vals = cat[self.config['ra']].copy()
             reshifted_ra_vals = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-            reshifted_ra_vals[reshifted_ra_vals<0] += 360.0
+            reshifted_ra_vals[reshifted_ra_vals>360] -= 360.0
             print("Max and Min RA", np.max(reshifted_ra_vals), np.min(reshifted_ra_vals))
 
 
