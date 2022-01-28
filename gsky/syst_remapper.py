@@ -50,6 +50,15 @@ class SystReMapper(PipelineStage) :
                 print(type(hsp_map))
                 vals = hsp_map[hsp_map.valid_pixels]
                 ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
+                # Roohi: move VVDS RAs to be on same side of 0 degrees
+                if 'VVDS' in self.get_input('masked_fraction'):
+                    print("Max and Min RA", np.max(ra), np.min(ra))
+                    print("Shifting RA by -30 degrees for VVDS")
+                    change_in_ra = -30.0
+                    init_ra_vals = ra.copy()
+                    ra = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                    ra[ra<0] += 360.0
+                    print("Max and Min RA", np.max(ra), np.min(ra))
                 mean_map, std_map = createMeanStdMaps(ra, dec, vals, fsk)
                 # median_map = createMedianMap(ra, dec, vals, fsk)
                 oc_mean_maps[q][b] = mean_map
