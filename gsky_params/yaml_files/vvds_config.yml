@@ -2,7 +2,7 @@ global:
   depth_cut: 24.5
   mapping:
     #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
-    res: 0.00833333333333
+    res: 0.01666666666666
     pad: 0.2
     res_bo: 0.003
     projection: CAR
