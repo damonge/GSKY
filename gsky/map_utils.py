@@ -177,11 +177,11 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     mp = np.bincount(pix_ids[id_good],
                      weights=None,
                      minlength=fsk.get_size())
-
+    print("Fraction of non integers in mpW", np.sum(np.array([val.is_integer() for val in mpW]))/len(mpW))
     mpW = np.bincount(pix_ids[id_good],
                       weights=quantity[id_good],
                       minlength=fsk.get_size())
-    print("Number of non integers in mpW", np.sum(np.array([val.is_integer() for val in mpW])))
+    print("Fraction of non integers in mpW", np.sum(np.array([val.is_integer() for val in mpW]))/len(mpW))
     mpWSq = np.bincount(pix_ids[id_good],
                         weights=quantity[id_good]**2,
                         minlength=fsk.get_size())
