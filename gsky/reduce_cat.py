@@ -152,9 +152,9 @@ class ReduceCat(PipelineStage):
         masked *= np.in1d(indices_obj, indices_map)
 
         # bright object mask
-        masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -168,8 +168,8 @@ class ReduceCat(PipelineStage):
         masked_fraction, _ = createMeanStdMaps(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                masked, fsk)
-        # masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
-        return masked_fraction
+        masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
+        return masked_fraction_cont
 
     def make_depth_map(self, cat, fsk):
         """
