@@ -548,12 +548,6 @@ class ReduceCat(PipelineStage):
         sel_psf_valid = np.ones(len(cat), dtype=bool)
         # sel_psf_valid[cat['icalib_psf_used'] == True] = 0
 
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
-        print("final size", )
-        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
-                    (np.sum(sel)))
-        cat.remove_rows(sel)
-
         ####
 
         # Roohi: move VVDS RAs to be on same side of 0 degrees
@@ -734,6 +728,12 @@ class ReduceCat(PipelineStage):
         seeing, seeing_desc = self.make_seeing_map(star_cat, fsk)
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
+
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        print("final size", )
+        logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
+                    (np.sum(sel)))
+        cat.remove_rows(sel)
 
         ####
         # Implement final cuts
