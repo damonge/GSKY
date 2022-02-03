@@ -146,7 +146,10 @@ class ReduceCat(PipelineStage):
         indices_map =   np.where(m)[0]
         nside   =   hp.get_nside(m)
         print("nside", nside)
-        phi     =   reshifted_ra_vals*mfactor
+        if 'VVDS' in self.get_input('raw_data'):
+            phi     =   reshifted_ra_vals*mfactor
+        else:
+            phi     =   cat[self.config['ra']]*mfactor
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
         masked *= np.in1d(indices_obj, indices_map)
