@@ -193,8 +193,8 @@ class GalMapper(PipelineStage):
         hdulist.writeto(self.get_output('ngal_maps'), overwrite=True)
 
         # Plotting
-        for im, m in enumerate(n_maps):
-            plot_map(self.config, self.fsk, m, 'ngal_%d' % im)
+        # for im, m in enumerate(n_maps):
+        #     plot_map(self.config, self.fsk, m, 'ngal_%d' % im)
             # z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
             # nzs = [pzs_cosmos[im, 2, :]]
             # names = ['COSMOS']
