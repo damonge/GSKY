@@ -136,7 +136,7 @@ CovGauss:
   mask_systematics: True
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: MaskLowNexp
+  output_run_dir: Baseline
 
 
 CwspCalc:
