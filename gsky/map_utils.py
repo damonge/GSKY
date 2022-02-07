@@ -188,7 +188,7 @@ def createMeanStdMaps(ra, dec, quantity, fsk):
     std = np.zeros(len(mp))
     count_frac = 0
     for i in range(len(mpW)):
-        if mpW[i] != 0 and mpW[i] != mp:
+        if mpW[i] != 0 and mpW[i] != mp[i]:
             count_frac += 1
     print("number of fractional masked fraction", count_frac)
     mean[idgood] = mpW[idgood]/mp[idgood]
