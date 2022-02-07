@@ -171,8 +171,8 @@ class ReduceCat(PipelineStage):
         masked_fraction, _ = createMeanStdMaps(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                masked, fsk)
-        masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
-        return masked_fraction_cont
+        # masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
+        return masked_fraction
 
     def make_depth_map(self, cat, fsk):
         """
@@ -463,7 +463,6 @@ class ReduceCat(PipelineStage):
         # Clean nans in ra and dec
         logger.info("Basic cleanup")
         # sel = np.ones(len(cat), dtype=bool)
-        sel_nan = np.logical_and(np.isnan(cat[self.config['ra']]), np.isnan(cat[self.config['dec']]))
         # isnull_names = []
         # for key in cat.keys():
         #     if key.__contains__('isnull'):
@@ -476,10 +475,6 @@ class ReduceCat(PipelineStage):
         #             sel[np.isnan(cat[key])] = 0
         # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
         # cat.remove_columns(isnull_names)
-        print("Number of rows removed due to NaN RA or Dec", np.sum(sel_nan))
-        cat.remove_rows(~np.logical_not(sel_nan))
-        print(np.mean(cat[self.config['ra']]))
-        print(len(cat[self.config['ra']]))
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
