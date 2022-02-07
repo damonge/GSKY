@@ -171,8 +171,8 @@ class ReduceCat(PipelineStage):
         masked_fraction, _ = createMeanStdMaps(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                masked, fsk)
-        # masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
-        return masked_fraction
+        masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
+        return masked_fraction_cont
 
     def make_depth_map(self, cat, fsk):
         """
