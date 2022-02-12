@@ -461,7 +461,7 @@ class ReduceCat(PipelineStage):
         logger.info('Initial catalog size: %d' % (len(cat)))
 
         # Clean nans in ra and dec
-        logger.info("Basic cleanup")
+        logger.info("Remove bad visit")
         # sel = np.ones(len(cat), dtype=bool)
         # isnull_names = []
         # for key in cat.keys():
@@ -475,6 +475,22 @@ class ReduceCat(PipelineStage):
         #             sel[np.isnan(cat[key])] = 0
         # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
         # cat.remove_columns(isnull_names)
+
+        # remove bad visit
+        ra=cat[self.config['ra']]
+        dec=cat[self.config['dec']]
+        def _calDistanceAngle(a1, d1):
+            a2=130.43
+            d2=-1.02
+            a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
+            d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
+            a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
+            d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
+            return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
+        d=_calDistanceAngle(ra,dec)
+        mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
+        mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        cat.remove_rows(~mask_bad_visit)
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
