@@ -490,9 +490,11 @@ class ReduceCat(PipelineStage):
         d=_calDistanceAngle(ra,dec)
         mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
         mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
-        cat.remove_rows(~mask_bad_visit)
-        logger.info("Bad visit removal ", np.sum(~mask_bad_visit))
+        print("testing")
         print("Bad visit removal ", np.sum(~mask_bad_visit))
+        print("testing2")
+        cat.remove_rows(~mask_bad_visit)
+
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
