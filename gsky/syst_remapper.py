@@ -26,10 +26,10 @@ class SystReMapper(PipelineStage) :
              ('skylevel_maps_out',FitsFile),('sigma_sky_maps_out',FitsFile),('e1_maps_out',FitsFile),
              ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile),('ccdtemp_maps_out',FitsFile)]
 
-
+    testing_i_sigma_sky_wmean.hs
     def run(self) :
         quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp', 'ccdtemp']
-        bands=['i']
+        bands=['g', 'r', 'i', 'z', 'y']
 
         logger.info("Reading sample map")
         fsk,mp=read_flat_map(self.get_input('masked_fraction'))
@@ -46,8 +46,12 @@ class SystReMapper(PipelineStage) :
             # oc_med_maps[q] = {}
             for b in bands:
                 # TODO: Figure out naming
-                hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
-                print(type(hsp_map))
+                # hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
+                if q=='exptime' or q=='nexp':
+                    str_hsp_map = self.config(maps_path)+'_'+b+'/'+'testing_i_'+q+'_sum.hs'
+                else:
+                    str_hsp_map = self.config(maps_path)+'_'+b+'/'+'testing_i_'+q+'_wmean.hs'
+                hsp_map = hsp.HealSparseMap.read(str_hsp_map)
                 vals = hsp_map[hsp_map.valid_pixels]
                 ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
                 # Roohi: move VVDS RAs to be on same side of 0 degrees
