@@ -27,7 +27,7 @@ class SystReMapper(PipelineStage) :
              ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile),('ccdtemp_maps_out',FitsFile)]
 
     def run(self) :
-        quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp', 'ccdtemp']
+        quants=['airmass','exptime','skylevel','sigma_sky','dcr_e1', 'dcr_e2', 'nexp', 'ccdtemp']
         bands=['g', 'r', 'i', 'z', 'y']
 
         logger.info("Reading sample map")
