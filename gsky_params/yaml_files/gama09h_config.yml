@@ -22,6 +22,9 @@ ReduceCat:
 SystMapper:
   ccd_drop: [9]
 
+SystReMapper:
+  maps_path: /tigress/rdalal/s19a_shear/shared_frames/decasu_output_16k_res
+
 COSMOSWeight:
   n_neighbors: 20
 
