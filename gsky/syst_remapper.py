@@ -47,9 +47,9 @@ class SystReMapper(PipelineStage) :
                 # TODO: Figure out naming
                 # hsp_map = hsp.HealSparseMap.read(self.get_input(q+'_maps'))
                 if q=='exptime' or q=='nexp':
-                    str_hsp_map = self.config(maps_path)+'_'+b+'/'+'testing_i_'+q+'_sum.hs'
+                    str_hsp_map = self.config['maps_path']+'_'+b+'/'+'testing_i_'+q+'_sum.hs'
                 else:
-                    str_hsp_map = self.config(maps_path)+'_'+b+'/'+'testing_i_'+q+'_wmean.hs'
+                    str_hsp_map = self.config['maps_path']+'_'+b+'/'+'testing_i_'+q+'_wmean.hs'
                 hsp_map = hsp.HealSparseMap.read(str_hsp_map)
                 vals = hsp_map[hsp_map.valid_pixels]
                 ra, dec = hsp_map.valid_pixels_pos(lonlat=True)
