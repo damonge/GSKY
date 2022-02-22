@@ -26,7 +26,6 @@ class SystReMapper(PipelineStage) :
              ('skylevel_maps_out',FitsFile),('sigma_sky_maps_out',FitsFile),('e1_maps_out',FitsFile),
              ('e2_maps_out',FitsFile),('nexp_maps_out',FitsFile),('ccdtemp_maps_out',FitsFile)]
 
-    testing_i_sigma_sky_wmean.hs
     def run(self) :
         quants=['airmass','exptime','skylevel','sigma_sky','e1', 'e2', 'nexp', 'ccdtemp']
         bands=['g', 'r', 'i', 'z', 'y']
