@@ -213,7 +213,7 @@ class ReduceCat(PipelineStage):
         :param fsk: FlatMapInfo object describing the
             geometry of the output map
         """
-        logger.info("Creating depth maps")
+        logger.info("Creating seeing maps")
         #method = self.config['depth_method']
         band = self.config['band']
         # good_object_id = np.ones(len(cat))
@@ -453,7 +453,8 @@ class ReduceCat(PipelineStage):
         self.mpp = self.config['mapping']
 
         # Read catalog
-        cat = Table.read(self.get_input('raw_data'))
+        cat = Table.read('/tigress/rdalal/s19a_shear/WIDE12H_no_m.fits')
+        # cat = Table.read(self.get_input('raw_data'))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
@@ -752,6 +753,7 @@ class ReduceCat(PipelineStage):
         logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
                     (np.sum(sel)))
         cat.remove_rows(sel)
+        logger.info('Final catalog size: %d' % (len(cat)))
 
         ####
         # Implement final cuts

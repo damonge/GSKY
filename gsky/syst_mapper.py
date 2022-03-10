@@ -37,10 +37,10 @@ class SystMapper(PipelineStage) :
         bands=np.unique(data['filter'])
 
         logger.info("Computing frame coords")
-        ix_ll,iy_ll,in_ll=fsk.pos2pix2d(data['llcra'],data['llcdecl'])
-        ix_ul,iy_ul,in_ul=fsk.pos2pix2d(data['ulcra'],data['ulcdecl'])
-        ix_ur,iy_ur,in_ur=fsk.pos2pix2d(data['urcra'],data['urcdecl'])
-        ix_lr,iy_lr,in_lr=fsk.pos2pix2d(data['lrcra'],data['lrcdecl'])
+        ix_ll,iy_ll,in_ll=fsk.pos2pix2d(data['llcra'],data['llcdec'])
+        ix_ul,iy_ul,in_ul=fsk.pos2pix2d(data['ulcra'],data['ulcdec'])
+        ix_ur,iy_ur,in_ur=fsk.pos2pix2d(data['urcra'],data['urcdec'])
+        ix_lr,iy_lr,in_lr=fsk.pos2pix2d(data['lrcra'],data['lrcdec'])
         #Keep only frames that fit inside the field
         is_in=np.logical_or(in_ll,np.logical_or(in_ul,np.logical_or(in_ur,in_lr)))
         data=data[is_in]
@@ -137,8 +137,8 @@ class SystMapper(PipelineStage) :
                 plot_map(self.config, fsk, mp, '%s_%s' % (q, b))
 
         # Permissions on NERSC
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
