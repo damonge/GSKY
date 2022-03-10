@@ -453,8 +453,8 @@ class ReduceCat(PipelineStage):
         self.mpp = self.config['mapping']
 
         # Read catalog
-        # cat = Table.read('/tigress/rdalal/s19a_shear/WIDE12H_no_m.fits')
-        cat = Table.read(self.get_input('raw_data'))
+        cat = Table.read('/tigress/rdalal/s19a_shear/WIDE12H_no_m.fits')
+        # cat = Table.read(self.get_input('raw_data'))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
@@ -754,6 +754,7 @@ class ReduceCat(PipelineStage):
                     (np.sum(sel)))
         cat.remove_rows(sel)
         logger.info('Final catalog size: %d' % (len(cat)))
+        print('Final catalog size: %d' % (len(cat)))
 
         ####
         # Implement final cuts
