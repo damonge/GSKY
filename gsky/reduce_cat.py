@@ -155,9 +155,9 @@ class ReduceCat(PipelineStage):
         masked *= np.in1d(indices_obj, indices_map)
 
         # bright object mask
-        masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
