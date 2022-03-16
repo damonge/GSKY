@@ -430,7 +430,7 @@ class ReduceCat(PipelineStage):
                            "best, mean, mode and mc")
 
         # self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
-        self.column_mark = 'photoz_'+self.config['pz_mark']
+        self.column_mark = self.pz_code+'_photoz_'+self.config['pz_mark']
         zs = cat[self.column_mark]
 
         # Assign all galaxies to bin -1
