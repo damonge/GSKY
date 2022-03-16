@@ -28,7 +28,7 @@ class SystReMapper(PipelineStage) :
 
     def run(self) :
         quants=['airmass','exptime','skylevel','sigma_sky','dcr_e1', 'dcr_e2', 'nexp', 'ccdtemp']
-        bands=['g', 'r', 'i', 'z', 'y']
+        bands=['i']
 
         logger.info("Reading sample map")
         fsk,mp=read_flat_map(self.get_input('masked_fraction'))
