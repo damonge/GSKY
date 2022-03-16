@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
-    inputs = [('raw_data', FitsFile), ('shape_catalog', FitsFile)
+    inputs = [('raw_data', FitsFile), ('shape_catalog', FitsFile),
               ('star_catalog', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
     #            ('dust_map', FitsFile),
