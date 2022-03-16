@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
-    inputs = [('raw_data', FitsFile), ('shape_catalog', FitsFile)
+    inputs = [('raw_data', FitsFile),
               ('star_catalog', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
     #            ('dust_map', FitsFile),
@@ -454,8 +454,7 @@ class ReduceCat(PipelineStage):
 
         # Read catalog
         # cat = Table.read('/tigress/rdalal/s19a_shear/WIDE12H_no_m.fits')
-        raw_cat = Table.read(self.get_input('raw_data'))
-        cat = Table.read(self.get_input('shape_catalog'))
+        cat = Table.read(self.get_input('raw_data'))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
@@ -492,7 +491,9 @@ class ReduceCat(PipelineStage):
         d=_calDistanceAngle(ra,dec)
         mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
         mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        print("testing")
         print("Bad visit removal ", np.sum(~mask_bad_visit))
+        print("testing2")
         cat.remove_rows(~mask_bad_visit)
 
 
@@ -732,7 +733,7 @@ class ReduceCat(PipelineStage):
         #                    descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont = self.make_masked_fraction(raw_cat, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
                                                          mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
