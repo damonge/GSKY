@@ -155,9 +155,9 @@ class ReduceCat(PipelineStage):
         masked *= np.in1d(indices_obj, indices_map)
 
         # bright object mask
-        # masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        # masked *= np.logical_not(cat['i_mask_brightstar_halo'])
-        # masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        masked *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        masked *= np.logical_not(cat['i_mask_brightstar_halo'])
+        masked *= np.logical_not(cat['i_mask_brightstar_blooming'])
         # if mask_fulldepth:
         #     masked *= cat['wl_fulldepth_fullcolor']
         # if self.config['mask_type'] == 'arcturus':
@@ -507,9 +507,9 @@ class ReduceCat(PipelineStage):
         # print("After blendedness cut", np.sum(sel_raw))
         # sel_raw *= np.logical_not(np.isnan(cat['i_hsmshaperegauss_sigma']))
         # print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
-        sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        # sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        # sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
+        # sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
         print("After bright object mask", np.sum(sel_raw))
         hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
         m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
