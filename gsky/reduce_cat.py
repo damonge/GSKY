@@ -150,6 +150,7 @@ class ReduceCat(PipelineStage):
         indices_map =   np.where(m[m.valid_pixels])[0]
         # nside   =   hp.get_nside(m)
         nside   =   m.nside_sparse
+        print("nside", nside)
         if 'VVDS' in self.get_input('raw_data'):
             phi     =   reshifted_ra_vals*mfactor
         else:
