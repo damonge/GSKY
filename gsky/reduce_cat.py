@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
-    inputs = [('raw_data', FitsFile), ('shape_catalog', FitsFile),
+    inputs = [('raw_data', FitsFile),
               ('star_catalog', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
     #            ('dust_map', FitsFile),
@@ -140,12 +140,14 @@ class ReduceCat(PipelineStage):
 
         masked = np.ones(len(cat))
         # full depth full color cut based on healpix map
-        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map_psf_cut.hs"
+        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        m       =   hsp.HealSparseMap.read(hpfname)
         mfactor =   np.pi/180.
         indices_map =   np.where(m)[0]
-        nside   =   hp.get_nside(m)
-        print("nside", nside)
+        # nside   =   hp.get_nside(m)
+        nside   =   m.nside_sparse
         if 'VVDS' in self.get_input('raw_data'):
             phi     =   reshifted_ra_vals*mfactor
         else:
@@ -430,7 +432,7 @@ class ReduceCat(PipelineStage):
                            "best, mean, mode and mc")
 
         # self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
-        self.column_mark = self.pz_code+'_photoz_'+self.config['pz_mark']
+        self.column_mark = 'photoz_'+self.config['pz_mark']
         zs = cat[self.column_mark]
 
         # Assign all galaxies to bin -1
@@ -454,8 +456,7 @@ class ReduceCat(PipelineStage):
 
         # Read catalog
         # cat = Table.read('/tigress/rdalal/s19a_shear/WIDE12H_no_m.fits')
-        raw_cat = Table.read(self.get_input('raw_data'))
-        cat = Table.read(self.get_input('shape_catalog'))
+        cat = Table.read(self.get_input('raw_data'))
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
@@ -492,7 +493,9 @@ class ReduceCat(PipelineStage):
         d=_calDistanceAngle(ra,dec)
         mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
         mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        print("testing")
         print("Bad visit removal ", np.sum(~mask_bad_visit))
+        print("testing2")
         cat.remove_rows(~mask_bad_visit)
 
 
@@ -507,15 +510,18 @@ class ReduceCat(PipelineStage):
         # print("After blendedness cut", np.sum(sel_raw))
         # sel_raw *= np.logical_not(np.isnan(cat['i_hsmshaperegauss_sigma']))
         # print("After i_hsmshaperegauss_sigma cut", np.sum(sel_raw))
-        # sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost15'])
-        # sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
-        # sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_ghost15'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
+        sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
         print("After bright object mask", np.sum(sel_raw))
-        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map_psf_cut.hs"
+        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        m       =   hsp.HealSparseMap.read(hpfname)
         mfactor =   np.pi/180.
         indices_map =   np.where(m)[0]
-        nside   =   hp.get_nside(m)
+        # nside   =   hp.get_nside(m)
+        nside   =   m.nside_sparse
         phi     =   cat[self.config['ra']]*mfactor
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
@@ -732,7 +738,7 @@ class ReduceCat(PipelineStage):
         #                    descript='Bright-object mask')
 
         # 6- Masked fraction
-        masked_fraction_cont = self.make_masked_fraction(raw_cat, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
                                                          mask_fulldepth=True)
         fsk.write_flat_map(self.get_output('masked_fraction'),
                            masked_fraction_cont,
