@@ -6,6 +6,7 @@ from astropy import units as u
 import numpy as np
 import os
 import healpy as hp
+import healsparse as hsp
 from .flatmaps import FlatMapInfo
 from .map_utils import (createCountsMap,
                         createMeanStdMaps,
