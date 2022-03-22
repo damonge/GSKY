@@ -146,7 +146,7 @@ class ReduceCat(PipelineStage):
         # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
         m       =   hsp.HealSparseMap.read(hpfname)
         mfactor =   np.pi/180.
-        indices_map =   np.where(m)[0]
+        indices_map =   np.where(hsp_map[hsp_map.valid_pixels])[0]
         # nside   =   hp.get_nside(m)
         nside   =   m.nside_sparse
         if 'VVDS' in self.get_input('raw_data'):
