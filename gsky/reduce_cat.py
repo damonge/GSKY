@@ -142,7 +142,7 @@ class ReduceCat(PipelineStage):
         masked = np.ones(len(cat))
         # full depth full color cut based on healpix map
         # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map_psf_cut.hs"
+        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map.hs"
         # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
         m       =   hsp.HealSparseMap.read(hpfname)
         mfactor =   np.pi/180.
