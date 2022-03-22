@@ -156,6 +156,8 @@ class ReduceCat(PipelineStage):
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
         print("masked sum", np.sum(masked))
+        print(np.min(indices_obj), np.max(indices_obj))
+        print(np.min(indices_map), np.max(indices_map))
         masked *= np.in1d(indices_obj, indices_map)
         print("masked sum", np.sum(masked))
 
