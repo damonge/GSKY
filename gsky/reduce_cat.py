@@ -520,15 +520,15 @@ class ReduceCat(PipelineStage):
         sel_raw *= np.logical_not(cat['i_mask_brightstar_halo'])
         sel_raw *= np.logical_not(cat['i_mask_brightstar_blooming'])
         print("After bright object mask", np.sum(sel_raw))
-        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map_psf_cut.hs"
-        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
-        m       =   hsp.HealSparseMap.read(hpfname)
+        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        # hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map_psf_cut.hs"
+        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        # m       =   hsp.HealSparseMap.read(hpfname)
         mfactor =   np.pi/180.
-        # indices_map =   np.where(m)[0]
-        indices_map =   np.where(m[m.valid_pixels])[0]
-        # nside   =   hp.get_nside(m)
-        nside   =   m.nside_sparse
+        indices_map =   np.where(m)[0]
+        # indices_map =   np.where(m[m.valid_pixels])[0]
+        nside   =   hp.get_nside(m)
+        # nside   =   m.nside_sparse
         phi     =   cat[self.config['ra']]*mfactor
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
