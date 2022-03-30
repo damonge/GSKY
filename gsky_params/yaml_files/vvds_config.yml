@@ -23,6 +23,9 @@ ReduceCat:
 SystMapper:
   ccd_drop: [9]
 
+SystReMapper:
+  maps_path: /tigress/rdalal/s19a_shear/shared_frames/decasu_output_16k_res
+
 COSMOSWeight:
   n_neighbors: 20
 
@@ -48,10 +51,10 @@ PowerSpecter:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
   noise_bias_type: analytic
   guess_spectrum: NONE
-  mask_systematics: True
+  mask_systematics: False
   oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_all_bands: False
-  output_run_dir: MaskLowNexp
+  output_run_dir: no_mask
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
@@ -136,7 +139,7 @@ CovGauss:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
+  output_run_dir: no_mask
 
 CwspCalc:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]

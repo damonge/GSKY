@@ -141,15 +141,16 @@ class ReduceCat(PipelineStage):
 
         masked = np.ones(len(cat))
         # full depth full color cut based on healpix map
-        # hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
-        hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map.hs"
-        # m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
-        m       =   hsp.HealSparseMap.read(hpfname)
+        hpfname =   "/tigress/rdalal/s19a_shear/s19a_fdfc_hp_contarea_izy-gt-5_trimmed_fd001.fits"
+        # hpfname = "/tigress/rdalal/s19a_shear/shared_frames/final_fdfc_map.hs"
+        m       =   hp.read_map(hpfname, nest = True, dtype = np.bool)
+        # m_hsp       =   hsp.HealSparseMap.read(hpfname)
+        # m = m.generate_healpix_map(nside=16384, reduction='mean')
         mfactor =   np.pi/180.
-        # indices_map =   np.where(m)[0]
-        indices_map =   np.where(m[m.valid_pixels])[0]
-        # nside   =   hp.get_nside(m)
-        nside   =   m.nside_sparse
+        indices_map =   np.where(m)[0]
+        # indices_map =   np.where(m[m.valid_pixels])[0]
+        nside   =   hp.get_nside(m)
+        # nside   =   m.nside_sparse
         print("nside", nside)
         if 'VVDS' in self.get_input('raw_data'):
             phi     =   reshifted_ra_vals*mfactor
@@ -158,8 +159,6 @@ class ReduceCat(PipelineStage):
         theta   =   np.pi/2. - cat[self.config['dec']]*mfactor
         indices_obj = hp.ang2pix(nside, theta, phi, nest = True)
         print("masked sum", np.sum(masked))
-        print(np.min(indices_obj), np.max(indices_obj))
-        print(np.min(indices_map), np.max(indices_map))
         masked *= np.in1d(indices_obj, indices_map)
         print("masked sum", np.sum(masked))
 
@@ -180,8 +179,8 @@ class ReduceCat(PipelineStage):
         masked_fraction, _ = createMeanStdMaps(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                masked, fsk)
-        # masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
-        return masked_fraction
+        masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
+        return masked_fraction_cont
 
     def make_depth_map(self, cat, fsk):
         """
