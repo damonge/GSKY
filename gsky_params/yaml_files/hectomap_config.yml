@@ -10,10 +10,10 @@ global:
   mask_thr: 0.5
   shearrot: noflip
   sys_collapse_type: average
-  pz_code: ephor_ab
+  pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /global/cscratch1/sd/damonge/GSKY/outputs/HECTOMAP_ceci/plots
+  plots_dir: /tigress/rdalal/s19a_shear/GSKY_outputs/HECTOMAP_ceci/plots
 
 ReduceCat:
   min_snr: 10.
