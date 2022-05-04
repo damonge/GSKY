@@ -129,7 +129,7 @@ class ReduceCat(PipelineStage):
         """
         logger.info("Generating masked fraction map")
 
-        if 'VVDS' in self.get_input('raw_data'):
+        if 'VVDS' in self.get_input('shape_catalog'):
             print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
             print("Shifting RA back by +30 degrees for VVDS for FDFC cut")
             change_in_ra = +30.0
@@ -153,7 +153,7 @@ class ReduceCat(PipelineStage):
         nside   =   hp.get_nside(m)
         # nside   =   m.nside_sparse
         # print("nside", nside)
-        if 'VVDS' in self.get_input('raw_data'):
+        if 'VVDS' in self.get_input('shape_catalog'):
             phi     =   reshifted_ra_vals*mfactor
         else:
             phi     =   cat[self.config['ra']]*mfactor
@@ -583,7 +583,7 @@ class ReduceCat(PipelineStage):
         ####
 
         # Roohi: move VVDS RAs to be on same side of 0 degrees
-        if 'VVDS' in self.get_input('raw_data'):
+        if 'VVDS' in self.get_input('shape_catalog'):
             print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
             # np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/VVDS_ceci/initial_ras', cat[self.config['ra']])
             print("Shifting RA by -30 degrees for VVDS")
@@ -616,7 +616,7 @@ class ReduceCat(PipelineStage):
             hdul = fits.open(self.get_input('star_catalog'))
             star_cat = hdul[1].data
             # Roohi: move VVDS RAs to be on same side of 0 degrees
-            if 'VVDS' in self.get_input('raw_data'):
+            if 'VVDS' in self.get_input('shape_catalog'):
                 print("Shifting star catalog RA by -30 degrees for VVDS")
                 print("Max and Min RA", np.max(star_cat[self.config['ra']]), np.min(star_cat[self.config['ra']]))
                 change_in_ra = -30.0
