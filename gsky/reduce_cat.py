@@ -284,7 +284,7 @@ class ReduceCat(PipelineStage):
 
         # PSF of stars
         Mxx = star_cat['i_sdssshape_psf_shape11']
-        Myy = star_cat['i_sdssshape_psf_shape21']
+        Myy = star_cat['i_sdssshape_psf_shape22']
         Mxy = star_cat['i_sdssshape_psf_shape12']
         T_I = Mxx + Myy
         e_plus_I = (Mxx - Myy)/T_I
