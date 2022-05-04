@@ -767,6 +767,8 @@ class ReduceCat(PipelineStage):
         logger.info('Final catalog size: %d' % (len(cat)))
         print('Final catalog size: %d' % (len(cat)))
 
+        print(cat['i_hsmshaperegauss_derived_bias_m'])
+
         ####
         # Implement final cuts
         # - Mag. limit
