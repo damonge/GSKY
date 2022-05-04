@@ -374,7 +374,8 @@ class ReduceCat(PipelineStage):
 
     def shear_calibrate(self, cat):
         # Galaxies used for shear
-        mask_shear = cat['shear_cat'] & (cat['tomo_bin'] >= 0)
+        # mask_shear = cat['shear_cat'] & (cat['tomo_bin'] >= 0)
+        mask_shear = cat['tomo_bin'] >= 0
 
         # Calibrate shears per redshift bin
         e1cal = np.zeros(len(cat))
