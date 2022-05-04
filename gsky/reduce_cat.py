@@ -370,7 +370,7 @@ class ReduceCat(PipelineStage):
 
         # shearmask = ishape_flags_mask*ishape_sigma_mask*ishape_resolution_mask*ishape_shear_mod_mask*star_mask*fdfc_mask
         
-        return np.ones(len(cat['i_hsmshaperegauss_flag']))
+        return np.ones(len(cat[self.config['ra']]))
 
     def shear_calibrate(self, cat):
         # Galaxies used for shear
