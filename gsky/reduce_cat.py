@@ -408,8 +408,8 @@ class ReduceCat(PipelineStage):
         :return:
         """
 
-        w2e2maps = createW2QU2Map(cat['ra'],
-                                  cat['dec'],
+        w2e2maps = createW2QU2Map(cat[self.config['ra']],
+                                  cat[self.config['dec']],
                                   e1,
                                   e2, fsk,
                                   weights=None)
