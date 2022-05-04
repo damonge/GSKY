@@ -636,8 +636,7 @@ class ReduceCat(PipelineStage):
         # 3- e_PSF
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
-            hdul = fits.open(self.get_input('star_catalog'))
-            star_cat = hdul[1].data
+            star_cat = Table.read(self.get_input('star_catalog'))
             # TODO: do these stars need to have the same cuts as our sample?
             # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
             logger.info('Creating e_PSF and T_PSF maps.')
