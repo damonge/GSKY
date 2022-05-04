@@ -788,9 +788,9 @@ class ReduceCat(PipelineStage):
 
         ####
         # Secondary peak cut flag - defined to be 0 if included in peak cut
-        width95_mizuki = cat['mizuki_photoz_err95_max'] - cat['mizuki_photoz_err95_min']
-        width95_dnnz = cat['dnnz_photoz_err95_max'] - cat['dnnz_photoz_err95_min']
-        cat['pz_secondary_peak'] = np.logical_or(np.logical_or(cat['tomo_bin']==2, cat['tomo_bin']==3), np.logical_and(width95_mizuki<2.7, width95_dnnz<2.7))
+        # width95_mizuki = cat['mizuki_photoz_err95_max'] - cat['mizuki_photoz_err95_min']
+        # width95_dnnz = cat['dnnz_photoz_err95_max'] - cat['dnnz_photoz_err95_min']
+        # cat['pz_secondary_peak'] = np.logical_or(np.logical_or(cat['tomo_bin']==2, cat['tomo_bin']==3), np.logical_and(width95_mizuki<2.7, width95_dnnz<2.7))
 
         ####
         # Calibrated shears
