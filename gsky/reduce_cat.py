@@ -613,7 +613,7 @@ class ReduceCat(PipelineStage):
 
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
-            star_cat = Table.read(self.get_input('shape_catalog'))
+            star_cat = Table.read(self.get_input('star_catalog'))
             # Roohi: move VVDS RAs to be on same side of 0 degrees
             if 'VVDS' in self.get_input('shape_catalog'):
                 print("Shifting star catalog RA by -30 degrees for VVDS")
