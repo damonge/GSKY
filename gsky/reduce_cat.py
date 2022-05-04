@@ -385,7 +385,7 @@ class ReduceCat(PipelineStage):
         for ibin in range(self.nbins):
             mask_bin = mask_shear & (cat['tomo_bin'] == ibin)
             # Compute multiplicative bias
-            mhat = np.average(cat[mask_bin]['i_hsmshaperegauss_derived_bias_m'],
+            mhat = np.average(cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_m'],
                               weights=cat[mask_bin]['i_hsmshaperegauss_derived_weight'])
             mhats[ibin] = mhat
             # Compute responsivity
@@ -394,9 +394,9 @@ class ReduceCat(PipelineStage):
             resps[ibin] = resp
 
             e1 = (cat[mask_bin]['i_hsmshaperegauss_e1']/(2.*resp) -
-                  cat[mask_bin]['i_hsmshaperegauss_derived_bias_c1']) / (1 + mhat)
+                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c1']) / (1 + mhat)
             e2 = (cat[mask_bin]['i_hsmshaperegauss_e2']/(2.*resp) -
-                  cat[mask_bin]['i_hsmshaperegauss_derived_bias_c2']) / (1 + mhat)
+                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c2']) / (1 + mhat)
             e1cal[mask_bin] = e1
             e2cal[mask_bin] = e2
         return e1cal, e2cal, mhats, resps
@@ -766,8 +766,6 @@ class ReduceCat(PipelineStage):
         cat.remove_rows(sel)
         logger.info('Final catalog size: %d' % (len(cat)))
         print('Final catalog size: %d' % (len(cat)))
-
-        print(cat['i_hsmshaperegauss_derived_bias_m'])
 
         ####
         # Implement final cuts
