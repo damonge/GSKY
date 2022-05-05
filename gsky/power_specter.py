@@ -954,6 +954,8 @@ class PowerSpecter(PipelineStage) :
                 #RD: changed here!
                 # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 # nz = t.nz_data['nz_cosmos']
+                z = np.ones(5)
+                nz = np.ones(5)
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                                       quantity='galaxy_shear',
