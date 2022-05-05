@@ -49,8 +49,8 @@ class ShearMapper(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
-            gammamaps, gammamasks = createSpin2Map(subcat['ra'],
-                                                   subcat['dec'],
+            gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
+                                                   subcat[self.config['dec']],
                                                    subcat['i_hsmshaperegauss_e1_calib'],
                                                    subcat['i_hsmshaperegauss_e2_calib'], self.fsk,
                                                    weights=subcat['i_hsmshaperegauss_derived_weight'],
