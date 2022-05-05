@@ -26,7 +26,8 @@ class ShearMapper(PipelineStage):
                       'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.50],
                       'nz_bin_num': 200,
                       'nz_bin_max': 3.0,
-                      'shearrot': 'noflip'}
+                      'shearrot': 'noflip',
+                      'ra':  'i_ra', 'dec':  'i_dec'}
 
     def get_gamma_maps(self, cat):
         """
