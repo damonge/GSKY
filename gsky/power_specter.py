@@ -755,9 +755,10 @@ class PowerSpecter(PipelineStage) :
 
         elif map_type == 'shear_maps':
             logger.info('Creating cosmic shear tracers.')
-            if (len(hdul)-1)%6!=0 :
+            # RD: changed here from 6 to 5!
+            if (len(hdul)-1)%5!=0 :
                 raise ValueError("Input file should have six HDUs per map")
-            nmaps=(len(hdul)-1)//6
+            nmaps=(len(hdul)-1)//5
             tracers_nocont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
                             for i in range(nmaps)]
             tracers_wcont=[Tracer(hdul,i,self.fsk,self.msk_bi,self.mskfrac,contaminants=None, type=map_type, weightmask=True)
