@@ -804,10 +804,10 @@ class ReduceCat(PipelineStage):
         # 1- header
         logger.info("Writing output")
         hdr = fits.Header()
-        # for ibin in range(self.nbins):
-        #     hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
-        # for ibin in range(self.nbins):
-        #     hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
+        for ibin in range(self.nbins):
+            hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
+        for ibin in range(self.nbins):
+            hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
         hdr['BAND'] = self.config['band']
         hdr['DEPTH'] = self.config['depth_cut']
         prm_hdu = fits.PrimaryHDU(header=hdr)
