@@ -912,6 +912,7 @@ class PowerSpecter(PipelineStage) :
 
         for i_t,t in enumerate(tracers):
             if t.type == 'galaxy_density':
+                #RD: changed here!
                 # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
                 # nz = t.nz_data['nz_cosmos']
                 z = np.ones(5)
@@ -950,17 +951,18 @@ class PowerSpecter(PipelineStage) :
                                                       beam=-1*np.ones(self.nbands))
 
             elif t.type == 'galaxy_shear':
-                z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
-                nz = t.nz_data['nz_cosmos']
+                #RD: changed here!
+                # z = (t.nz_data['z_i'] + t.nz_data['z_f']) * 0.5
+                # nz = t.nz_data['nz_cosmos']
                 tracer = sacc.tracers.BaseTracer.make('NZ',
                                                       'wl_{}'.format(i_t-self.ntracers_counts -self.ntracers_comptony - self.ntracers_kappa),
                                                       quantity='galaxy_shear',
                                                       metadata={'spin': 2},
                                                       z=z,
-                                                      nz=nz,
-                                                      extra_columns={key: t.nz_data[key]
-                                                                     for key in t.nz_data.dtype.names if
-                                                                     'nz_' in key and key != 'nz_cosmos'})
+                                                      nz=nz)
+                                                      # extra_columns={key: t.nz_data[key]
+                                                      #                for key in t.nz_data.dtype.names if
+                                                      #                'nz_' in key and key != 'nz_cosmos'})
 
             else:
                 raise NotImplementedError('Only tracer types galaxy_density, galaxy_shear, cmb_tSZ supported.')
