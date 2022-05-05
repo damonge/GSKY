@@ -20,7 +20,7 @@ class PowerSpecter(PipelineStage) :
     name="PowerSpecter"
     inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
             ('act_maps', FitsFile),('y_beam', ASCIIFile),('depth_map',FitsFile),
-            ('star_map',FitsFile),('syst_masking_file',ASCIIFile)]
+            ('star_map',FitsFile),('dust_maps',FitsFile),('syst_masking_file',ASCIIFile)]
     # inputs=[('masked_fraction',FitsFile),('ngal_maps',FitsFile),('shear_maps',FitsFile),
     #         ('act_maps', FitsFile),('y_beam', ASCIIFile),('dust_maps',FitsFile),
     #         ('star_map',FitsFile),('depth_map',FitsFile),('ccdtemp_maps',FitsFile),
