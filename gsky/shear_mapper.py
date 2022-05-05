@@ -15,15 +15,15 @@ logger = logging.getLogger(__name__)
 class ShearMapper(PipelineStage):
     name = "ShearMapper"
     inputs = [('clean_catalog', FitsFile),
-              ('masked_fraction', FitsFile),
-              ('cosmos_weights', FitsFile),
-              ('pdf_matched', ASCIIFile)]
+              ('masked_fraction', FitsFile)]
+              # ('cosmos_weights', FitsFile),
+              # ('pdf_matched', ASCIIFile)]
     outputs = [('gamma_maps', FitsFile),
                ('w2e2_maps', FitsFile)]
     config_options = {'mask_type': 'sirius',
-                      'pz_code': 'ephor_ab',
+                      'pz_code': 'dnnz',
                       'pz_mark': 'best',
-                      'pz_bins': [0.15, 0.50, 0.75, 1.00, 1.50],
+                      'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.50],
                       'nz_bin_num': 200,
                       'nz_bin_max': 3.0,
                       'shearrot': 'noflip'}
@@ -35,7 +35,7 @@ class ShearMapper(PipelineStage):
         :return:
         """
 
-        if 'ishape_hsm_regauss_e1_calib' not in cat.dtype.names:
+        if 'i_hsmshaperegauss_e1_calib' not in cat.dtype.names:
             raise RuntimeError('get_gamma_maps must be called with '
                                'calibrated shear catalog. Aborting.')
         maps = []
@@ -43,15 +43,17 @@ class ShearMapper(PipelineStage):
         # Tomographic maps
         for ibin in self.bin_indxs:
             if ibin != -1:
-                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                # msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                msk_bin = (cat['tomo_bin'] == ibin)
             else:
-                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
             gammamaps, gammamasks = createSpin2Map(subcat['ra'],
                                                    subcat['dec'],
-                                                   subcat['ishape_hsm_regauss_e1_calib'],
-                                                   subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
-                                                   weights=subcat['ishape_hsm_regauss_derived_shape_weight'],
+                                                   subcat['i_hsmshaperegauss_e1_calib'],
+                                                   subcat['i_hsmshaperegauss_e2_calib'], self.fsk,
+                                                   weights=subcat['i_hsmshaperegauss_derived_weight'],
                                                    shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
             maps.append(maps_combined)
@@ -65,21 +67,23 @@ class ShearMapper(PipelineStage):
         :return:
         """
 
-        if 'ishape_hsm_regauss_e1_calib' not in cat.dtype.names:
+        if 'i_hsmshaperegauss_e1_calib' not in cat.dtype.names:
             raise RuntimeError('get_e2rms must be called with '
                                'calibrated shear catalog. Aborting.')
         e2rms_arr = []
 
         for ibin in self.bin_indxs:
             if ibin != -1:
-                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                # msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                msk_bin = (cat['tomo_bin'] == ibin)
             else:
-                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            e1_2rms = np.average(subcat['ishape_hsm_regauss_e1_calib']**2,
-                                 weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
-            e2_2rms = np.average(subcat['ishape_hsm_regauss_e2_calib']**2,
-                                 weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
+            e1_2rms = np.average(subcat['i_hsmshaperegauss_e1_calib']**2,
+                                 weights=subcat['i_hsmshaperegauss_derived_weight'])
+            e2_2rms = np.average(subcat['i_hsmshaperegauss_e2_calib']**2,
+                                 weights=subcat['i_hsmshaperegauss_derived_weight'])
 
             e2rms_combined = np.array([e1_2rms, e2_2rms])
             e2rms_arr.append(e2rms_combined)
@@ -94,7 +98,7 @@ class ShearMapper(PipelineStage):
         :return:
         """
 
-        if 'ishape_hsm_regauss_e1_calib' not in cat.dtype.names:
+        if 'i_hsmshaperegauss_e1_calib' not in cat.dtype.names:
             raise RuntimeError('get_gamma_maps must be called with '
                                'calibrated shear catalog. Aborting.')
         w2e2 = []
@@ -102,15 +106,17 @@ class ShearMapper(PipelineStage):
 
         for ibin in self.bin_indxs:
             if ibin != -1:
-                msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                # msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                msk_bin = (cat['tomo_bin'] == ibin)
             else:
-                msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
             w2e2maps_curr = createW2QU2Map(subcat['ra'],
                                                    subcat['dec'],
-                                                   subcat['ishape_hsm_regauss_e1_calib'],
-                                                   subcat['ishape_hsm_regauss_e2_calib'], self.fsk,
-                                                   weights=subcat['ishape_hsm_regauss_derived_shape_weight'])
+                                                   subcat['i_hsmshaperegauss_e1_calib'],
+                                                   subcat['i_hsmshaperegauss_e2_calib'], self.fsk,
+                                                   weights=subcat['i_hsmshaperegauss_derived_weight'])
 
             w2e2_curr = 0.5*(np.mean(w2e2maps_curr[0]) + np.mean(w2e2maps_curr[1]))
             w2e2.append(w2e2_curr)
@@ -130,15 +136,15 @@ class ShearMapper(PipelineStage):
         zi_arr = self.config['pz_bins'][:-1]
         zf_arr = self.config['pz_bins'][1:]
 
-        if self.config['pz_code'] == 'ephor_ab':
-            pz_code = 'eab'
-        elif self.config['pz_code'] == 'frankenz':
-            pz_code = 'frz'
-        elif self.config['pz_code'] == 'nnpz':
-            pz_code = 'nnz'
+        if self.config['pz_code'] == 'dnnz':
+            pz_code = 'dnnz'
+        # elif self.config['pz_code'] == 'frankenz':
+        #     pz_code = 'frz'
+        # elif self.config['pz_code'] == 'nnpz':
+        #     pz_code = 'nnz'
         else:
             raise KeyError("Photo-z method "+self.config['pz_code'] +
-                           " unavailable. Choose ephor_ab, frankenz or nnpz")
+                           " unavailable. Choose dnnz")
 
         if self.config['pz_mark'] not in ['best', 'mean', 'mode', 'mc']:
             raise KeyError("Photo-z mark "+self.config['pz_mark'] +
@@ -231,16 +237,16 @@ class ShearMapper(PipelineStage):
                           for ibin in range(self.nbins)])
         cat = hdul[1].data
         # Remove masked objects
-        if self.config['mask_type'] == 'arcturus':
-            self.msk = cat['mask_Arcturus'].astype(bool)
-        elif self.config['mask_type'] == 'sirius':
-            self.msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
-            self.msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
-        else:
-            raise KeyError("Mask type "+self.config['mask_type'] +
-                           " not supported. Choose arcturus or sirius")
-        self.msk *= cat['wl_fulldepth_fullcolor']
-        cat = cat[self.msk]
+        # if self.config['mask_type'] == 'arcturus':
+        #     self.msk = cat['mask_Arcturus'].astype(bool)
+        # elif self.config['mask_type'] == 'sirius':
+        #     self.msk = np.logical_not(cat['iflags_pixel_bright_object_center'])
+        #     self.msk *= np.logical_not(cat['iflags_pixel_bright_object_any'])
+        # else:
+        #     raise KeyError("Mask type "+self.config['mask_type'] +
+        #                    " not supported. Choose arcturus or sirius")
+        # self.msk *= cat['wl_fulldepth_fullcolor']
+        # cat = cat[self.msk]
 
         # logger.info("Reading pdf filenames")
         # data_syst = np.genfromtxt(self.get_input('pdf_matched'),
@@ -250,8 +256,8 @@ class ShearMapper(PipelineStage):
         #                   for n, fn in zip(np.atleast_1d(data_syst['pzname']),
         #                                    np.atleast_1d(data_syst['fname']))}
 
-        logger.info("Getting COSMOS N(z)s")
-        pzs_cosmos = self.get_nz_cosmos()
+        # logger.info("Getting COSMOS N(z)s")
+        # pzs_cosmos = self.get_nz_cosmos()
 
         # logger.info("Getting pdf stacks")
         # pzs_stack = {}
@@ -317,19 +323,19 @@ class ShearMapper(PipelineStage):
                                 header=head)
             hdus.append(hdu)
 
-            cols = [fits.Column(name='z_i', array=pzs_cosmos[im, 0, :],
-                                format='E'),
-                    fits.Column(name='z_f', array=pzs_cosmos[im, 1, :],
-                                format='E'),
-                    fits.Column(name='nz_cosmos', array=pzs_cosmos[im, 2, :],
-                                format='E'),
-                    fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
-                                format='E')]
+            # cols = [fits.Column(name='z_i', array=pzs_cosmos[im, 0, :],
+            #                     format='E'),
+            #         fits.Column(name='z_f', array=pzs_cosmos[im, 1, :],
+            #                     format='E'),
+            #         fits.Column(name='nz_cosmos', array=pzs_cosmos[im, 2, :],
+            #                     format='E'),
+            #         fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
+            #                     format='E')]
             # for n in self.pdf_files.keys():
             #     cols.append(fits.Column(name='nz_'+n,
             #                             array=pzs_stack[n][im, 2, :],
             #                             format='E'))
-            hdus.append(fits.BinTableHDU.from_columns(cols))
+            # hdus.append(fits.BinTableHDU.from_columns(cols))
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
                 fits.Column(name='w2e2', array=w2e2, format='E'),

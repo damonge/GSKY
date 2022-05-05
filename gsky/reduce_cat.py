@@ -728,11 +728,11 @@ class ReduceCat(PipelineStage):
             fsk.write_flat_map(self.get_output('TPSFres_map'),
                                np.array([mPSFresstar[2], mPSFresstar[2].astype('bool').astype('int')]),
                                descript=['T_PSFres', 'T_PSFres binary mask'])
-            star_cat['ishape_delta_PSF_e1'] = delta_e_plus
-            star_cat['ishape_delta_PSF_e2'] = delta_e_cross
-            star_cat['ishape_delta_PSF_T'] = delta_T
-            star_cat['ishape_hsm_e1'] = e_plus_I
-            star_cat['ishape_hsm_e2'] = e_cross_I
+            star_cat['i_shape_delta_PSF_e1'] = delta_e_plus
+            star_cat['i_shape_delta_PSF_e2'] = delta_e_cross
+            star_cat['i_shape_delta_PSF_T'] = delta_T
+            star_cat['i_hsmshape_e1'] = e_plus_I
+            star_cat['i_hsmshape_e2'] = e_cross_I
             star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
         else:
             logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
@@ -796,8 +796,8 @@ class ReduceCat(PipelineStage):
         ####
         # Calibrated shears
         e1c, e2c, mhat, resp = self.shear_calibrate(cat)
-        cat['ishape_hsm_regauss_e1_calib'] = e1c
-        cat['ishape_hsm_regauss_e2_calib'] = e2c
+        cat['i_hsmshaperegauss_e1_calib'] = e1c
+        cat['i_hsmshaperegauss_e2_calib'] = e2c
 
         ####
         # Write final catalog
