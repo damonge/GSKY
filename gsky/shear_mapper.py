@@ -383,14 +383,14 @@ class ShearMapper(PipelineStage):
             plot_map(self.config, self.fsk, m_list[1][0], 'gamma_w_%d' % im)
             plot_map(self.config, self.fsk, m_list[1][1], 'gamma_b_%d' % im)
             plot_map(self.config, self.fsk, m_list[1][2], 'gamma_c_%d' % im)
-            z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
-            nzs = [pzs_cosmos[im, 2, :]]
-            names = ['COSMOS']
+            # z = 0.5 * (pzs_cosmos[im, 0, :] + pzs_cosmos[im, 1, :])
+            # nzs = [pzs_cosmos[im, 2, :]]
+            # names = ['COSMOS']
             # for n in self.pdf_files.keys():
             #     nzs.append(pzs_stack[n][im, 2, :])
             #     names.append(n)
-            plot_curves(self.config, 'nz_%d' % im,
-                        z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
+            # plot_curves(self.config, 'nz_%d' % im,
+            #             z, nzs, names, xt=r'$z$', yt=r'$N(z)$')
         x = np.arange(self.nbins)
         plot_curves(self.config, 'mhat', np.arange(self.nbins),
                     [mhats], ['m_hat'], xt='bin', yt=r'$\hat{m}$')
