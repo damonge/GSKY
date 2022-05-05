@@ -27,11 +27,13 @@ class Tracer(object) :
             self.spin = 0
             #Read numbers map
             #RD: changed here!
+            # self.fsk,nmap=read_flat_map(None,hdu=hdu_list[2*i_bin])
             self.fsk,nmap=read_flat_map(None,hdu=hdu_list[i_bin])
             compare_infos(fsk,self.fsk)
 
             #Read N(z)
             #RD: changed here!
+            # self.nz_data=hdu_list[2*i_bin+1].data.copy()
             self.nz_data=hdu_list[i_bin].data.copy()
 
             #Make sure other maps are compatible
@@ -72,13 +74,19 @@ class Tracer(object) :
             self.type = 'galaxy_shear'
             self.spin = 2
             # Read shear map
-            self.fsk, gammamaps = read_flat_map(None, hdu=[hdu_list[6*i_bin], hdu_list[6*i_bin+1]])
+            #RD: changed here!
+            # self.fsk, gammamaps = read_flat_map(None, hdu=[hdu_list[6*i_bin], hdu_list[6*i_bin+1]])
+            self.fsk, gammamaps = read_flat_map(None, hdu=[hdu_list[5*i_bin], hdu_list[5*i_bin+1]])
             compare_infos(fsk, self.fsk)
 
-            _, masks = read_flat_map(None, hdu=[hdu_list[6*i_bin+2], hdu_list[6*i_bin+3], hdu_list[6*i_bin+4]])
+            #RD: changed here!
+            # _, masks = read_flat_map(None, hdu=[hdu_list[6*i_bin+2], hdu_list[6*i_bin+3], hdu_list[6*i_bin+4]])
+            _, masks = read_flat_map(None, hdu=[hdu_list[5*i_bin+2], hdu_list[5*i_bin+3], hdu_list[5*i_bin+4]])
 
             #Read N(z)
-            self.nz_data=hdu_list[6*i_bin+5].data.copy()
+            #RD: changed here!
+            # self.nz_data=hdu_list[6*i_bin+5].data.copy()
+            self.nz_data=hdu_list[5*i_bin].data.copy()
 
             # Make sure other maps are compatible
             if not self.fsk.is_map_compatible(masks[0]) :
