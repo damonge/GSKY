@@ -2,7 +2,7 @@ global:
   depth_cut: 24.5
   mapping:
     #wcs: /Users/Roohi/Documents/Princeton/Projects/s19a_clustering/kappa_mask_D56.fits
-    res: 0.01666666666667
+    res: 0.02886666666667
     pad: 0.2
     res_bo: 0.003
     projection: CAR
@@ -14,7 +14,7 @@ global:
   pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /tigress/rdalal/s19a_shear/GSKY_outputs/XMM_ceci/plots
+  plots_dir: /tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/plots
 
 ReduceCat:
   min_snr: 10.
@@ -24,7 +24,7 @@ SystMapper:
   ccd_drop: [9]
 
 SystReMapper:
-  maps_path: /tigress/rdalal/s19a_shear/shared_frames/decasu_output_16k_res
+  maps_path: /tigress/rdalal/fourier_space_shear/shared_frames/decasu_output_16k_res
 
 COSMOSWeight:
   n_neighbors: 20
@@ -64,7 +64,7 @@ PowerSpecter:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: pixel_1_arcmin
+  output_run_dir: pixel_1.732_arcmin
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
