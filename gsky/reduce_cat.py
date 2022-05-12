@@ -512,7 +512,7 @@ class ReduceCat(PipelineStage):
             raise ValueError("Unknown PSF size type: %s"%type)
         return size
 
-    def test(cat):
+    def get_binarystar_flags(cat):
         """
         Get the flags for binary stars (|e|>0.8 & logR<1.8-0.1r)
         Parameters:
@@ -521,8 +521,8 @@ class ReduceCat(PipelineStage):
         Returns:
             a boolean (True for binary stars)
         """
-        absE=   get_abs_ellip(cat)
-        logR=   np.log10(get_sdss_size(cat))
+        absE=   self.get_abs_ellip(cat)
+        logR=   np.log10(self.get_sdss_size(cat))
         rmag=   cat['forced_r_cmodel_mag']-cat['a_r']
         msk =   absE>0.8
         a=1;b=10.;c=-18.
@@ -837,7 +837,7 @@ class ReduceCat(PipelineStage):
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
 
-        sel_binary_stars = test(cat)
+        sel_binary_stars = self.get_binarystar_flags(cat)
         sel_binary_stars = ~sel_binary_stars
         sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended*sel_binary_stars)
         print("final size", )
