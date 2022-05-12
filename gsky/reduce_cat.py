@@ -837,9 +837,9 @@ class ReduceCat(PipelineStage):
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
 
-        sel_binary_stars = ~get_binarystar_flags(cat)
-
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
+        sel_binary_stars = get_binarystar_flags(cat)
+        sel_binary_stars = ~sel_binary_stars
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended*sel_binary_stars)
         print("final size", )
         logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
                     (np.sum(sel)))
