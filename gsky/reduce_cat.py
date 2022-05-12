@@ -451,7 +451,7 @@ class ReduceCat(PipelineStage):
             bin_number[msk] = ib
         return bin_number
 
-    def get_abs_ellip(catalog):
+    def get_abs_ellip(self, catalog):
     #Returns the modulus of galaxy distortions.
         if 'absE' in catalog.dtype.names:
             absE    =   catalog['absE']
@@ -470,7 +470,7 @@ class ReduceCat(PipelineStage):
             absE.fill(np.nan)
         return absE
 
-    def get_sdss_size(catalog,type='det'):
+    def get_sdss_size(self, catalog,type='det'):
         """
         This utility gets the observed galaxy size from a data or sims catalog using the
         specified size definition from the second moments matrix.
@@ -512,7 +512,7 @@ class ReduceCat(PipelineStage):
             raise ValueError("Unknown PSF size type: %s"%type)
         return size
 
-    def get_binarystar_flags(data):
+    def get_binarystar_flags(self, data):
         """
         Get the flags for binary stars (|e|>0.8 & logR<1.8-0.1r)
         Parameters:
