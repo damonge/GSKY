@@ -512,7 +512,7 @@ class ReduceCat(PipelineStage):
             raise ValueError("Unknown PSF size type: %s"%type)
         return size
 
-    def get_binarystar_flags(cat):
+    def get_binarystar_flags(data):
         """
         Get the flags for binary stars (|e|>0.8 & logR<1.8-0.1r)
         Parameters:
@@ -521,9 +521,9 @@ class ReduceCat(PipelineStage):
         Returns:
             a boolean (True for binary stars)
         """
-        absE=   self.get_abs_ellip(cat)
-        logR=   np.log10(self.get_sdss_size(cat))
-        rmag=   cat['forced_r_cmodel_mag']-cat['a_r']
+        absE=   self.get_abs_ellip(data)
+        logR=   np.log10(self.get_sdss_size(data))
+        rmag=   data['forced_r_cmodel_mag']-data['a_r']
         msk =   absE>0.8
         a=1;b=10.;c=-18.
         msk =   msk & ((a*rmag+b*logR+c)<0.)
