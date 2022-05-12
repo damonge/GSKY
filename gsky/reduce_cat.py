@@ -451,6 +451,86 @@ class ReduceCat(PipelineStage):
             bin_number[msk] = ib
         return bin_number
 
+    def get_abs_ellip(catalog):
+    """
+    Returns the modulus of galaxy distortions.
+    """
+    if 'absE' in catalog.dtype.names:
+        absE    =   catalog['absE']
+    elif 'i_hsmshaperegauss_e1' in catalog.dtype.names:# For S18A
+        absE    =   catalog['i_hsmshaperegauss_e1']**2.+catalog['i_hsmshaperegauss_e2']**2.
+        absE    =   np.sqrt(absE)
+    elif 'ishape_hsm_regauss_e1' in catalog.dtype.names:# For S16A
+        absE    =   catalog['ishape_hsm_regauss_e1']**2.+catalog['ishape_hsm_regauss_e2']**2.
+        absE    =   np.sqrt(absE)
+    elif 'ext_shapeHSM_HsmShapeRegauss_e1' in catalog.dtype.names:# For pipe 7
+        absE    =   catalog['ext_shapeHSM_HsmShapeRegauss_e1']**2.\
+                    +catalog['ext_shapeHSM_HsmShapeRegauss_e2']**2.
+        absE    =   np.sqrt(absE)
+    else:
+        absE  =   np.empty(len(catalog))
+        absE.fill(np.nan)
+    return absE
+
+def get_sdss_size(catalog,type='det'):
+    """
+    This utility gets the observed galaxy size from a data or sims catalog using the
+    specified size definition from the second moments matrix.
+
+    Parameters:
+        catalog: recarray
+            Simulation or data catalog
+        type: string
+            Type of psf size measurement in ['trace', 'determin']
+
+    Returns:
+        gal_size [arcsec]
+    """
+    if 'base_SdssShape_xx' in catalog.dtype.names:        #pipe 7
+        gal_mxx = catalog['base_SdssShape_xx']*0.168**2.
+        gal_myy = catalog['base_SdssShape_yy']*0.168**2.
+        gal_mxy = catalog['base_SdssShape_xy']*0.168**2.
+    elif 'i_sdssshape_shape11' in catalog.dtype.names:  #s18 & s19
+        gal_mxx = catalog['i_sdssshape_shape11']
+        gal_myy = catalog['i_sdssshape_shape22']
+        gal_mxy = catalog['i_sdssshape_shape12']
+    elif 'ishape_sdss_ixx' in catalog.dtype.names:      #s15
+        gal_mxx = catalog['ishape_sdss_ixx']
+        gal_myy = catalog['ishape_sdss_iyy']
+        gal_mxy = catalog['ishape_sdss_ixy']
+    else:
+        gal_mxx  =   np.empty(len(catalog))
+        gal_mxx.fill(np.nan)
+        gal_myy  =   np.empty(len(catalog))
+        gal_myy.fill(np.nan)
+        gal_mxy  =   np.empty(len(catalog))
+        gal_mxy.fill(np.nan)
+
+    if type == 'trace':
+        size = np.sqrt(gal_mxx + gal_myy)
+    elif type == 'det':
+        size = (gal_mxx * gal_myy - gal_mxy**2)**(0.25)
+    else:
+        raise ValueError("Unknown PSF size type: %s"%type)
+    return size
+
+def get_binarystar_flags(data):
+    """
+    Get the flags for binary stars (|e|>0.8 & logR<1.8-0.1r)
+    Parameters:
+        an hsc-like catalog
+        [ndarray,table]
+    Returns:
+        a boolean (True for binary stars)
+    """
+    absE=   get_abs_ellip(data)
+    logR=   np.log10(get_sdss_size(data))
+    rmag=   data['forced_r_cmodel_mag']-data['a_r']
+    msk =   absE>0.8
+    a=1;b=10.;c=-18.
+    msk =   msk & ((a*rmag+b*logR+c)<0.)
+    return msk
+
     def run(self):
         """
         Main function.
@@ -758,6 +838,8 @@ class ReduceCat(PipelineStage):
         seeing, seeing_desc = self.make_seeing_map(star_cat, fsk)
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
+
+        sel_binary_stars = ~get_binarystar_flags(cat)
 
         sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
         print("final size", )
