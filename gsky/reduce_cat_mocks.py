@@ -25,8 +25,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ReduceCat(PipelineStage):
-    name = "ReduceCat"
+class ReduceCatMocks(PipelineStage):
+    name = "ReduceCatMocks"
     inputs = [('mock_catalog', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
                ('masked_fraction', FitsFile)]
