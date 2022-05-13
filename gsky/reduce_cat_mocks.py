@@ -828,7 +828,7 @@ class ReduceCatMocks(PipelineStage):
 
         # sel_binary_stars = self.get_binarystar_flags(cat)
         # sel_binary_stars = ~sel_binary_stars
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended*sel_binary_stars)
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
         print("final size", )
         logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
                     (np.sum(sel)))
