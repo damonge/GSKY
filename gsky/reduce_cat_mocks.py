@@ -430,7 +430,7 @@ class ReduceCatMocks(PipelineStage):
 
         # self.column_mark = 'pz_'+self.config['pz_mark']+'_'+self.pz_code
         # self.column_mark = self.pz_code+'_photoz_'+self.config['pz_mark']
-        zs = cat[z_source_mock]
+        zs = cat['z_source_mock']
 
         # Assign all galaxies to bin -1
         bin_number = np.zeros(len(cat), dtype=int) - 1
