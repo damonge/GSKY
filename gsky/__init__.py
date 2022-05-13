@@ -1,5 +1,6 @@
 from ceci import PipelineStage  # noqa
 from .reduce_cat import ReduceCat  # noqa
+from .reduce_cat_mocks import ReduceCatMocks  # noqa
 from .syst_mapper import SystMapper  # noqa
 from .syst_remapper import SystReMapper  # noqa
 from .pdf_match import PDFMatch  # noqa
