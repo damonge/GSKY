@@ -677,7 +677,7 @@ class PowerSpecterMocks(PipelineStage) :
         Read or compute all binary masks and the masked fraction map.
         """
         #Depth-based mask
-        # self.fsk,mp_depth=read_flat_map(self.get_input("depth_map"),i_map=0)
+        self.fsk,mp_depth=read_flat_map(self.get_input("masked_fraction"),i_map=0)
         # mp_depth[np.isnan(mp_depth)]=0; mp_depth[mp_depth>40]=0
         # msk_depth=np.zeros_like(mp_depth); msk_depth[mp_depth>=self.config['depth_cut']]=1
 
