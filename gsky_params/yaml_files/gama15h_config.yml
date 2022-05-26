@@ -150,7 +150,7 @@ CovGauss:
   gaus_covar_type: analytic
   # guess_spectrum: /global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs_oldbins/GAMA15H_ceci/CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj/guess_spectra_cpld.sacc
   guess_spectrum: NONE
-  mask_systematics: True
+  mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
   output_run_dir: pixel_1_arcmin

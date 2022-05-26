@@ -2,7 +2,9 @@ global:
   depth_cut: 24.5
   mapping:
     #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
-    res: 0.01666666666666
+    # res: 0.01466666666667 #0.88 arcmin
+    res: 0.01666666666667 #1 arcmin
+    # res: 0.025 #1.5 arcmin
     pad: 0.2
     res_bo: 0.003
     projection: CAR
@@ -14,7 +16,7 @@ global:
   pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /tigress/rdalal/s19a_shear/GSKY_outputs/GAMA15H_ceci/plots
+  plots_dir: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/plots
 
 ReduceCat:
   min_snr: 10.
@@ -51,10 +53,11 @@ PowerSpecter:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
   noise_bias_type: analytic
   guess_spectrum: NONE
-  mask_systematics: True
-  oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: with_mask
+  output_run_dir: pixel_1_arcmin
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
@@ -136,10 +139,10 @@ CovGauss:
   gaus_covar_type: analytic
   # guess_spectrum: /global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs_oldbins/VVDS_ceci/CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj/guess_spectra_cpld.sacc
   guess_spectrum: NONE
-  mask_systematics: True
+  mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: with_mask
+  output_run_dir: pixel_1_arcmin
 
 CwspCalc:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
