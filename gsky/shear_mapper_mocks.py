@@ -24,10 +24,10 @@ class ShearMapperMocks(PipelineStage):
                       'pz_code': 'dnnz',
                       'pz_mark': 'best',
                       'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.50],
-                      'nz_bin_num': 200,
-                      'nz_bin_max': 3.0,
+                      'nz_bin_num': 100,
+                      'nz_bin_max': 4.0,
                       'shearrot': 'noflip',
-                      'ra':  'ra_mock', 'dec':  'dec_mock'}
+                      'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': False}
 
     def get_gamma_maps(self, cat):
         """
@@ -50,12 +50,20 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
-            gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
-                                                   subcat[self.config['dec']],
-                                                   subcat['shear1_sim']/(1-subcat['kappa']),
-                                                   subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
-                                                   weights=subcat['weight'],
-                                                   shearrot=self.config['shearrot'])
+            if self.shape_noise == False:
+                gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
+                                                       subcat[self.config['dec']],
+                                                       subcat['shear1_sim']/(1-subcat['kappa']),
+                                                       subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
+                                                       weights=subcat['weight'],
+                                                       shearrot=self.config['shearrot'])
+            else:
+                gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
+                                                       subcat[self.config['dec']],
+                                                       subcat['e1_mock'],
+                                                       subcat['e2_mock'], self.fsk,
+                                                       weights=subcat['weight'],
+                                                       shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
             maps.append(maps_combined)
 
@@ -81,10 +89,16 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            e1_2rms = np.average((subcat['shear1_sim']/(1-subcat['kappa']))**2,
-                                 weights=subcat['weight'])
-            e2_2rms = np.average((subcat['shear2_sim']/(1-subcat['kappa']))**2,
-                                 weights=subcat['weight'])
+            if self.shape_noise == False:
+                e1_2rms = np.average((subcat['shear1_sim']/(1-subcat['kappa']))**2,
+                                     weights=subcat['weight'])
+                e2_2rms = np.average((subcat['shear2_sim']/(1-subcat['kappa']))**2,
+                                     weights=subcat['weight'])
+            else:
+                e1_2rms = np.average((subcat['e1_mock'])**2,
+                                     weights=subcat['weight'])
+                e2_2rms = np.average((subcat['e2_mock'])**2,
+                                     weights=subcat['weight'])
 
             e2rms_combined = np.array([e1_2rms, e2_2rms])
             e2rms_arr.append(e2rms_combined)
@@ -113,11 +127,18 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
-                                                   subcat[self.config['dec']],
-                                                   subcat['shear1_sim']/(1-subcat['kappa']),
-                                                   subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
-                                                   weights=subcat['weight'])
+            if self.shape_noise == False:
+                w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
+                                                       subcat[self.config['dec']],
+                                                       subcat['shear1_sim']/(1-subcat['kappa']),
+                                                       subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
+                                                       weights=subcat['weight'])
+            else:
+                w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
+                                                       subcat[self.config['dec']],
+                                                       subcat['e1_mock'],
+                                                       subcat['e2_mock'], self.fsk,
+                                                       weights=subcat['weight'])
 
             w2e2_curr = 0.5*(np.mean(w2e2maps_curr[0]) + np.mean(w2e2maps_curr[1]))
             w2e2.append(w2e2_curr)
