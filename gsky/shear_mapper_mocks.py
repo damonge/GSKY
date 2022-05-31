@@ -50,7 +50,7 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
-            if self.shape_noise == False:
+            if self.config['shape_noise'] == False:
                 gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
                                                        subcat['shear1_sim']/(1-subcat['kappa']),
@@ -89,7 +89,7 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            if self.shape_noise == False:
+            if self.config['shape_noise'] == False:
                 e1_2rms = np.average((subcat['shear1_sim']/(1-subcat['kappa']))**2,
                                      weights=subcat['weight'])
                 e2_2rms = np.average((subcat['shear2_sim']/(1-subcat['kappa']))**2,
@@ -127,7 +127,7 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            if self.shape_noise == False:
+            if self.config['shape_noise'] == False:
                 w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
                                                        subcat['shear1_sim']/(1-subcat['kappa']),
