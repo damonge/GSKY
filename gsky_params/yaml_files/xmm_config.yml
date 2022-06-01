@@ -2,8 +2,8 @@ global:
   depth_cut: 24.5
   mapping:
     #wcs: /Users/Roohi/Documents/Princeton/Projects/s19a_clustering/kappa_mask_D56.fits
-    # res: 0.01466666666667 #0.88 arcmin
-    res: 0.01666666666667 #1 arcmin
+    res: 0.01466666666667 #0.88 arcmin
+    # res: 0.01666666666667 #1 arcmin
     # res: 0.025 #1.5 arcmin
     pad: 0.2
     res_bo: 0.003
@@ -76,7 +76,7 @@ PowerSpecter:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: shape_noise_1_arcmin
+  output_run_dir: shape_noise_0.88_arcmin
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
@@ -162,7 +162,7 @@ CovGauss:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: shape_noise_1_arcmin
+  output_run_dir: shape_noise_0.88_arcmin
 
 CwspCalc:
   ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]

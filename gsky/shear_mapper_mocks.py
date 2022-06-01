@@ -58,6 +58,7 @@ class ShearMapperMocks(PipelineStage):
                                                        weights=subcat['weight'],
                                                        shearrot=self.config['shearrot'])
             else:
+                print("using e1, e2")
                 gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
                                                        subcat['e1_mock'],
