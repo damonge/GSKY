@@ -50,6 +50,7 @@ class ShearMapperMocks(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
+            print(self.config['shape_noise'])
             if self.config['shape_noise'] == False:
                 gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
