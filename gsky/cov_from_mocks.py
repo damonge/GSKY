@@ -68,7 +68,7 @@ class CovFromMocks(object):
             bin_number[msk] = ib
         return bin_number
 
-    def get_gamma_maps(self, cat, config):
+    def get_gamma_maps(self, cat, fsk, config):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
@@ -93,14 +93,14 @@ class CovFromMocks(object):
                 gammamaps, gammamasks = createSpin2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
                                                        subcat['shear1_sim']/(1-subcat['kappa']),
-                                                       subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
+                                                       subcat['shear2_sim']/(1-subcat['kappa']), fsk,
                                                        weights=subcat['weight'],
                                                        shearrot=config['shearrot'])
             else:
                 gammamaps, gammamasks = createSpin2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
                                                        subcat['e1_mock'],
-                                                       subcat['e2_mock'], self.fsk,
+                                                       subcat['e2_mock'], fsk,
                                                        weights=subcat['weight'],
                                                        shearrot=config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
@@ -144,7 +144,7 @@ class CovFromMocks(object):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat, config, return_maps=False):
+    def get_w2e2(self, cat, config, fsk, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -170,13 +170,13 @@ class CovFromMocks(object):
                 w2e2maps_curr = createW2QU2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
                                                        subcat['shear1_sim']/(1-subcat['kappa']),
-                                                       subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
+                                                       subcat['shear2_sim']/(1-subcat['kappa']), fsk,
                                                        weights=subcat['weight'])
             else:
                 w2e2maps_curr = createW2QU2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
                                                        subcat['e1_mock'],
-                                                       subcat['e2_mock'], self.fsk,
+                                                       subcat['e2_mock'], fsk,
                                                        weights=subcat['weight'])
 
             w2e2_curr = 0.5*(np.mean(w2e2maps_curr[0]) + np.mean(w2e2maps_curr[1]))
@@ -273,9 +273,9 @@ class CovFromMocks(object):
         logger.info('getting e2rms')
         e2rms = self.get_e2rms(cat, config)
         logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, config, return_maps=False)
+        w2e2 = self.get_w2e2(cat, self.fsk, config, return_maps=False)
         logger.info('getting gamma maps')
-        gammamaps = self.get_gamma_maps(cat, config)
+        gammamaps = self.get_gamma_maps(cat, self.fsk, config)
 
     # def __init__(self, masks, simparams={}, noiseparams={}):
     #     """
