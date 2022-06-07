@@ -209,12 +209,27 @@ class CovFromMocks(object):
         pool = multiprocessing.Pool(processes = ncpus)
 
         # Pool map preserves the call order!
-        reslist = pool.map(self, realizations, config, chunksize=int(realizations.shape[0]/ncpus))
+        reslist = pool.map(self, realizations, chunksize=int(realizations.shape[0]/ncpus))
 
         pool.close() # no more tasks
         pool.join()  # wrap up current tasks
 
-    def __call__(self, realization, config):
+    def __call__(self, realization):
+        config={'plots_dir': None,
+          'min_snr': 10., 'depth_cut': 24.5,
+          'mapping': {'wcs': None, 'res': 0.0285,
+                      'res_bo': 0.003, 'pad': 0.1,
+                      'projection': 'CAR'},
+          'band': 'i', 'depth_method': 'fluxerr',
+          'shearrot': 'noflip', 'mask_type': 'sirius',
+          'ra':  'ra_mock', 'dec':  'dec_mock',
+          'pz_code': 'dnnz', 'pz_mark': 'best',
+          'pz_bins': [0.3, 0.6, 0.9, 1.2, 1.5],
+          'nz_bin_num': 100,
+          'nz_bin_max': 4.0,
+          'shearrot': 'noflip',
+          'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': True,
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
         band = config['band']
         self.mpp = config['mapping']
         #map realization number to mock catalog
