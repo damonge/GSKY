@@ -198,7 +198,9 @@ class CovFromMocks(object):
             return np.array(w2e2), w2e2maps
 
     def go(self):
-        realizations = np.arange(len(os.listdir(config['mocks_dir'])))
+        n_realizations = len(os.listdir(config['mocks_dir']))
+        n_realizations = 8
+        # realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
         # ncpus = 1
