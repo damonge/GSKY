@@ -13,6 +13,7 @@ from .map_diagnoser import MapDiagnoser  # noqa
 from .power_specter import PowerSpecter  # noqa
 from .mock_generator import MockGen
 from .cov_gauss import CovGauss
+from .cov_from_mocks import CovFromMocks
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
 from .like_minimizer import LikeMinimizer
