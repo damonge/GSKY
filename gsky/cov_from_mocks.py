@@ -1,5 +1,12 @@
 #! /usr/bin/env python
-from .types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
+
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from gsky.types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
 import numpy as np
 from operator import add
 import multiprocessing
