@@ -1,7 +1,7 @@
 global:
   depth_cut: 24.5
   mapping:
-    #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
+    wcs: /tigress/anicola/share/ACT/ilc_SZ_deproj_cib_yy_noKspaceCor.fits
     res: 0.00833333333333
     pad: 0.2
     res_bo: 0.003
