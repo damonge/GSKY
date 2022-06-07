@@ -6,6 +6,7 @@ from .map_utils import createCountsMap
 from astropy.io import fits
 import os
 from .plot_utils import plot_map, plot_curves
+from gsky.CovFromMocks import CovFromMocks
 
 import logging
 logging.basicConfig(level=logging.INFO)
