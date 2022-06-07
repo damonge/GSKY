@@ -14,7 +14,7 @@ import copy
 import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
-# from gsky.tracer import Tracer
+from gsky.tracer import Tracer
 # from gsky.map_utils import (createCountsMap,
 #                         createMeanStdMaps,
 #                         createMask,
@@ -209,7 +209,7 @@ class CovFromMocks(object):
         n_realizations = 8
         realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
-        ncpus = 4
+        ncpus = 1
         # ncpus = 1
         logger.info('Number of realizations {}.'.format(n_realizations))
         logger.info('Number of available CPUs {}.'.format(ncpus))
