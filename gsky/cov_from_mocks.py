@@ -38,7 +38,7 @@ class CovFromMocks(object):
     def __init__(self):
         pass
 
-    def make_masked_fraction(self, cat, fsk, mask_fulldepth=False):
+    def make_masked_fraction(self, cat, fsk, config, mask_fulldepth=False):
         """
         Produces a masked fraction map
         :param cat: input catalog
@@ -68,7 +68,7 @@ class CovFromMocks(object):
             bin_number[msk] = ib
         return bin_number
 
-    def get_gamma_maps(self, cat):
+    def get_gamma_maps(self, cat, config):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
@@ -108,7 +108,7 @@ class CovFromMocks(object):
 
         return maps
 
-    def get_e2rms(self, cat):
+    def get_e2rms(self, cat, config):
         """
         Get e1_2rms, e2_2rms from catalog.
         :param cat:
@@ -144,7 +144,7 @@ class CovFromMocks(object):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat, return_maps=False):
+    def get_w2e2(self, cat, config, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -259,7 +259,7 @@ class CovFromMocks(object):
         fsk = FlatMapInfo.from_coords(cat[config['ra']],
                               cat[config['dec']],
                               self.mpp)
-        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk, config,
                                                  mask_fulldepth=True)
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
@@ -271,11 +271,11 @@ class CovFromMocks(object):
         else:
             self.bin_indxs = range(self.nbins)
         logger.info('getting e2rms')
-        e2rms = self.get_e2rms(cat)
+        e2rms = self.get_e2rms(cat, config)
         logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, return_maps=False)
+        w2e2 = self.get_w2e2(cat, config, return_maps=False)
         logger.info('getting gamma maps')
-        gammamaps = self.get_gamma_maps(cat)
+        gammamaps = self.get_gamma_maps(cat, config)
 
     # def __init__(self, masks, simparams={}, noiseparams={}):
     #     """
