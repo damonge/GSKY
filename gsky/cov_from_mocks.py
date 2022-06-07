@@ -15,12 +15,12 @@ import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
 # from gsky.tracer import Tracer
-from gsky.map_utils import (createCountsMap,
-                        createMeanStdMaps,
-                        createMask,
-                        removeDisconnected,
-                        createSpin2Map,
-                        createW2QU2Map)
+# from gsky.map_utils import (createCountsMap,
+#                         createMeanStdMaps,
+#                         createMask,
+#                         removeDisconnected,
+#                         createSpin2Map,
+#                         createW2QU2Map)
 import sacc
 from scipy.interpolate import interp1d
 # from gsky.flatmaps import read_flat_map,compare_infos
