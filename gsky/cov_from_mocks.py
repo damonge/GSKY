@@ -233,7 +233,7 @@ class CovFromMocks(object):
         band = config['band']
         self.mpp = config['mapping']
         #map realization number to mock catalog
-        r_num = int(floor(realization/13))
+        r_num = int(np.floor(realization/13))
         r_num_str = format(r_num, '03d')
         rotmat = int(realization - (r_num*13))
         name = 'mock_nres13_r'+r_num_str+'_rotmat'+str(rotmat)+'_shear_catalog.fits'
