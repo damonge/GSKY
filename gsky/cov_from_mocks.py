@@ -14,17 +14,17 @@ import copy
 import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
-# from .tracer import Tracer
-# from .map_utils import (createCountsMap,
-#                         createMeanStdMaps,
-#                         createMask,
-#                         removeDisconnected,
-#                         createSpin2Map,
-#                         createW2QU2Map)
+from gsky.tracer import Tracer
+from gsky.map_utils import (createCountsMap,
+                        createMeanStdMaps,
+                        createMask,
+                        removeDisconnected,
+                        createSpin2Map,
+                        createW2QU2Map)
 import os
 import sacc
 from scipy.interpolate import interp1d
-# from .flatmaps import read_flat_map,compare_infos
+from gsky.flatmaps import read_flat_map,compare_infos
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -212,6 +212,7 @@ class CovFromMocks(object):
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
         # ncpus = 1
+        logger.info('Number of realizations {}.'.format(n_realizations))
         logger.info('Number of available CPUs {}.'.format(ncpus))
         pool = multiprocessing.Pool(processes = ncpus)
 
@@ -245,6 +246,7 @@ class CovFromMocks(object):
         rotmat = int(realization - (r_num*13))
         name = 'mock_nres13_r'+r_num_str+'_rotmat'+str(rotmat)+'_shear_catalog.fits'
         # Read catalog
+        logger.info('reading catalog')
         cat = Table.read(config['mocks_dir']+name)
         #ReduceCat
         if 'VVDS' in config['mocks_dir']:
@@ -253,24 +255,27 @@ class CovFromMocks(object):
             init_ra_vals = cat[config['ra']].copy()
             cat[config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             cat[config['ra']][cat[config['ra']]<0] += 360.0
-        # fsk = FlatMapInfo.from_coords(cat[config['ra']],
-        #                       cat[config['dec']],
-        #                       self.mpp)
-        # masked_fraction_cont = self.make_masked_fraction(cat, fsk,
-        #                                          mask_fulldepth=True)
+        logger.info('generating masked fraction')
+        fsk = FlatMapInfo.from_coords(cat[config['ra']],
+                              cat[config['dec']],
+                              self.mpp)
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
+                                                 mask_fulldepth=True)
+        logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
-
         #ShearMapper
-        # self.fsk = masked_fraction_cont
-        # self.nbins = len(config['pz_bins'])-1
-        # if 'ntomo_bins' in config:
-        #     self.bin_indxs = config['ntomo_bins']
-        # else:
-        #     self.bin_indxs = range(self.nbins)
-
-        # e2rms = self.get_e2rms(cat)
-        # w2e2 = self.get_w2e2(cat, return_maps=False)
-        # gammamaps = self.get_gamma_maps(cat)
+        self.fsk = masked_fraction_cont
+        self.nbins = len(config['pz_bins'])-1
+        if 'ntomo_bins' in config:
+            self.bin_indxs = config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
+        logger.info('getting e2rms')
+        e2rms = self.get_e2rms(cat)
+        logger.info('getting w2e2')
+        w2e2 = self.get_w2e2(cat, return_maps=False)
+        logger.info('getting gamma maps')
+        gammamaps = self.get_gamma_maps(cat)
 
 test = CovFromMocks()
 test.go()
