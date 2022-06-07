@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from ceci import PipelineStage
-from ..types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
+from import types
 import numpy as np
 from operator import add
 import multiprocessing
