@@ -198,7 +198,7 @@ class CovFromMocks(object):
           'shearrot': 'noflip',
           'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
-        
+
         n_realizations = len(os.listdir(config['mocks_dir']))
         n_realizations = 8
         realizations = np.arange(n_realizations)
@@ -209,12 +209,12 @@ class CovFromMocks(object):
         pool = multiprocessing.Pool(processes = ncpus)
 
         # Pool map preserves the call order!
-        reslist = pool.map(self, realizations, chunksize=int(realizations.shape[0]/ncpus))
+        reslist = pool.map(self, realizations, config, chunksize=int(realizations.shape[0]/ncpus))
 
         pool.close() # no more tasks
         pool.join()  # wrap up current tasks
 
-    def __call__(self, realization):
+    def __call__(self, realization, config):
         band = config['band']
         self.mpp = config['mapping']
         #map realization number to mock catalog
