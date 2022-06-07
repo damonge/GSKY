@@ -49,7 +49,7 @@ class CovFromMocks(object):
         masked_fraction_cont = removeDisconnected(masked_fraction, fsk)
         return masked_fraction_cont
 
-    def pz_binning(self, cat):
+    def pz_binning(self, cat, config):
         zi_arr = config['pz_bins'][:-1]
         zf_arr = config['pz_bins'][1:]
         self.nbins = len(zi_arr)
@@ -252,7 +252,7 @@ class CovFromMocks(object):
         #                       self.mpp)
         # masked_fraction_cont = self.make_masked_fraction(cat, fsk,
         #                                          mask_fulldepth=True)
-        cat['tomo_bin'] = self.pz_binning(cat)
+        cat['tomo_bin'] = self.pz_binning(cat, config)
 
         #ShearMapper
         # self.fsk = masked_fraction_cont
