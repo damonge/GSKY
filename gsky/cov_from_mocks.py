@@ -166,6 +166,7 @@ class CovFromMocks(object):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
+            print(config['shape_noise'])
             if config['shape_noise'] == False:
                 w2e2maps_curr = createW2QU2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
