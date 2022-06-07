@@ -201,7 +201,7 @@ class CovFromMocks(object):
         
         n_realizations = len(os.listdir(config['mocks_dir']))
         n_realizations = 8
-        # realizations = np.arange(n_realizations)
+        realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
         # ncpus = 1
