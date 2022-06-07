@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from ceci import PipelineStage
-from import types
+import types
 import numpy as np
 from operator import add
 import multiprocessing
