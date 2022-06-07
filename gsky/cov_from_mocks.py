@@ -144,7 +144,7 @@ class CovFromMocks(object):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat, config, fsk, return_maps=False):
+    def get_w2e2(self, cat, fsk, config, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -166,7 +166,6 @@ class CovFromMocks(object):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            logger.info('Shape noise {}.'.format(config['shape_noise']))
             if config['shape_noise'] == False:
                 w2e2maps_curr = createW2QU2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
