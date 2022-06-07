@@ -3,8 +3,8 @@
 import sys
 import os
 
-# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(os.path.dirname(SCRIPT_DIR))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 # from gsky.types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
 import numpy as np
@@ -15,12 +15,12 @@ import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
 # from gsky.tracer import Tracer
-# from gsky.map_utils import (createCountsMap,
-#                         createMeanStdMaps,
-#                         createMask,
-#                         removeDisconnected,
-#                         createSpin2Map,
-#                         createW2QU2Map)
+from gsky.map_utils import (createCountsMap,
+                        createMeanStdMaps,
+                        createMask,
+                        removeDisconnected,
+                        createSpin2Map,
+                        createW2QU2Map)
 import sacc
 from scipy.interpolate import interp1d
 # from gsky.flatmaps import read_flat_map,compare_infos
