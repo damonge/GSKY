@@ -7,6 +7,7 @@ import multiprocessing
 import copy
 import pymaster as nmt
 from astropy.io import fits
+from astropy.table import Table, vstack
 # from .tracer import Tracer
 # from .map_utils import (createCountsMap,
 #                         createMeanStdMaps,
