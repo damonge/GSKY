@@ -264,7 +264,6 @@ class CovFromMocks(object):
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
         #ShearMapper
-        self.fsk = masked_fraction_cont
         self.nbins = len(config['pz_bins'])-1
         if 'ntomo_bins' in config:
             self.bin_indxs = config['ntomo_bins']
@@ -273,9 +272,9 @@ class CovFromMocks(object):
         logger.info('getting e2rms')
         e2rms = self.get_e2rms(cat, config)
         logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, self.fsk, config, return_maps=False)
+        w2e2 = self.get_w2e2(cat, fsk, config, return_maps=False)
         logger.info('getting gamma maps')
-        gammamaps = self.get_gamma_maps(cat, self.fsk, config)
+        gammamaps = self.get_gamma_maps(cat, fsk, config)
 
     # def __init__(self, masks, simparams={}, noiseparams={}):
     #     """
