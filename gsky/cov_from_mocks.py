@@ -7,17 +7,18 @@ import multiprocessing
 import copy
 import pymaster as nmt
 from astropy.io import fits
-from ..tracer import Tracer
-from ..map_utils import (createCountsMap,
-                        createMeanStdMaps,
-                        createMask,
-                        removeDisconnected,
-                        createSpin2Map,
-                        createW2QU2Map)
+import tracer
+import map_utils
+# from ..map_utils import (createCountsMap,
+#                         createMeanStdMaps,
+#                         createMask,
+#                         removeDisconnected,
+#                         createSpin2Map,
+#                         createW2QU2Map)
 import os
 import sacc
 from scipy.interpolate import interp1d
-from ..flatmaps import read_flat_map,compare_infos
+import flatmaps
 
 import logging
 logging.basicConfig(level=logging.INFO)
