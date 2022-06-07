@@ -256,26 +256,26 @@ class CovFromMocks(object):
             cat[config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             cat[config['ra']][cat[config['ra']]<0] += 360.0
         logger.info('generating masked fraction')
-        # fsk = FlatMapInfo.from_coords(cat[config['ra']],
-        #                       cat[config['dec']],
-        #                       self.mpp)
-        # masked_fraction_cont = self.make_masked_fraction(cat, fsk,
-        #                                          mask_fulldepth=True)
+        fsk = FlatMapInfo.from_coords(cat[config['ra']],
+                              cat[config['dec']],
+                              self.mpp)
+        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
+                                                 mask_fulldepth=True)
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
         #ShearMapper
-        # self.fsk = masked_fraction_cont
-        # self.nbins = len(config['pz_bins'])-1
-        # if 'ntomo_bins' in config:
-        #     self.bin_indxs = config['ntomo_bins']
-        # else:
-        #     self.bin_indxs = range(self.nbins)
-        # logger.info('getting e2rms')
-        # e2rms = self.get_e2rms(cat)
-        # logger.info('getting w2e2')
-        # w2e2 = self.get_w2e2(cat, return_maps=False)
-        # logger.info('getting gamma maps')
-        # gammamaps = self.get_gamma_maps(cat)
+        self.fsk = masked_fraction_cont
+        self.nbins = len(config['pz_bins'])-1
+        if 'ntomo_bins' in config:
+            self.bin_indxs = config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
+        logger.info('getting e2rms')
+        e2rms = self.get_e2rms(cat)
+        logger.info('getting w2e2')
+        w2e2 = self.get_w2e2(cat, return_maps=False)
+        logger.info('getting gamma maps')
+        gammamaps = self.get_gamma_maps(cat)
 
     # def __init__(self, masks, simparams={}, noiseparams={}):
     #     """
