@@ -23,7 +23,7 @@ from .map_utils import (createCountsMap,
                         createW2QU2Map)
 import sacc
 from scipy.interpolate import interp1d
-from .flatmaps import read_flat_map,compare_infos
+from .flatmaps import FlatMapInfo,read_flat_map,compare_infos
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -206,10 +206,10 @@ class CovFromMocks(object):
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
-        n_realizations = 1
+        n_realizations = 8
         realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
-        ncpus = 1
+        ncpus = 4
         # ncpus = 1
         logger.info('Number of realizations {}.'.format(n_realizations))
         logger.info('Number of available CPUs {}.'.format(ncpus))
