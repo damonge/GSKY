@@ -3,10 +3,10 @@
 import sys
 import os
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
+# SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from gsky.types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
+# from gsky.types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
 import numpy as np
 from operator import add
 import multiprocessing
@@ -14,17 +14,16 @@ import copy
 import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
-from gsky.tracer import Tracer
-from gsky.map_utils import (createCountsMap,
-                        createMeanStdMaps,
-                        createMask,
-                        removeDisconnected,
-                        createSpin2Map,
-                        createW2QU2Map)
-import os
+# from gsky.tracer import Tracer
+# from gsky.map_utils import (createCountsMap,
+#                         createMeanStdMaps,
+#                         createMask,
+#                         removeDisconnected,
+#                         createSpin2Map,
+#                         createW2QU2Map)
 import sacc
 from scipy.interpolate import interp1d
-from gsky.flatmaps import read_flat_map,compare_infos
+# from gsky.flatmaps import read_flat_map,compare_infos
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -219,6 +218,7 @@ class CovFromMocks(object):
         # Pool map preserves the call order!
         reslist = pool.map(self, realizations, chunksize=int(realizations.shape[0]/ncpus))
 
+        logger.info('done')
         pool.close() # no more tasks
         pool.join()  # wrap up current tasks
 
@@ -256,26 +256,26 @@ class CovFromMocks(object):
             cat[config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             cat[config['ra']][cat[config['ra']]<0] += 360.0
         logger.info('generating masked fraction')
-        fsk = FlatMapInfo.from_coords(cat[config['ra']],
-                              cat[config['dec']],
-                              self.mpp)
-        masked_fraction_cont = self.make_masked_fraction(cat, fsk,
-                                                 mask_fulldepth=True)
+        # fsk = FlatMapInfo.from_coords(cat[config['ra']],
+        #                       cat[config['dec']],
+        #                       self.mpp)
+        # masked_fraction_cont = self.make_masked_fraction(cat, fsk,
+        #                                          mask_fulldepth=True)
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
         #ShearMapper
-        self.fsk = masked_fraction_cont
-        self.nbins = len(config['pz_bins'])-1
-        if 'ntomo_bins' in config:
-            self.bin_indxs = config['ntomo_bins']
-        else:
-            self.bin_indxs = range(self.nbins)
-        logger.info('getting e2rms')
-        e2rms = self.get_e2rms(cat)
-        logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, return_maps=False)
-        logger.info('getting gamma maps')
-        gammamaps = self.get_gamma_maps(cat)
+        # self.fsk = masked_fraction_cont
+        # self.nbins = len(config['pz_bins'])-1
+        # if 'ntomo_bins' in config:
+        #     self.bin_indxs = config['ntomo_bins']
+        # else:
+        #     self.bin_indxs = range(self.nbins)
+        # logger.info('getting e2rms')
+        # e2rms = self.get_e2rms(cat)
+        # logger.info('getting w2e2')
+        # w2e2 = self.get_w2e2(cat, return_maps=False)
+        # logger.info('getting gamma maps')
+        # gammamaps = self.get_gamma_maps(cat)
 
 test = CovFromMocks()
 test.go()
