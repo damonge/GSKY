@@ -78,7 +78,7 @@ PowerSpecter:
   oc_all_bands: False
   output_run_dir: shape_noise_0.88_arcmin
 
-CovFromMocks:
+CovMocks:
   min_snr: 10.
   depth_method: fluxerr
   nz_bin_num: 100

@@ -6,7 +6,7 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-# from gsky.types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
+from .types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
 import numpy as np
 from operator import add
 import multiprocessing
@@ -14,16 +14,16 @@ import copy
 import pymaster as nmt
 from astropy.io import fits
 from astropy.table import Table, vstack
-from gsky.tracer import Tracer
-# from gsky.map_utils import (createCountsMap,
-#                         createMeanStdMaps,
-#                         createMask,
-#                         removeDisconnected,
-#                         createSpin2Map,
-#                         createW2QU2Map)
+from .tracer import Tracer
+from .map_utils import (createCountsMap,
+                        createMeanStdMaps,
+                        createMask,
+                        removeDisconnected,
+                        createSpin2Map,
+                        createW2QU2Map)
 import sacc
 from scipy.interpolate import interp1d
-# from gsky.flatmaps import read_flat_map,compare_infos
+from .flatmaps import read_flat_map,compare_infos
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -276,9 +276,6 @@ class CovFromMocks(object):
         # w2e2 = self.get_w2e2(cat, return_maps=False)
         # logger.info('getting gamma maps')
         # gammamaps = self.get_gamma_maps(cat)
-
-test = CovFromMocks()
-test.go()
 
     # def __init__(self, masks, simparams={}, noiseparams={}):
     #     """
