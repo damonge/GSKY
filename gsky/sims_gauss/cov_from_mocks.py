@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 from ceci import PipelineStage
-from .types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
+from ..types import FitsFile,ASCIIFile,BinaryFile,NpzFile,SACCFile,DummyFile
 import numpy as np
 from operator import add
 import multiprocessing
 import copy
 import pymaster as nmt
 from astropy.io import fits
-from .tracer import Tracer
-from .map_utils import (createCountsMap,
+from ..tracer import Tracer
+from ..map_utils import (createCountsMap,
                         createMeanStdMaps,
                         createMask,
                         removeDisconnected,
@@ -17,7 +17,7 @@ from .map_utils import (createCountsMap,
 import os
 import sacc
 from scipy.interpolate import interp1d
-from .flatmaps import read_flat_map,compare_infos
+from ..flatmaps import read_flat_map,compare_infos
 
 import logging
 logging.basicConfig(level=logging.INFO)
