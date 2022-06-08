@@ -337,11 +337,11 @@ class CovFromMocks(object):
                 logger.info('Spins: spin1 = {}, spin2 = {}.'.format(spin1, spin2))
 
                 # Define flat sky spin-2 field
-                emaps = [gammamaps[j][0][0], gammamaps[j][0][1]]
+                emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
                 f2_1 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
                                         emaps, purify_b=False)
                 # Define flat sky spin-2 field
-                emaps = [gammamaps[jj][0][0], gammamaps[jj][0][1]]
+                emaps = [gammamaps[jj][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[jj][0][1].reshape([fsk.ny, fsk.nx])]
                 f2_2 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[jj],
                                         emaps, purify_b=False)
 
