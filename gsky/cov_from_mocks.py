@@ -310,11 +310,12 @@ class CovFromMocks(object):
         for i in range(self.params['nprobes']):
             if weightmask ==True:
                 logger.info('Using weightmask.')
-                mask_temp = gammamaps[i][2]
+                print(len(gammamaps))
+                mask_temp = gammamaps[i][1][0]
                 logger.info(mask_temp)
             else:
                 logger.info('Using binary mask.')
-                mask_temp = gammamaps[i][3]
+                mask_temp = gammamaps[i][1][1]
             mask_temp = np.array(mask_temp).reshape([fsk.ny, fsk.nx])
             masks.append(mask_temp)
         
