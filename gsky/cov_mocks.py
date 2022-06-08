@@ -33,13 +33,27 @@ class CovMocks(PipelineStage):
           'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
 
+    def get_output_fname(self,name,ext=None):
+        self.output_dir=self.get_output('dummy',final_name=True)[:-5]
+        if self.config['output_run_dir'] != 'NONE':
+            self.output_dir+=self.config['output_run_dir']+'/'
+        if not os.path.isdir(self.output_dir):
+            os.mkdir(self.output_dir)
+        fname=self.output_dir+name
+        if ext is not None:
+            fname+='.'+ext
+        return fname
+
     def run(self):
         """
         Main routine. This stage:
         - Calls CovFromMocks in cov_from_mocks.py
         """
         test = CovFromMocks()
-        test.go()
+        cls, ells, wsps = test.go()
+
+        np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
+        logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', ext='npy')))
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

@@ -247,6 +247,11 @@ class CovFromMocks(object):
         pool.close() # no more tasks
         pool.join()  # wrap up current tasks
 
+        cls = np.concatenate([res[0][..., np.newaxis,:] for res in reslist], axis=2)
+        tempells = reslist[0][1]
+
+        return cls, tempells, wsps
+
     def __call__(self, realization):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
@@ -367,6 +372,8 @@ class CovFromMocks(object):
                 cls[j, jj, :] = tempclse
                 cls[j+self.params['nspin2'], jj, :] = tempclseb
                 cls[j+self.params['nspin2'], jj+self.params['nspin2'], :] = tempclsb
+
+        return cls, ells_uncoupled
 
 
         # # If noise is True, then we need to compute the noise from simulations
