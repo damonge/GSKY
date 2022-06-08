@@ -1,5 +1,5 @@
 from ceci import PipelineStage
-from .types import FitsFile, ASCIIFile
+from .types import FitsFile, ASCIIFile, DummyFile
 import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createCountsMap
