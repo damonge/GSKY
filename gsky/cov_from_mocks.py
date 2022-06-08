@@ -37,27 +37,6 @@ class CovFromMocks(object):
     """
     def __init__(self):
         self.enrich_params()
-        # self.masks = masks
-
-        # logger.info("Reading masked fraction from {}.".format(noiseparams['path2fsk']))
-        # self.fsk, _ = read_flat_map(noiseparams['path2fsk'])
-
-        # if simparams['theory_sacc'] != 'NONE':
-        #     logger.info('theory_sacc provided. Generating signal realizations.')
-        #     self.params['signal'] = True
-        #     self.simmaps = SimulatedMaps(self.fsk, simparams)
-        # else:
-        #     logger.info('theory_sacc is NONE. Not generating signal realizations.')
-        #     self.params['signal'] = False
-        # if noiseparams != {}:
-        #     logger.info('Generating noise realizations.')
-        #     # Need to generate noise realisations as well
-        #     self.params['noise'] = True
-        #     noiseparams = self.enrich_noise_params(noiseparams)
-        #     self.noisemaps = NoiseMaps(noiseparams)
-        # else:
-        #     logger.info('Not generating noise realizations.')
-        #     self.params['noise'] = False
 
     def make_masked_fraction(self, cat, fsk, config, mask_fulldepth=False):
         """
@@ -324,7 +303,22 @@ class CovFromMocks(object):
         logger.info('getting gamma maps')
         gammamaps = self.get_gamma_maps(cat, fsk, config)
 
-        # b = nmt.NmtBinFlat(self.params['l0_bins'], self.params['lf_bins'])
+        b = nmt.NmtBinFlat(self.params['l0_bins'], self.params['lf_bins'])
+
+        masks = []
+        weightmask=True
+        for i in range(self.params['nprobes']):
+            if weightmask ==True:
+                logger.info('Using weightmask.')
+                mask_temp = gammamaps[6*i+2]
+            else:
+                logger.info('Using binary mask.')
+                mask_temp = gammamaps[6*i+3]
+            mask_temp = mask_temp.reshape([fsk.ny, fsk.nx])
+            masks.append(mask_temp)
+        
+        self.masks = masks
+
 
         # for j in range(self.nbins):
         #     for jj in range(j+1):
