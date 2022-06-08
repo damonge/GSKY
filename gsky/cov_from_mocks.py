@@ -314,7 +314,7 @@ class CovFromMocks(object):
             else:
                 logger.info('Using binary mask.')
                 mask_temp = gammamaps[6*i+3]
-            mask_temp = mask_temp.reshape([fsk.ny, fsk.nx])
+            mask_temp = np.array(mask_temp).reshape([fsk.ny, fsk.nx])
             masks.append(mask_temp)
         
         self.masks = masks
