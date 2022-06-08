@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class CovMocks(PipelineStage):
     name = "CovMocks"
     inputs = []
-    outputs = []
+    outputs = [('dummy',DummyFile)]
     config_options={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
           'mapping': {'wcs': None, 'res': 0.0285,
