@@ -216,7 +216,11 @@ class CovFromMocks(object):
         :param :
         :return :
         """
-
+        PARAMS_KEYS = ['nprobes', 'ncls', 'l0_bins', 'lf_bins', 'nell',
+                  'nspin2', 'nautocls']
+        default_key_vals = [4, 10, [], [], 0,
+                  1, 4]
+        self.params = {key: default_key_vals[key] for key in PARAMS_KEYS}
         self.params['nprobes'] = 4
         self.params['ncls'] = int(self.params['nprobes']*(self.params['nprobes'] + 1.)/2.)
         ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
