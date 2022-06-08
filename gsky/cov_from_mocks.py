@@ -311,6 +311,7 @@ class CovFromMocks(object):
             if weightmask ==True:
                 logger.info('Using weightmask.')
                 mask_temp = gammamaps[6*i+2]
+                logger.info(mask_temp)
             else:
                 logger.info('Using binary mask.')
                 mask_temp = gammamaps[6*i+3]
