@@ -250,7 +250,7 @@ class CovFromMocks(object):
         cls = np.concatenate([res[0][..., np.newaxis,:] for res in reslist], axis=2)
         tempells = reslist[0][1]
 
-        return cls, tempells, wsps
+        return cls, tempells
 
     def __call__(self, realization):
         config={'plots_dir': None,
