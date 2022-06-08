@@ -231,7 +231,7 @@ class CovFromMocks(object):
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
-        n_realizations = 8
+        n_realizations = 4
         realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
         ncpus = 4
