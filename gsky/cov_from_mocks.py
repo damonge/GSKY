@@ -206,7 +206,7 @@ class CovFromMocks(object):
         self.params['l0_bins'] = np.array(ell_bpws)[:-1]
         self.params['lf_bins'] = np.array(ell_bpws)[1:]
         self.params['nell'] = int(self.params['l0_bins'].shape[0])
-        self.params['nspin2'] = 1
+        self.params['nspin2'] = self.params['nprobes']
         self.params['nautocls'] = self.params['nprobes']+self.params['nspin2']
 
         if not hasattr(self, 'wsps'):
