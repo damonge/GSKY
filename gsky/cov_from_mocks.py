@@ -228,7 +228,7 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
         # n_realizations = 4
@@ -266,7 +266,7 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
         self.mpp = config['mapping']
@@ -276,7 +276,7 @@ class CovFromMocks(object):
         rotmat = int(realization - (r_num*13))
         name = 'mock_nres13_r'+r_num_str+'_rotmat'+str(rotmat)+'_shear_catalog.fits'
         # Read catalog
-        logger.info('reading catalog')
+        logger.info('reading catalog from {}'.format(config['mocks_dir']+name))
         cat = Table.read(config['mocks_dir']+name)
         #ReduceCat
         if 'VVDS' in config['mocks_dir']:
