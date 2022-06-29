@@ -58,10 +58,20 @@ class ShearMapperMocks(PipelineStage):
                                                        weights=subcat['weight'],
                                                        shearrot=self.config['shearrot'])
             else:
+                
+                erms=   (datIn['noise1_int']**2.+datIn['noise2_int']**2.)/2.
+                eres=   1.-np.sum(datIn['weight']*erms)\
+                        /np.sum(datIn['weight'])
+                # Note: here we assume addtive bias is zero
+                g1I =   datIn['e1_mock']/2./eres
+                g2I =   datIn['e2_mock']/2./eres
+                # g1I =   datIn['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g2I =   datIn['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+
                 gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
-                                                       subcat['e1_mock'],
-                                                       subcat['e2_mock'], self.fsk,
+                                                       g1I,
+                                                       g2I, self.fsk,
                                                        weights=subcat['weight'],
                                                        shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
@@ -95,9 +105,19 @@ class ShearMapperMocks(PipelineStage):
                 e2_2rms = np.average((subcat['shear2_sim']/(1-subcat['kappa']))**2,
                                      weights=subcat['weight'])
             else:
-                e1_2rms = np.average((subcat['e1_mock'])**2,
+
+                erms=   (datIn['noise1_int']**2.+datIn['noise2_int']**2.)/2.
+                eres=   1.-np.sum(datIn['weight']*erms)\
+                        /np.sum(datIn['weight'])
+                # Note: here we assume addtive bias is zero
+                g1I =   datIn['e1_mock']/2./eres
+                g2I =   datIn['e2_mock']/2./eres
+                # g1I =   datIn['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g2I =   datIn['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+
+                e1_2rms = np.average((g1I)**2,
                                      weights=subcat['weight'])
-                e2_2rms = np.average((subcat['e2_mock'])**2,
+                e2_2rms = np.average((g2I)**2,
                                      weights=subcat['weight'])
 
             e2rms_combined = np.array([e1_2rms, e2_2rms])
@@ -134,10 +154,20 @@ class ShearMapperMocks(PipelineStage):
                                                        subcat['shear2_sim']/(1-subcat['kappa']), self.fsk,
                                                        weights=subcat['weight'])
             else:
+
+                erms=   (datIn['noise1_int']**2.+datIn['noise2_int']**2.)/2.
+                eres=   1.-np.sum(datIn['weight']*erms)\
+                        /np.sum(datIn['weight'])
+                # Note: here we assume addtive bias is zero
+                g1I =   datIn['e1_mock']/2./eres
+                g2I =   datIn['e2_mock']/2./eres
+                # g1I =   datIn['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g2I =   datIn['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+
                 w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
-                                                       subcat['e1_mock'],
-                                                       subcat['e2_mock'], self.fsk,
+                                                       g1I,
+                                                       g2I, self.fsk,
                                                        weights=subcat['weight'])
 
             w2e2_curr = 0.5*(np.mean(w2e2maps_curr[0]) + np.mean(w2e2maps_curr[1]))
