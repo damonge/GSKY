@@ -63,8 +63,8 @@ class ShearMapperMocks(PipelineStage):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2.
+                g2I =   subcat['e2_mock']/2.
                 # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
                 # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
 
@@ -110,8 +110,8 @@ class ShearMapperMocks(PipelineStage):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2.
+                g2I =   subcat['e2_mock']/2.
                 # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
                 # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
 
@@ -159,8 +159,8 @@ class ShearMapperMocks(PipelineStage):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2.
+                g2I =   subcat['e2_mock']/2.
                 # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
                 # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
 
