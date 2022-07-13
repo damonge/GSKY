@@ -922,7 +922,7 @@ class ReduceCatMocks(PipelineStage):
             msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
-        corr_arr=np.array([1.17133725, 1.08968149, 1.06929737, 1.05591374])
+        corr_arr=np.load(self.config['mock_correction_factors'])
         cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
 
         ####
