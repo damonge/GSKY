@@ -68,7 +68,7 @@ class CovFromMocks(object):
             bin_number[msk] = ib
         return bin_number
 
-        def add_mbias(self, datIn, mbias, msel, corr):
+    def add_mbias(self, datIn, mbias, msel, corr):
         """
         Rescale the shear by (1 + mbias) following section 5.6 and calculate the
         mock ellipticities according to eq. (24) and (25) of
