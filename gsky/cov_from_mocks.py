@@ -68,7 +68,58 @@ class CovFromMocks(object):
             bin_number[msk] = ib
         return bin_number
 
-    def get_gamma_maps(self, cat, fsk, config):
+        def add_mbias(self, datIn, mbias, msel, corr):
+        """
+        Rescale the shear by (1 + mbias) following section 5.6 and calculate the
+        mock ellipticities according to eq. (24) and (25) of
+        https://arxiv.org/pdf/1901.09488.pdf
+        Args:
+            datIn (ndaray): Original HSC S19A mock catalog (it should haave m=0)
+            mbias (float):  The multiplicative bias
+            msel (float):   Selection bias [default=0.]
+            corr (float):   Correction term for shell thickness, finite resolution and missmatch
+                            between n(z_data) and n(z_mock) due to a limited number source planes
+        Returns:
+            out (ndarray):  Updated S19A mock catalog (with m=mbias)
+        """
+
+
+        # if not isinstance(mbias,(float,int)):
+        #     raise TypeError('multiplicative shear estimation bias should be a float.')
+        # if not isinstance(msel,(float,int)):
+        #     raise TypeError('multiplicative selection bias should be a float.')
+        bratio_arr = np.ones(self.nbins+1)
+        if 'ntomo_bins' in self.config:
+            self.bin_indxs = self.config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
+        for ibin in self.bin_indxs:
+            bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])*corr[ibin]
+        out   =  datIn.copy()
+        # Rescaled gamma by (1+m) and then calculate the distortion delta
+        gamma_sq=(out['shear1_sim']**2.+out['shear2_sim']**2.)*bratio_arr[out['tomo_bin']]**2.
+        dis1  =  2.*(1-out['kappa'])*out['shear1_sim']*bratio_arr[out['tomo_bin']]/\
+                    ((1-out['kappa'])**2+gamma_sq)
+        dis2  =  2.*(1-out['kappa'])*out['shear2_sim']*bratio_arr[out['tomo_bin']]/\
+                    ((1-out['kappa'])**2+gamma_sq)
+        # Calculate the mock ellitpicities
+        de    =  dis1*out['noise1_int']+dis2*out['noise2_int'] # for denominators
+        dd    =  dis1**2+dis2**2.
+        # avoid dividing by zero (this term is 0 under the limit dd->0)
+        tmp1  =  np.divide(dis1,dd,out=np.zeros_like(dd),where=dd!=0)
+        tmp2  =  np.divide(dis2,dd,out=np.zeros_like(dd),where=dd!=0)
+        # the nominator for e1
+        e1_mock= out['noise1_int']+dis1+tmp2*(1-(1-dd)**0.5)*\
+            (dis1*out['noise2_int']-dis2*out['noise1_int'])
+        # the nominator for e2
+        e2_mock= out['noise2_int']+dis2+tmp1*(1-(1-dd)**0.5)*\
+            (dis2*out['noise1_int']-dis1*out['noise2_int'])
+        # update e1_mock and e2_mock
+        out['e1_mock']=e1_mock/(1.+de)+out['noise1_mea']
+        out['e2_mock']=e2_mock/(1.+de)+out['noise2_mea']
+        return out
+
+    def get_gamma_maps(self, cat, mbias, msel, fsk, config):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
@@ -102,10 +153,10 @@ class CovFromMocks(object):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2.
-                g2I =   subcat['e2_mock']/2.
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 gammamaps, gammamasks = createSpin2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
@@ -118,7 +169,7 @@ class CovFromMocks(object):
 
         return maps
 
-    def get_e2rms(self, cat, config):
+    def get_e2rms(self, cat, mbias, msel, config):
         """
         Get e1_2rms, e2_2rms from catalog.
         :param cat:
@@ -149,10 +200,10 @@ class CovFromMocks(object):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2.
-                g2I =   subcat['e2_mock']/2.
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 e1_2rms = np.average((g1I)**2,
                                      weights=subcat['weight'])
@@ -164,7 +215,7 @@ class CovFromMocks(object):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat, fsk, config, return_maps=False):
+    def get_w2e2(self, cat, mbias, msel, fsk, config, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -198,10 +249,10 @@ class CovFromMocks(object):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2.
-                g2I =   subcat['e2_mock']/2.
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 w2e2maps_curr = createW2QU2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
@@ -259,6 +310,18 @@ class CovFromMocks(object):
           'nz_bin_max': 4.0,
           'shape_noise': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
+
+
+        # Get multiplicative bias from data
+        hdul1 = fits.open(self.config['clean_catalog_data']) 
+        mhat_arr = np.zeros(4)
+        msel_arr = np.zeros(4)
+        for i in range(len(mhat_arr)):
+            mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
+            msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
+        # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
+        # Need to update this, current values are from Xiangchong
+        corr_arr=np.load(self.config['mock_correction_factors'])
 
         n_realizations = len(os.listdir(config['mocks_dir']))
         # n_realizations = 4
@@ -323,6 +386,7 @@ class CovFromMocks(object):
                                                  mask_fulldepth=True)
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
+        cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
         #ShearMapper
         self.nbins = len(config['pz_bins'])-1
         if 'ntomo_bins' in config:
@@ -330,11 +394,11 @@ class CovFromMocks(object):
         else:
             self.bin_indxs = range(self.nbins)
         logger.info('getting e2rms')
-        e2rms = self.get_e2rms(cat, config)
+        e2rms = self.get_e2rms(cat, mhat_arr, msel_arr, config)
         logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, fsk, config, return_maps=False)
+        w2e2 = self.get_w2e2(cat, mhat_arr, msel_arr, fsk, config, return_maps=False)
         logger.info('getting gamma maps')
-        gammamaps = self.get_gamma_maps(cat, fsk, config)
+        gammamaps = self.get_gamma_maps(cat, mhat_arr, msel_arr, fsk, config)
 
         #PowerSpecter
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
