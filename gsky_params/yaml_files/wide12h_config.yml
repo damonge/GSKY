@@ -23,6 +23,11 @@ ReduceCat:
   depth_method: fluxerr
   clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits
 
+ReduceCatMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits
+
 SystMapper:
   ccd_drop: [9]
 
