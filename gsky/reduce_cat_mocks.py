@@ -518,47 +518,6 @@ class ReduceCatMocks(PipelineStage):
         msk =   msk & ((a*rmag+b*logR+c)<0.)
         return msk
 
-    def get_sel_bias(self, weight, magA10, res):
-        """
-        This utility gets the selection bias (multiplicative and additive)
-        Parameters:
-            weight: array_like
-                Weight for dataset.  E.g., lensing shape weight, Sigma_c^-2 weight
-            res: array_like
-                Resolution factor for dataset
-            magA10: array_like
-                aperture magnitude (1 arcsec) for dataset
-        Returns:
-            m_sel (float) :
-                Multiplicative edge-selection bias
-            a_sel (float) :
-                additive edge-selection bias (c1)
-            m_sel_err (float) :
-                1-sigma uncertainty in m_sel
-            a_sel_err (float) :
-                1-sigma uncertainty in a_sel
-        """
-
-        if not(np.all(np.isfinite(weight))):
-            raise ValueError("Non-finite weight")
-        if not(np.all(weight) >= 0.0):
-            raise ValueError("Negative weight")
-        wSum    =   np.sum(weight)
-
-        bin_magA=   0.025
-        pedgeM  =   np.sum(weight[(magA10>= 25.5-bin_magA)])/wSum/bin_magA
-
-        bin_res =   0.01
-        pedgeR  =   np.sum(weight[(res<= 0.3+bin_res)])/wSum/bin_res
-
-        m_sel   =   -0.059*pedgeM+0.019*pedgeR
-        a_sel   =   0.0064*pedgeM+0.0063*pedgeR
-
-        # assume the errors for 2 cuts are independent.
-        m_err   =   np.sqrt((0.0089*pedgeM)**2.+(0.0013*pedgeR)**2.)
-        a_err   =   np.sqrt((0.0034*pedgeM)**2.+(0.0009*pedgeR)**2.)
-        return m_sel,a_sel,m_err,a_err
-
     def add_mbias(self, datIn, mbias, msel, corr):
         """
         Rescale the shear by (1 + mbias) following section 5.6 and calculate the
@@ -951,25 +910,10 @@ class ReduceCatMocks(PipelineStage):
         # Get multiplicative bias from data
         hdul1 = fits.open(self.config['clean_catalog_data']) 
         mhat_arr = np.zeros(4)
+        msel_arr = np.zeros(4)
         for i in range(len(mhat_arr)):
             mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
-        msel_arr = np.zeros(4)
-        # Measure multiplicative selection bias from data
-        cat_data = hdul1[1].data
-        if 'ntomo_bins' in self.config:
-            self.bin_indxs = self.config['ntomo_bins']
-        else:
-            self.bin_indxs = range(self.nbins)
-        for ibin in self.bin_indxs:
-            if ibin != -1:
-                # msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
-                msk_bin = (cat_data['tomo_bin'] == ibin)
-            else:
-                # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
-                msk_bin = (cat_data['tomo_bin'] >= 0)
-            subcat = cat_data[msk_bin]
-            msel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
-                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
+            msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.array([1.17133725, 1.08968149, 1.06929737, 1.05591374])

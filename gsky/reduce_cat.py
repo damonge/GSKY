@@ -401,6 +401,47 @@ class ReduceCat(PipelineStage):
             e2cal[mask_bin] = e2
         return e1cal, e2cal, mhats, resps
 
+    def get_sel_bias(self, weight, magA10, res):
+        """
+        This utility gets the selection bias (multiplicative and additive)
+        Parameters:
+            weight: array_like
+                Weight for dataset.  E.g., lensing shape weight, Sigma_c^-2 weight
+            res: array_like
+                Resolution factor for dataset
+            magA10: array_like
+                aperture magnitude (1 arcsec) for dataset
+        Returns:
+            m_sel (float) :
+                Multiplicative edge-selection bias
+            a_sel (float) :
+                additive edge-selection bias (c1)
+            m_sel_err (float) :
+                1-sigma uncertainty in m_sel
+            a_sel_err (float) :
+                1-sigma uncertainty in a_sel
+        """
+
+        if not(np.all(np.isfinite(weight))):
+            raise ValueError("Non-finite weight")
+        if not(np.all(weight) >= 0.0):
+            raise ValueError("Negative weight")
+        wSum    =   np.sum(weight)
+
+        bin_magA=   0.025
+        pedgeM  =   np.sum(weight[(magA10>= 25.5-bin_magA)])/wSum/bin_magA
+
+        bin_res =   0.01
+        pedgeR  =   np.sum(weight[(res<= 0.3+bin_res)])/wSum/bin_res
+
+        m_sel   =   -0.059*pedgeM+0.019*pedgeR
+        a_sel   =   0.0064*pedgeM+0.0063*pedgeR
+
+        # assume the errors for 2 cuts are independent.
+        m_err   =   np.sqrt((0.0089*pedgeM)**2.+(0.0013*pedgeR)**2.)
+        a_err   =   np.sqrt((0.0034*pedgeM)**2.+(0.0009*pedgeR)**2.)
+        return m_sel,a_sel,m_err,a_err
+
     def get_w2e2(self, cat, e1, e2, fsk):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
@@ -879,6 +920,23 @@ class ReduceCat(PipelineStage):
         cat['i_hsmshaperegauss_e1_calib'] = e1c
         cat['i_hsmshaperegauss_e2_calib'] = e2c
 
+        msel_arr = np.zeros(4)
+        # Measure multiplicative selection bias from data
+        if 'ntomo_bins' in self.config:
+            self.bin_indxs = self.config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
+        for ibin in self.bin_indxs:
+            if ibin != -1:
+                # msk_bin = (cat['tomo_bin'] == ibin) & cat['shear_cat']
+                msk_bin = (cat['tomo_bin'] == ibin)
+            else:
+                # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
+                msk_bin = (cat['tomo_bin'] >= 0)
+            subcat = cat[msk_bin]
+            msel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
+                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
+
         ####
         # Write final catalog
         # 1- header
@@ -886,6 +944,8 @@ class ReduceCat(PipelineStage):
         hdr = fits.Header()
         for ibin in range(self.nbins):
             hdr['MHAT_%d' % (ibin+1)] = mhat[ibin]
+        for ibin in range(self.nbins):
+            hdr['MSEL_%d' % (ibin+1)] = msel_arr[ibin]
         for ibin in range(self.nbins):
             hdr['RESPONS_%d' % (ibin+1)] = resp[ibin]
         hdr['BAND'] = self.config['band']
