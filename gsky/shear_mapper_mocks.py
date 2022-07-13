@@ -109,6 +109,7 @@ class ShearMapperMocks(PipelineStage):
                 erms=   (subcat['noise1_int']**2.+subcat['noise2_int']**2.)/2.
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
+                logger.info("Responsivity %f", (eres))
                 # Note: here we assume addtive bias is zero
                 g1I =   subcat['e1_mock']/2./eres
                 g2I =   subcat['e2_mock']/2./eres
