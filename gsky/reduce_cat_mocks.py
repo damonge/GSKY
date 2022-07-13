@@ -559,7 +559,7 @@ class ReduceCatMocks(PipelineStage):
         a_err   =   np.sqrt((0.0034*pedgeM)**2.+(0.0009*pedgeR)**2.)
         return m_sel,a_sel,m_err,a_err
 
-    def add_mbias(self, datIn, mbias, msel, corr)
+    def add_mbias(self, datIn, mbias, msel, corr):
         """
         Rescale the shear by (1 + mbias) following section 5.6 and calculate the
         mock ellipticities according to eq. (24) and (25) of
