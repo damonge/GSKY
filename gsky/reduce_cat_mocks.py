@@ -539,6 +539,10 @@ class ReduceCatMocks(PipelineStage):
         # if not isinstance(msel,(float,int)):
         #     raise TypeError('multiplicative selection bias should be a float.')
         bratio_arr = np.ones(self.nbins+1)
+        if 'ntomo_bins' in self.config:
+            self.bin_indxs = self.config['ntomo_bins']
+        else:
+            self.bin_indxs = range(self.nbins)
         for ibin in self.bin_indxs:
             bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])*corr[ibin]
         logger.info('bratios: %f %f %f %f %f' % (bratio_arr[0], bratio_arr[1], bratio_arr[2], bratio_arr[3], bratio_arr[4]))
