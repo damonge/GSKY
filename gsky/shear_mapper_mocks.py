@@ -29,7 +29,7 @@ class ShearMapperMocks(PipelineStage):
                       'shearrot': 'noflip',
                       'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': False}
 
-    def get_gamma_maps(self, cat):
+    def get_gamma_maps(self, cat, mbias, msel):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
@@ -63,10 +63,10 @@ class ShearMapperMocks(PipelineStage):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 gammamaps, gammamasks = createSpin2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
@@ -79,7 +79,7 @@ class ShearMapperMocks(PipelineStage):
 
         return maps
 
-    def get_e2rms(self, cat):
+    def get_e2rms(self, cat, mbias, msel):
         """
         Get e1_2rms, e2_2rms from catalog.
         :param cat:
@@ -111,10 +111,10 @@ class ShearMapperMocks(PipelineStage):
                         /np.sum(subcat['weight'])
                 logger.info("Responsivity %f", (eres))
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 e1_2rms = np.average((g1I)**2,
                                      weights=subcat['weight'])
@@ -126,7 +126,7 @@ class ShearMapperMocks(PipelineStage):
 
         return np.array(e2rms_arr)
 
-    def get_w2e2(self, cat, return_maps=False):
+    def get_w2e2(self, cat, mbias, msel, return_maps=False):
         """
         Compute the weighted mean squared ellipticity in a pixel, averaged over the whole map (used for analytic shape
         noise estimation).
@@ -160,10 +160,10 @@ class ShearMapperMocks(PipelineStage):
                 eres=   1.-np.sum(subcat['weight']*erms)\
                         /np.sum(subcat['weight'])
                 # Note: here we assume addtive bias is zero
-                g1I =   subcat['e1_mock']/2./eres
-                g2I =   subcat['e2_mock']/2./eres
-                # g1I =   subcat['e1_mock']/2./eres/(1.+mbias)/(1.+msel)
-                # g2I =   subcat['e2_mock']/2./eres/(1.+mbias)/(1.+msel)
+                # g1I =   subcat['e1_mock']/2./eres
+                # g2I =   subcat['e2_mock']/2./eres
+                g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
+                g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
 
                 w2e2maps_curr = createW2QU2Map(subcat[self.config['ra']],
                                                        subcat[self.config['dec']],
@@ -317,20 +317,28 @@ class ShearMapperMocks(PipelineStage):
         # for n in self.pdf_files.keys():
         #     pzs_stack[n] = self.get_nz_stack(cat, n)
 
+        #read in multiplicative and selection bias from data files
+        hdul1 = fits.open(self.config['clean_catalog_data']) 
+        mhat_arr = np.zeros(4)
+        msel_arr = np.zeros(4)
+        for i in range(len(mhat_arr)):
+            mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
+            msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
+
         logger.info("Computing e2rms.")
-        e2rms = self.get_e2rms(cat)
+        e2rms = self.get_e2rms(cat, mhat_arr, msel_arr)
 
         logger.info("Computing w2e2.")
         if self.get_output('w2e2_maps') != 'NONE':
             logger.info('Saving w2e2 maps.')
             logger.info("Writing output to {}.".format(self.get_output('w2e2_maps')))
-            w2e2, w2e2maps = self.get_w2e2(cat, return_maps=True)
+            w2e2, w2e2maps = self.get_w2e2(cat, mhat_arr, msel_arr, return_maps=True)
         else:
             logger.info('Not saving w2e2 maps.')
-            w2e2 = self.get_w2e2(cat)
+            w2e2 = self.get_w2e2(cat, mhat_arr, msel_arr)
 
         logger.info("Creating shear maps and corresponding masks.")
-        gammamaps = self.get_gamma_maps(cat)
+        gammamaps = self.get_gamma_maps(cat, mhat_arr, msel_arr)
 
         logger.info("Writing output to {}.".format(self.get_output('gamma_maps')))
         header = self.fsk.wcs.to_header()
