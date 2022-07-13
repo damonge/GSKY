@@ -973,7 +973,7 @@ class ReduceCatMocks(PipelineStage):
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.array([1.17133725, 1.08968149, 1.06929737, 1.05591374])
-        cat_out = self.add_mbias(cat, mhat_list, msel_list, corr_arr)
+        cat_out = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
 
         ####
         # Secondary peak cut flag - defined to be 0 if included in peak cut
