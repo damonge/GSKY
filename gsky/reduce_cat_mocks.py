@@ -951,7 +951,7 @@ class ReduceCatMocks(PipelineStage):
         # Get multiplicative bias from data
         hdul1 = fits.open(self.config['clean_catalog_data']) 
         mhat_arr = np.zeros(4)
-        for i in range(mhat_list):
+        for i in range(len(mhat_arr)):
             mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
         msel_arr = np.zeros(4)
         # Measure multiplicative selection bias from data
