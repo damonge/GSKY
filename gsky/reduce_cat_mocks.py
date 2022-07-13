@@ -585,10 +585,10 @@ class ReduceCatMocks(PipelineStage):
         logger.info('bratios: %f %f %f %f %f' % (bratio_arr[0], bratio_arr[1], bratio_arr[2], bratio_arr[3], bratio_arr[4]))
         out   =  datIn.copy()
         # Rescaled gamma by (1+m) and then calculate the distortion delta
-        gamma_sq=(out['shear1_sim']**2.+out['shear2_sim']**2.)*bratio[out['tomo_bin']]**2.
-        dis1  =  2.*(1-out['kappa'])*out['shear1_sim']*bratio[out['tomo_bin']]/\
+        gamma_sq=(out['shear1_sim']**2.+out['shear2_sim']**2.)*bratio_arr[out['tomo_bin']]**2.
+        dis1  =  2.*(1-out['kappa'])*out['shear1_sim']*bratio_arr[out['tomo_bin']]/\
                     ((1-out['kappa'])**2+gamma_sq)
-        dis2  =  2.*(1-out['kappa'])*out['shear2_sim']*bratio[out['tomo_bin']]/\
+        dis2  =  2.*(1-out['kappa'])*out['shear2_sim']*bratio_arr[out['tomo_bin']]/\
                     ((1-out['kappa'])**2+gamma_sq)
         # Calculate the mock ellitpicities
         de    =  dis1*out['noise1_int']+dis2*out['noise2_int'] # for denominators
