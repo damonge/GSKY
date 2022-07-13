@@ -969,7 +969,7 @@ class ReduceCatMocks(PipelineStage):
                 msk_bin = (cat_data['tomo_bin'] >= 0)
             subcat = cat_data[msk_bin]
             msel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
-                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])
+                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.array([1.17133725, 1.08968149, 1.06929737, 1.05591374])
