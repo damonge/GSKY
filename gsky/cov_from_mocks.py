@@ -336,7 +336,7 @@ class CovFromMocks(object):
         pool = multiprocessing.Pool(processes = ncpus)
 
         # Pool map preserves the call order!
-        reslist = pool.map(self, realizations, mhat_arr, mhat_arr, corr_arr, chunksize=int(realizations.shape[0]/ncpus))
+        reslist = pool.map(self, realizations, mhat_arr, msel_arr, corr_arr, chunksize=int(realizations.shape[0]/ncpus))
 
         logger.info('done')
         pool.close() # no more tasks
@@ -347,7 +347,7 @@ class CovFromMocks(object):
 
         return cls, tempells
 
-    def __call__(self, realization, mhat_arr, mhat_arr, corr_arr):
+    def __call__(self, realization, mhat_arr, msel_arr, corr_arr):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
           'mapping': {'wcs': None, 'res': 0.01666666666667,
