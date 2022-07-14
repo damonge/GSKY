@@ -309,11 +309,13 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits',
+          'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
 
         # Get multiplicative bias from data
-        hdul1 = fits.open(self.config['clean_catalog_data']) 
+        hdul1 = fits.open(config['clean_catalog_data']) 
         mhat_arr = np.zeros(4)
         msel_arr = np.zeros(4)
         for i in range(len(mhat_arr)):
@@ -321,7 +323,7 @@ class CovFromMocks(object):
             msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
-        corr_arr=np.load(self.config['mock_correction_factors'])
+        corr_arr=np.load(config['mock_correction_factors'])
 
         n_realizations = len(os.listdir(config['mocks_dir']))
         # n_realizations = 4
