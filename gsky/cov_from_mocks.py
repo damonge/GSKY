@@ -68,7 +68,7 @@ class CovFromMocks(object):
             bin_number[msk] = ib
         return bin_number
 
-    def add_mbias(self, datIn, mbias, msel, corr):
+    def add_mbias(self, datIn, mbias, msel, corr, config):
         """
         Rescale the shear by (1 + mbias) following section 5.6 and calculate the
         mock ellipticities according to eq. (24) and (25) of
@@ -89,8 +89,8 @@ class CovFromMocks(object):
         # if not isinstance(msel,(float,int)):
         #     raise TypeError('multiplicative selection bias should be a float.')
         bratio_arr = np.ones(self.nbins+1)
-        if 'ntomo_bins' in self.config:
-            self.bin_indxs = self.config['ntomo_bins']
+        if 'ntomo_bins' in config:
+            self.bin_indxs = config['ntomo_bins']
         else:
             self.bin_indxs = range(self.nbins)
         for ibin in self.bin_indxs:
@@ -388,7 +388,7 @@ class CovFromMocks(object):
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.load(config['mock_correction_factors'])
-        cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
+        cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr, config)
         #ShearMapper
         self.nbins = len(config['pz_bins'])-1
         if 'ntomo_bins' in config:
