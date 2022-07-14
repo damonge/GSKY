@@ -313,18 +313,6 @@ class CovFromMocks(object):
           'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
-
-        # Get multiplicative bias from data
-        hdul1 = fits.open(config['clean_catalog_data']) 
-        mhat_arr = np.zeros(4)
-        msel_arr = np.zeros(4)
-        for i in range(len(mhat_arr)):
-            mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
-            mhat_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
-        # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
-        # Need to update this, current values are from Xiangchong
-        corr_arr=np.load(config['mock_correction_factors'])
-
         n_realizations = len(os.listdir(config['mocks_dir']))
         # n_realizations = 4
         realizations = np.arange(n_realizations)
@@ -336,7 +324,7 @@ class CovFromMocks(object):
         pool = multiprocessing.Pool(processes = ncpus)
 
         # Pool map preserves the call order!
-        reslist = pool.map(self, realizations, mhat_arr, msel_arr, corr_arr, chunksize=int(realizations.shape[0]/ncpus))
+        reslist = pool.map(self, realizations, chunksize=int(realizations.shape[0]/ncpus))
 
         logger.info('done')
         pool.close() # no more tasks
@@ -347,7 +335,7 @@ class CovFromMocks(object):
 
         return cls, tempells
 
-    def __call__(self, realization, mhat_arr, msel_arr, corr_arr):
+    def __call__(self, realization):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
           'mapping': {'wcs': None, 'res': 0.01666666666667,
@@ -388,6 +376,16 @@ class CovFromMocks(object):
                                                  mask_fulldepth=True)
         logger.info('tomographic binning')
         cat['tomo_bin'] = self.pz_binning(cat, config)
+        # Get multiplicative bias from data
+        hdul1 = fits.open(config['clean_catalog_data']) 
+        mhat_arr = np.zeros(4)
+        msel_arr = np.zeros(4)
+        for i in range(len(mhat_arr)):
+            mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
+            mhat_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
+        # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
+        # Need to update this, current values are from Xiangchong
+        corr_arr=np.load(config['mock_correction_factors'])
         cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
         #ShearMapper
         self.nbins = len(config['pz_bins'])-1
