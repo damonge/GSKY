@@ -349,7 +349,9 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits',
+          'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
         self.mpp = config['mapping']
