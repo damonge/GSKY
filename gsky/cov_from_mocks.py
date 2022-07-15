@@ -88,6 +88,9 @@ class CovFromMocks(object):
         #     raise TypeError('multiplicative shear estimation bias should be a float.')
         # if not isinstance(msel,(float,int)):
         #     raise TypeError('multiplicative selection bias should be a float.')
+        logger.info('mbias: %f %f %f %f' % (mbias[0], mbias[1], mbias[2], mbias[3]))
+        logger.info('msel: %f %f %f %f' % (msel[0], msel[1], msel[2], msel[3]))
+        logger.info('corr: %f %f %f %f' % (corr[0], corr[1], corr[2], corr[3]))
         bratio_arr = np.ones(self.nbins+1)
         if 'ntomo_bins' in config:
             self.bin_indxs = config['ntomo_bins']
