@@ -117,6 +117,7 @@ class CovFromMocks(object):
         # update e1_mock and e2_mock
         out['e1_mock']=e1_mock/(1.+de)+out['noise1_mea']
         out['e2_mock']=e2_mock/(1.+de)+out['noise2_mea']
+        logger.info('e_old/e_mbias : %f %f', (datIn['e1_mock']/out['e1_mock'], datIn['e2_mock']/out['e2_mock']) )
         return out
 
     def get_gamma_maps(self, cat, mbias, msel, fsk, config):
