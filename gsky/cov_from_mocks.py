@@ -88,9 +88,6 @@ class CovFromMocks(object):
         #     raise TypeError('multiplicative shear estimation bias should be a float.')
         # if not isinstance(msel,(float,int)):
         #     raise TypeError('multiplicative selection bias should be a float.')
-        logger.info('mbias: %f %f %f %f' % (mbias[0], mbias[1], mbias[2], mbias[3]))
-        logger.info('msel: %f %f %f %f' % (msel[0], msel[1], msel[2], msel[3]))
-        logger.info('corr: %f %f %f %f' % (corr[0], corr[1], corr[2], corr[3]))
         bratio_arr = np.ones(self.nbins+1)
         if 'ntomo_bins' in config:
             self.bin_indxs = config['ntomo_bins']
@@ -98,7 +95,7 @@ class CovFromMocks(object):
             self.bin_indxs = range(self.nbins)
         for ibin in self.bin_indxs:
             bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])*corr[ibin]
-        logger.info('bratios: %f %f %f %f %f' % (bratio_arr[0], bratio_arr[1], bratio_arr[2], bratio_arr[3], bratio_arr[4]))
+        # logger.info('bratios: %f %f %f %f %f' % (bratio_arr[0], bratio_arr[1], bratio_arr[2], bratio_arr[3], bratio_arr[4]))
         out   =  datIn.copy()
         # Rescaled gamma by (1+m) and then calculate the distortion delta
         gamma_sq=(out['shear1_sim']**2.+out['shear2_sim']**2.)*bratio_arr[out['tomo_bin']]**2.
@@ -121,7 +118,6 @@ class CovFromMocks(object):
         # update e1_mock and e2_mock
         out['e1_mock']=e1_mock/(1.+de)+out['noise1_mea']
         out['e2_mock']=e2_mock/(1.+de)+out['noise2_mea']
-        logger.info('e_old/e_mbias : %f %f', (datIn['e1_mock']/out['e1_mock'], datIn['e2_mock']/out['e2_mock']) )
         return out
 
     def get_gamma_maps(self, cat, mbias, msel, fsk, config):
@@ -318,12 +314,12 @@ class CovFromMocks(object):
           'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
-        # n_realizations = len(os.listdir(config['mocks_dir']))
-        n_realizations = 1
+        n_realizations = len(os.listdir(config['mocks_dir']))
+        # n_realizations = 1
         realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
-        # ncpus = 4
-        ncpus = 1
+        ncpus = 4
+        # ncpus = 1
         logger.info('Number of realizations {}.'.format(n_realizations))
         logger.info('Number of available CPUs {}.'.format(ncpus))
         pool = multiprocessing.Pool(processes = ncpus)
@@ -366,7 +362,7 @@ class CovFromMocks(object):
         rotmat = int(realization - (r_num*13))
         name = 'mock_nres13_r'+r_num_str+'_rotmat'+str(rotmat)+'_shear_catalog.fits'
         # Read catalog
-        logger.info('reading catalog from {}'.format(config['mocks_dir']+name))
+        # logger.info('reading catalog from {}'.format(config['mocks_dir']+name))
         cat = Table.read(config['mocks_dir']+name)
         #ReduceCat
         if 'VVDS' in config['mocks_dir']:
@@ -393,9 +389,9 @@ class CovFromMocks(object):
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.load(config['mock_correction_factors'])
-        logger.info('initial e1 mean: %f', (np.mean(cat['e1_mock'])))
+        # logger.info('initial e1 mean: %f', (np.mean(cat['e1_mock'])))
         cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr, config)
-        logger.info('e1 mean after mbias: %f', (np.mean(cat['e1_mock'])))
+        # logger.info('e1 mean after mbias: %f', (np.mean(cat['e1_mock'])))
         #ShearMapper
         self.nbins = len(config['pz_bins'])-1
         if 'ntomo_bins' in config:
