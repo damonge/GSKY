@@ -924,7 +924,9 @@ class ReduceCatMocks(PipelineStage):
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.load(self.config['mock_correction_factors'])
+        logger.info('initial e1 mean: %f', (np.mean(cat['e1_mock'])))
         cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr)
+        logger.info('e1 mean after mbias: %f', (np.mean(cat['e1_mock'])))
 
         ####
         # Secondary peak cut flag - defined to be 0 if included in peak cut

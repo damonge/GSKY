@@ -389,7 +389,9 @@ class CovFromMocks(object):
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.load(config['mock_correction_factors'])
+        logger.info('initial e1 mean: %f', (np.mean(cat['e1_mock'])))
         cat = self.add_mbias(cat, mhat_arr, msel_arr, corr_arr, config)
+        logger.info('e1 mean after mbias: %f', (np.mean(cat['e1_mock'])))
         #ShearMapper
         self.nbins = len(config['pz_bins'])-1
         if 'ntomo_bins' in config:
