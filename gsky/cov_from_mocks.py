@@ -389,7 +389,7 @@ class CovFromMocks(object):
         msel_arr = np.zeros(4)
         for i in range(len(mhat_arr)):
             mhat_arr[i] = hdul1[0].header['MHAT_'+str(i+1)]
-            mhat_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
+            msel_arr[i] = hdul1[0].header['MSEL_'+str(i+1)]
         # Correction factor to account for finite resolution, shell thickness, n(z) differences between data and mocks
         # Need to update this, current values are from Xiangchong
         corr_arr=np.load(config['mock_correction_factors'])
