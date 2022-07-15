@@ -340,6 +340,9 @@ class ShearMapperMocks(PipelineStage):
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat, mhat_arr, msel_arr)
 
+        np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/e1_test_mocks_single.npy', gammamaps[0][0][0])
+        np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/e2_test_mocks_single.npy', gammamaps[0][0][1])
+
         logger.info("Writing output to {}.".format(self.get_output('gamma_maps')))
         header = self.fsk.wcs.to_header()
         hdus = []

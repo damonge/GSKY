@@ -314,12 +314,12 @@ class CovFromMocks(object):
           'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
-        n_realizations = len(os.listdir(config['mocks_dir']))
-        # n_realizations = 4
+        # n_realizations = len(os.listdir(config['mocks_dir']))
+        n_realizations = 1
         realizations = np.arange(n_realizations)
         ncpus = multiprocessing.cpu_count()
-        ncpus = 4
-        # ncpus = 1
+        # ncpus = 4
+        ncpus = 1
         logger.info('Number of realizations {}.'.format(n_realizations))
         logger.info('Number of available CPUs {}.'.format(ncpus))
         pool = multiprocessing.Pool(processes = ncpus)
@@ -402,6 +402,8 @@ class CovFromMocks(object):
         w2e2 = self.get_w2e2(cat, mhat_arr, msel_arr, fsk, config, return_maps=False)
         logger.info('getting gamma maps')
         gammamaps = self.get_gamma_maps(cat, mhat_arr, msel_arr, fsk, config)
+        np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/e1_test_mocks_cov.npy', gammamaps[0][0][0])
+        np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/e2_test_mocks_cov.npy', gammamaps[0][0][1])
 
         #PowerSpecter
         cls = np.zeros((self.params['nautocls'], self.params['nautocls'], self.params['nell']))
