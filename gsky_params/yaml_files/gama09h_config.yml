@@ -15,11 +15,17 @@ global:
   pz_code: dnnz
   pz_mark: best
   pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
-  plots_dir: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/plots
+  plots_dir: None
 
 ReduceCat:
   min_snr: 10.
   depth_method: fluxerr
+
+ReduceCatMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
 
 SystMapper:
   ccd_drop: [9]
@@ -37,6 +43,12 @@ GalMapper:
 ShearMapper:
   nz_bin_num: 100
   nz_bin_max: 4.0
+
+ShearMapperMocks:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/clean_catalog.fits
 
 #PowerSpecter:
 #  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
@@ -56,7 +68,26 @@ PowerSpecter:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: pixel_1_arcmin
+  output_run_dir: shape_noise_1_arcmin_with_mbias
+
+CovMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  mocks_dir: /projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA09H/
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  # ell_bpws: [100.0,400.0,1000.0,1400.0,1800.0,2200.0,3800.0,6200.0,9400.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: cov_from_mocks_with_mbias
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']
@@ -141,7 +172,7 @@ CovGauss:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: pixel_1_arcmin
+  output_run_dir: shape_noise_1_arcmin_with_mbias
 
 
 CwspCalc:
