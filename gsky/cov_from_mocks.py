@@ -310,8 +310,8 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/HECTOMAP/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/HECTOMAP_ceci/clean_catalog.fits',
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -350,8 +350,8 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/HECTOMAP/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/HECTOMAP_ceci/clean_catalog.fits',
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
