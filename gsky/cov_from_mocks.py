@@ -372,7 +372,7 @@ class CovFromMocks(object):
         if 'GAMA09H' in config['mocks_dir'] and config['rm_gama09h_region']==True:
             good_seeing_mask = (cat[config['ra']]>=132.5)&(cat[config['ra']]<=140.)&(cat[config['dec']]>1.6)    
             logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(cat)))
-            cat.remove_rows(~good_seeing_mask)
+            cat.remove_rows(good_seeing_mask)
 
         if 'VVDS' in config['mocks_dir']:
             logger.info("Shifting RA by -30 degrees for VVDS")
