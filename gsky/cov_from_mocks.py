@@ -370,7 +370,7 @@ class CovFromMocks(object):
 
         # Roohi: remove good seeing region in GAMA09H
         if 'GAMA09H' in config['mocks_dir'] and config['rm_gama09h_region']==True:
-            good_seeing_mask = (cat[self.config['ra']]>=132.5)&(cat[self.config['ra']]<=140.)&(cat[self.config['dec']]>1.6)    
+            good_seeing_mask = (cat[config['ra']]>=132.5)&(cat[config['ra']]<=140.)&(cat[config['dec']]>1.6)    
             logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(cat)))
             cat.remove_rows(~good_seeing_mask)
 
