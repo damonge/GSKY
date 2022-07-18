@@ -629,6 +629,31 @@ class ReduceCatMocks(PipelineStage):
         # cat.remove_rows(~mask_bad_visit)
 
 
+        # remove bad visit
+        ra=cat[self.config['ra']]
+        dec=cat[self.config['dec']]
+        def _calDistanceAngle(a1, d1):
+            a2=130.43
+            d2=-1.02
+            a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
+            d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
+            a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
+            d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
+            return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
+        d=_calDistanceAngle(ra,dec)
+        mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
+        mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        print("testing")
+        print("Bad visit removal ", np.sum(~mask_bad_visit))
+        print("testing2")
+        cat.remove_rows(~mask_bad_visit)
+
+        # Roohi: remove good seeing region in GAMA09H
+        if 'GAMA09H' in self.get_input('shape_catalog') and self.config['rm_gama09h_region']==True:
+            good_seeing_mask = (cat[self.config['ra']]>=132.5)&(cat[self.config['ra']]<=140.)&(cat[self.config['dec']]>1.6)    
+            logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(cat)))
+            cat.remove_rows(~good_seeing_mask)
+
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
         print("Initial size", len(cat))
