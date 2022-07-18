@@ -311,7 +311,7 @@ class CovFromMocks(object):
           'nz_bin_max': 4.0,
           'shape_noise': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog_rm20sqdeg.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -350,8 +350,9 @@ class CovFromMocks(object):
           'nz_bin_num': 100,
           'nz_bin_max': 4.0,
           'shape_noise': True,
+          'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog_rm20sqdeg.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
@@ -365,6 +366,13 @@ class CovFromMocks(object):
         # logger.info('reading catalog from {}'.format(config['mocks_dir']+name))
         cat = Table.read(config['mocks_dir']+name)
         #ReduceCat
+
+        # Roohi: remove good seeing region in GAMA09H
+        if 'GAMA09H' in config['mocks_dir'] and config['rm_gama09h_region']==True:
+            good_seeing_mask = (cat[self.config['ra']]>=132.5)&(cat[self.config['ra']]<=140.)&(cat[self.config['dec']]>1.6)    
+            logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(cat)))
+            cat.remove_rows(~good_seeing_mask)
+
         if 'VVDS' in config['mocks_dir']:
             logger.info("Shifting RA by -30 degrees for VVDS")
             change_in_ra = -30.0
