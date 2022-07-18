@@ -649,7 +649,7 @@ class ReduceCatMocks(PipelineStage):
         cat.remove_rows(~mask_bad_visit)
 
         # Roohi: remove good seeing region in GAMA09H
-        if 'GAMA09H' in self.get_input('shape_catalog') and self.config['rm_gama09h_region']==True:
+        if 'GAMA09H' in self.get_input('mock_catalog') and self.config['rm_gama09h_region']==True:
             good_seeing_mask = (cat[self.config['ra']]>=132.5)&(cat[self.config['ra']]<=140.)&(cat[self.config['dec']]>1.6)    
             logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(cat)))
             cat.remove_rows(~good_seeing_mask)
