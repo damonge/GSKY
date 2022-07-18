@@ -714,6 +714,12 @@ class ReduceCat(PipelineStage):
             # np.savez('/tigress/rdalal/s19a_shear/GSKY_outputs/VVDS_ceci/shifted_ras', cat[self.config['ra']])
             print("Max and Min RA", np.max(cat[self.config['ra']]), np.min(cat[self.config['ra']]))
 
+        # Roohi: remove good seeing region in GAMA09H
+        if 'GAMA09H' in self.get_input('shape_catalog') and self.config['rm_gama09h_region']==True:
+            good_seeing_mask = (cat[self.config['ra']]>=132.5)&(cat[self.config['ra']]<=140.)&(cat[self.config['dec']]>1.6)    
+            logger.info("Good seeing removal %f", (np.sum(~good_seeing_mask)/len(cat)))
+            cat.remove_rows(~good_seeing_mask)
+
         # Generate sky projection
         fsk = FlatMapInfo.from_coords(cat[self.config['ra']],
                                       cat[self.config['dec']],
