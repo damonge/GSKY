@@ -78,7 +78,7 @@ PowerSpecter:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: shape_noise_1_arcmin_with_mbias
+  output_run_dir: shape_noise_1_arcmin_with_mbias_no_corr
 
 CovMocks:
   min_snr: 10.
@@ -95,7 +95,7 @@ CovMocks:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: cov_from_mocks_with_mbias
+  output_run_dir: cov_from_mocks_with_mbias_no_corr
   clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/clean_catalog.fits
   mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
 
