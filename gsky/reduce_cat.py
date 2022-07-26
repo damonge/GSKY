@@ -853,11 +853,11 @@ class ReduceCat(PipelineStage):
             fsk.write_flat_map(self.get_output('TPSFres_map'),
                                np.array([mPSFresstar[2], mPSFresstar[2].astype('bool').astype('int')]),
                                descript=['T_PSFres', 'T_PSFres binary mask'])
-            star_cat['i_shape_delta_PSF_e1'][star_cat['i_calib_psf_used']==False] = delta_e_plus
-            star_cat['i_shape_delta_PSF_e2'][star_cat['i_calib_psf_used']==False] = delta_e_cross
-            star_cat['i_shape_delta_PSF_T'][star_cat['i_calib_psf_used']==False] = delta_T
-            star_cat['i_hsmshape_e1'][star_cat['i_calib_psf_used']==False] = e_plus_I
-            star_cat['i_hsmshape_e2'][star_cat['i_calib_psf_used']==False] = e_cross_I
+            # star_cat['i_shape_delta_PSF_e1'] = delta_e_plus
+            # star_cat['i_shape_delta_PSF_e2'] = delta_e_cross
+            # star_cat['i_shape_delta_PSF_T'] = delta_T
+            # star_cat['i_hsmshape_e1'] = e_plus_I
+            # star_cat['i_hsmshape_e2'] = e_cross_I
             star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
         else:
             logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
