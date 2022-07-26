@@ -814,7 +814,7 @@ class ReduceCat(PipelineStage):
             logger.info('Creating e_PSF and T_PSF residual maps.')
             mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat, delta_e_plus, delta_e_cross, fsk)
+            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], delta_e_plus, delta_e_cross, fsk)
             # Write e_PSFres map
             logger.info("Writing output to {}.".format(self.get_output('ePSFres_map')))
             header = fsk.wcs.to_header()
