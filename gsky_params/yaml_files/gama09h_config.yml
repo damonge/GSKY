@@ -175,7 +175,7 @@ CovGauss:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: shape_noise_1_arcmin_with_mbias
+  output_run_dir: pixel_1_arcmin
 
 
 CwspCalc:
