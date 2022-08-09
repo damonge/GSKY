@@ -440,49 +440,49 @@ class CovFromMocks(object):
         self.masks = masks
 
         for j in range(self.nbins):
-            for jj in range(j+1):
+            for jj in range(self.nbins):
+                if jj>=j:
+                    probe1 = 'wl_'+str(j)
+                    probe2 = 'wl_'+str(jj)
+                    spin1 = 2
+                    spin2 = 2
 
-                probe1 = 'wl_'+str(j)
-                probe2 = 'wl_'+str(jj)
-                spin1 = 2
-                spin2 = 2
+                    logger.info('Computing the power spectrum between probe1 = {} and probe2 = {}.'.format(probe1, probe2))
+                    logger.info('Spins: spin1 = {}, spin2 = {}.'.format(spin1, spin2))
 
-                logger.info('Computing the power spectrum between probe1 = {} and probe2 = {}.'.format(probe1, probe2))
-                logger.info('Spins: spin1 = {}, spin2 = {}.'.format(spin1, spin2))
+                    # Define flat sky spin-2 field
+                    emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
+                    f2_1 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
+                                            emaps, purify_b=False)
+                    # Define flat sky spin-2 field
+                    emaps = [gammamaps[jj][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[jj][0][1].reshape([fsk.ny, fsk.nx])]
+                    f2_2 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[jj],
+                                            emaps, purify_b=False)
 
-                # Define flat sky spin-2 field
-                emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
-                f2_1 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
-                                        emaps, purify_b=False)
-                # Define flat sky spin-2 field
-                emaps = [gammamaps[jj][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[jj][0][1].reshape([fsk.ny, fsk.nx])]
-                f2_2 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[jj],
-                                        emaps, purify_b=False)
+                    if self.wsps[j][jj] is None:
+                        logger.info('Workspace element for j, jj = {}, {} not set.'.format(j, jj))
+                        logger.info('Computing workspace element.')
+                        wsp = nmt.NmtWorkspaceFlat()
+                        wsp.compute_coupling_matrix(f2_1, f2_2, b)
+                        self.wsps[j][jj] = wsp
+                        if j != jj:
+                           self.wsps[jj][j] = wsp
+                    else:
+                        logger.info('Workspace element already set for j, jj = {}, {}.'.format(j, jj))
 
-                if self.wsps[j][jj] is None:
-                    logger.info('Workspace element for j, jj = {}, {} not set.'.format(j, jj))
-                    logger.info('Computing workspace element.')
-                    wsp = nmt.NmtWorkspaceFlat()
-                    wsp.compute_coupling_matrix(f2_1, f2_2, b)
-                    self.wsps[j][jj] = wsp
-                    if j != jj:
-                       self.wsps[jj][j] = wsp
-                else:
-                    logger.info('Workspace element already set for j, jj = {}, {}.'.format(j, jj))
+                    # Compute pseudo-Cls
+                    cl_coupled = nmt.compute_coupled_cell_flat(f2_1, f2_2, b)
+                    # Uncoupling pseudo-Cls
+                    cl_uncoupled = self.wsps[j][jj].decouple_cell(cl_coupled)
 
-                # Compute pseudo-Cls
-                cl_coupled = nmt.compute_coupled_cell_flat(f2_1, f2_2, b)
-                # Uncoupling pseudo-Cls
-                cl_uncoupled = self.wsps[j][jj].decouple_cell(cl_coupled)
+                    # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
+                    tempclse = cl_uncoupled[0]
+                    tempclseb = cl_uncoupled[1]
+                    tempclsb = cl_uncoupled[3]
 
-                # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
-                tempclse = cl_uncoupled[0]
-                tempclseb = cl_uncoupled[1]
-                tempclsb = cl_uncoupled[3]
-
-                cls[j, jj, :] = tempclse
-                cls[j+self.params['nspin2'], jj, :] = tempclseb
-                cls[j+self.params['nspin2'], jj+self.params['nspin2'], :] = tempclsb
+                    cls[j, jj, :] = tempclse
+                    cls[j+self.params['nspin2'], jj, :] = tempclseb
+                    cls[j+self.params['nspin2'], jj+self.params['nspin2'], :] = tempclsb
 
         return cls, ells_uncoupled
 
