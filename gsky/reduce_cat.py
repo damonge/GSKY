@@ -36,8 +36,10 @@ class ReduceCat(PipelineStage):
                ('masked_fraction', FitsFile),
                ('seeing_map', FitsFile),
                ('depth_map', FitsFile),
-               ('ePSF_map', FitsFile),
-               ('ePSFres_map', FitsFile),
+               ('ePSF_map_psf_used', FitsFile),
+               ('ePSFres_map_psf_used', FitsFile),
+               ('ePSF_map_psf_not_used', FitsFile),
+               ('ePSFres_map_psf_not_used', FitsFile)
                ('TPSF_map', FitsFile),
                ('TPSFres_map', FitsFile),
                ('star_catalog_final', FitsFile)]
@@ -759,17 +761,17 @@ class ReduceCat(PipelineStage):
         fsk.write_flat_map(self.get_output('star_map'), mstar,
                            descript=descstar)
 
-        # 3- e_PSF
+        # 3- e_PSF - PSF stars
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
             star_cat = Table.read(self.get_input('star_catalog'))
             # TODO: do these stars need to have the same cuts as our sample?
             # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
             logger.info('Creating e_PSF and T_PSF maps.')
-            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat, fsk)
+            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat[star_cat['i_calib_psf_used']==True], fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat, e_plus_I, e_cross_I, fsk)
-            logger.info("Writing output to {}.".format(self.get_output('ePSF_map')))
+            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==True], e_plus_I, e_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('ePSF_map_psf_used')))
             header = fsk.wcs.to_header()
             hdus = []
             shp_mp = [fsk.ny, fsk.nx]
@@ -801,7 +803,7 @@ class ReduceCat(PipelineStage):
             cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
             hdus.append(fits.BinTableHDU.from_columns(cols))
             hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('ePSF_map'), overwrite=True)
+            hdulist.writeto(self.get_output('ePSF_map_psf_used'), overwrite=True)
 
             fsk.write_flat_map(self.get_output('TPSF_map'),
                                np.array([mPSFstar[2], mPSFstar[2].astype('bool').astype('int')]),
@@ -810,13 +812,51 @@ class ReduceCat(PipelineStage):
             star_cat['i_hsmshape_PSF_e2'] = e_cross_I
             star_cat['i_hsmshape_PSF_T'] = T_I
 
-            # 4- delta_e_PSF
-            logger.info('Creating e_PSF and T_PSF residual maps.')
-            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
+            #ePSF - Non-PSF stars
+            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], delta_e_plus, delta_e_cross, fsk)
+            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], e_plus_I, e_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('ePSF_map_psf_not_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('e_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('e_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('ePSF_map_psf_not_used'), overwrite=True)
+
+            # 4- delta_e_PSF - PSF stars
+            logger.info('Creating e_PSF and T_PSF residual maps.')
+            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==True], fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==True], delta_e_plus, delta_e_cross, fsk)
             # Write e_PSFres map
-            logger.info("Writing output to {}.".format(self.get_output('ePSFres_map')))
+            logger.info("Writing output to {}.".format(self.get_output('ePSFres_map_psf_used')))
             header = fsk.wcs.to_header()
             hdus = []
             shp_mp = [fsk.ny, fsk.nx]
@@ -848,7 +888,47 @@ class ReduceCat(PipelineStage):
             cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
             hdus.append(fits.BinTableHDU.from_columns(cols))
             hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('ePSFres_map'), overwrite=True)
+            hdulist.writeto(self.get_output('ePSFres_map_psf_used'), overwrite=True)
+
+            # 4- delta_e_PSF - non-PSF stars
+            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], delta_e_plus, delta_e_cross, fsk)
+            # Write e_PSFres map
+            logger.info("Writing output to {}.".format(self.get_output('ePSFres_map_psf_not_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSFres weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('e_PSFres binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('ePSFres_map_psf_not_used'), overwrite=True)
+
             # Write TPSFres map
             fsk.write_flat_map(self.get_output('TPSFres_map'),
                                np.array([mPSFresstar[2], mPSFresstar[2].astype('bool').astype('int')]),
