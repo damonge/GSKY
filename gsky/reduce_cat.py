@@ -808,9 +808,9 @@ class ReduceCat(PipelineStage):
             fsk.write_flat_map(self.get_output('TPSF_map'),
                                np.array([mPSFstar[2], mPSFstar[2].astype('bool').astype('int')]),
                                descript=['T_PSF', 'T_PSF binary mask'])
-            star_cat['i_hsmshape_PSF_e1'] = e_plus_I
-            star_cat['i_hsmshape_PSF_e2'] = e_cross_I
-            star_cat['i_hsmshape_PSF_T'] = T_I
+            # star_cat['i_hsmshape_PSF_e1'] = e_plus_I
+            # star_cat['i_hsmshape_PSF_e2'] = e_cross_I
+            # star_cat['i_hsmshape_PSF_T'] = T_I
 
             #ePSF - Non-PSF stars
             mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
