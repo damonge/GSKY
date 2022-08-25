@@ -39,7 +39,7 @@ class ReduceCat(PipelineStage):
                ('ePSF_map_psf_used', FitsFile),
                ('ePSFres_map_psf_used', FitsFile),
                ('ePSF_map_psf_not_used', FitsFile),
-               ('ePSFres_map_psf_not_used', FitsFile)
+               ('ePSFres_map_psf_not_used', FitsFile),
                ('TPSF_map', FitsFile),
                ('TPSFres_map', FitsFile),
                ('star_catalog_final', FitsFile)]
