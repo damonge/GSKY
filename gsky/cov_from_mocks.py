@@ -94,8 +94,8 @@ class CovFromMocks(object):
         else:
             self.bin_indxs = range(self.nbins)
         for ibin in self.bin_indxs:
-            # bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])
-            bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])*corr[ibin]
+            bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])
+            # bratio_arr[ibin] = (1+mbias[ibin])*(1+msel[ibin])*corr[ibin]
         # logger.info('bratios: %f %f %f %f %f' % (bratio_arr[0], bratio_arr[1], bratio_arr[2], bratio_arr[3], bratio_arr[4]))
         out   =  datIn.copy()
         # Rescaled gamma by (1+m) and then calculate the distortion delta
