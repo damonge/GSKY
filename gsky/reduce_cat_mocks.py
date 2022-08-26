@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 class ReduceCatMocks(PipelineStage):
     name = "ReduceCatMocks"
-    inputs = [('mock_catalog', FitsFile)]
+    inputs = [('mock_catalog', FitsFile),
+              ('selection_array', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
                ('masked_fraction', FitsFile)]
     # outputs = [('clean_catalog', FitsFile),
@@ -631,23 +632,28 @@ class ReduceCatMocks(PipelineStage):
 
 
         # remove bad visit
-        ra=cat[self.config['ra']]
-        dec=cat[self.config['dec']]
-        def _calDistanceAngle(a1, d1):
-            a2=130.43
-            d2=-1.02
-            a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
-            d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
-            a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
-            d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
-            return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
-        d=_calDistanceAngle(ra,dec)
-        mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
-        mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
-        print("testing")
-        print("Bad visit removal ", np.sum(~mask_bad_visit))
-        print("testing2")
-        cat.remove_rows(~mask_bad_visit)
+        # ra=cat[self.config['ra']]
+        # dec=cat[self.config['dec']]
+        # def _calDistanceAngle(a1, d1):
+        #     a2=130.43
+        #     d2=-1.02
+        #     a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
+        #     d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
+        #     a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
+        #     d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
+        #     return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
+        # d=_calDistanceAngle(ra,dec)
+        # mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
+        # mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        # print("testing")
+        # print("Bad visit removal ", np.sum(~mask_bad_visit))
+        # print("testing2")
+        # cat.remove_rows(~mask_bad_visit)
+
+        #Secondary peak cut, binary star cut
+        logger.info("Seconday peak cut, binary star cut")
+        source_sel_array = Table.read(self.get_input('selection_array'))
+        cat=cat[source_sel_array['dnnz_bin']>0]
 
         # Roohi: remove good seeing region in GAMA09H
         if 'GAMA09H' in self.get_input('mock_catalog') and self.config['rm_gama09h_region']==True:
@@ -657,7 +663,7 @@ class ReduceCatMocks(PipelineStage):
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
-        print("Initial size", len(cat))
+        # print("Initial size", len(cat))
         # sel_raw *= cat['weak_lensing_flag']
         # print("After WL flag", np.sum(sel_raw))
         # sel_raw *= np.logical_not(cat['i_apertureflux_10_mag']>25.5)
@@ -915,7 +921,7 @@ class ReduceCatMocks(PipelineStage):
                     (np.sum(sel)))
         cat.remove_rows(sel)
         logger.info('Final catalog size: %d' % (len(cat)))
-        print('Final catalog size: %d' % (len(cat)))
+        # print('Final catalog size: %d' % (len(cat)))
 
         ####
         # Implement final cuts
