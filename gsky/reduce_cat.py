@@ -374,34 +374,31 @@ class ReduceCat(PipelineStage):
         
         return np.ones(len(cat[self.config['ra']]))
 
-    def shear_calibrate(self, cat):
-        # Galaxies used for shear
-        # mask_shear = cat['shear_cat'] & (cat['tomo_bin'] >= 0)
-        mask_shear = cat['tomo_bin'] >= 0
+    def get_psf_ellip(self, cat):
+        """
+        This utility gets the PSF ellipticity (distortion) from a data or sims
+        catalog.  It does not impose flag cuts, but rather assumes that has already
+        been done
 
-        # Calibrate shears per redshift bin
-        e1cal = np.zeros(len(cat))
-        e2cal = np.zeros(len(cat))
-        mhats = np.zeros(self.nbins)
-        resps = np.zeros(self.nbins)
-        for ibin in range(self.nbins):
-            mask_bin = mask_shear & (cat['tomo_bin'] == ibin)
-            # Compute multiplicative bias
-            mhat = np.average(cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_m'],
-                              weights=cat[mask_bin]['i_hsmshaperegauss_derived_weight'])
-            mhats[ibin] = mhat
-            # Compute responsivity
-            resp = 1. - np.average(cat[mask_bin]['i_hsmshaperegauss_derived_rms_e'] ** 2,
-                                   weights=cat[mask_bin]['i_hsmshaperegauss_derived_weight'])
-            resps[ibin] = resp
+        Parameters:
+        ----------
+        catalog: array_like
+            input galaxy catalog
 
-            e1 = (cat[mask_bin]['i_hsmshaperegauss_e1']/(2.*resp) -
-                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c1']) / (1 + mhat)
-            e2 = (cat[mask_bin]['i_hsmshaperegauss_e2']/(2.*resp) -
-                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c2']) / (1 + mhat)
-            e1cal[mask_bin] = e1
-            e2cal[mask_bin] = e2
-        return e1cal, e2cal, mhats, resps
+        Returns:
+        e1_psf: array_like
+            the first component of ellipticity
+        e2_psf: array_like
+            the second component of ellipticity
+        -------
+        """
+
+        psf_mxx = cat['i_sdssshape_psf_shape11']
+        psf_myy = cat['i_sdssshape_psf_shape22']
+        psf_mxy = cat['i_sdssshape_psf_shape12']
+
+        return (psf_mxx - psf_myy) / (psf_mxx + psf_myy), 2. * \
+            psf_mxy / (psf_mxx + psf_myy)
 
     def get_sel_bias(self, weight, magA10, res):
         """
@@ -443,6 +440,40 @@ class ReduceCat(PipelineStage):
         m_err   =   np.sqrt((0.0089*pedgeM)**2.+(0.0013*pedgeR)**2.)
         a_err   =   np.sqrt((0.0034*pedgeM)**2.+(0.0009*pedgeR)**2.)
         return m_sel,a_sel,m_err,a_err
+
+    def shear_calibrate(self, cat, msel_arr, asel_arr):
+        # Galaxies used for shear
+        # mask_shear = cat['shear_cat'] & (cat['tomo_bin'] >= 0)
+        mask_shear = cat['tomo_bin'] >= 0
+
+        # Calibrate shears per redshift bin
+        e1cal = np.zeros(len(cat))
+        e2cal = np.zeros(len(cat))
+        mhats = np.zeros(self.nbins)
+        resps = np.zeros(self.nbins)
+        for ibin in range(self.nbins):
+            mask_bin = mask_shear & (cat['tomo_bin'] == ibin)
+            # Compute multiplicative bias
+            mhat = np.average(cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_m'],
+                              weights=cat[mask_bin]['i_hsmshaperegauss_derived_weight'])
+            mhats[ibin] = mhat
+            # Compute responsivity
+            resp = 1. - np.average(cat[mask_bin]['i_hsmshaperegauss_derived_rms_e'] ** 2,
+                                   weights=cat[mask_bin]['i_hsmshaperegauss_derived_weight'])
+            resps[ibin] = resp
+            msel = msel_arr[ibin]
+            asel = asel_arr[ibin]
+            e1pg,e2pg=  self.get_psf_ellip(cat) # PSF shape
+
+            e1 = (cat[mask_bin]['i_hsmshaperegauss_e1']/(2.*resp) -
+                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c1']) / (1 + mhat)
+            e2 = (cat[mask_bin]['i_hsmshaperegauss_e2']/(2.*resp) -
+                  cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c2']) / (1 + mhat)
+            e1  =   (e1-e1pg*asel)/(1.+msel)
+            e2  =   (e2-e2pg*asel)/(1.+msel)
+            e1cal[mask_bin] = e1
+            e2cal[mask_bin] = e2
+        return e1cal, e2cal, mhats, resps
 
     def get_w2e2(self, cat, e1, e2, fsk):
         """
@@ -1001,12 +1032,9 @@ class ReduceCat(PipelineStage):
         # cat['pz_secondary_peak'] = np.logical_or(np.logical_or(cat['tomo_bin']==2, cat['tomo_bin']==3), np.logical_and(width95_mizuki<2.7, width95_dnnz<2.7))
 
         ####
-        # Calibrated shears
-        e1c, e2c, mhat, resp = self.shear_calibrate(cat)
-        cat['i_hsmshaperegauss_e1_calib'] = e1c
-        cat['i_hsmshaperegauss_e2_calib'] = e2c
 
         msel_arr = np.zeros(4)
+        asel_arr = np.zeros(4)
         # Measure multiplicative selection bias from data
         if 'ntomo_bins' in self.config:
             self.bin_indxs = self.config['ntomo_bins']
@@ -1020,8 +1048,15 @@ class ReduceCat(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            msel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
+            msel_arr[ibin], asel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
                 subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
+
+        # Calibrated shears
+        e1c, e2c, mhat, resp = self.shear_calibrate(cat, msel_arr, asel_arr)
+        cat['i_hsmshaperegauss_e1_calib'] = e1c
+        cat['i_hsmshaperegauss_e2_calib'] = e2c
+
+        
 
         ####
         # Write final catalog
