@@ -463,7 +463,7 @@ class ReduceCat(PipelineStage):
             resps[ibin] = resp
             msel = msel_arr[ibin]
             asel = asel_arr[ibin]
-            e1pg,e2pg=  self.get_psf_ellip(cat) # PSF shape
+            e1pg,e2pg=  self.get_psf_ellip(cat[mask_bin]) # PSF shape
 
             e1 = (cat[mask_bin]['i_hsmshaperegauss_e1']/(2.*resp) -
                   cat[mask_bin]['i_hsmshaperegauss_derived_shear_bias_c1']) / (1 + mhat)
