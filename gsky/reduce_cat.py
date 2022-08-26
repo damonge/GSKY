@@ -1035,6 +1035,8 @@ class ReduceCat(PipelineStage):
 
         msel_arr = np.zeros(4)
         asel_arr = np.zeros(4)
+        merr_arr = np.zeros(4)
+        aerr_arr = np.zeros(4)
         # Measure multiplicative selection bias from data
         if 'ntomo_bins' in self.config:
             self.bin_indxs = self.config['ntomo_bins']
@@ -1048,7 +1050,7 @@ class ReduceCat(PipelineStage):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
-            msel_arr[ibin], asel_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
+            msel_arr[ibin], asel_arr[ibin], merr_arr[ibin], aerr_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
                 subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
 
         # Calibrated shears
