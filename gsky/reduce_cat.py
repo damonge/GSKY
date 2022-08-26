@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
 class ReduceCat(PipelineStage):
     name = "ReduceCat"
     inputs = [('shape_catalog', FitsFile),
-              ('star_catalog', FitsFile)]
+              ('star_catalog', FitsFile),
+              ('selection_array', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
                ('dust_map', FitsFile),
                ('star_map', FitsFile),
@@ -624,7 +625,6 @@ class ReduceCat(PipelineStage):
         logger.info('Initial catalog size: %d' % (len(cat)))
 
         # Clean nans in ra and dec
-        logger.info("Remove bad visit")
         # sel = np.ones(len(cat), dtype=bool)
         # isnull_names = []
         # for key in cat.keys():
@@ -639,24 +639,30 @@ class ReduceCat(PipelineStage):
         # logger.info("Will drop %d rows" % (len(sel)-np.sum(sel)))
         # cat.remove_columns(isnull_names)
 
-        # remove bad visit
-        ra=cat[self.config['ra']]
-        dec=cat[self.config['dec']]
-        def _calDistanceAngle(a1, d1):
-            a2=130.43
-            d2=-1.02
-            a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
-            d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
-            a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
-            d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
-            return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
-        d=_calDistanceAngle(ra,dec)
-        mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
-        mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
-        print("testing")
-        print("Bad visit removal ", np.sum(~mask_bad_visit))
-        print("testing2")
-        cat.remove_rows(~mask_bad_visit)
+        # logger.info("Remove bad visit")
+        # # remove bad visit
+        # ra=cat[self.config['ra']]
+        # dec=cat[self.config['dec']]
+        # def _calDistanceAngle(a1, d1):
+        #     a2=130.43
+        #     d2=-1.02
+        #     a1_f64 = np.array(a1, dtype = np.float64)*np.pi/180.
+        #     d1_f64 = np.array(d1, dtype = np.float64)*np.pi/180.
+        #     a2_f64 = np.array(a2, dtype = np.float64)*np.pi/180.
+        #     d2_f64 = np.array(d2, dtype = np.float64)*np.pi/180.
+        #     return np.arccos(np.cos(d1_f64)*np.cos(d2_f64)*np.cos(a1_f64-a2_f64)+np.sin(d1_f64)*np.sin(d2_f64))/np.pi*180.
+        # d=_calDistanceAngle(ra,dec)
+        # mask_bad_visit1=(ra>130.5)&(ra<131.5)&(dec<-1.5) # disconnected regions
+        # mask_bad_visit = (d>0.80)&(~mask_bad_visit1)
+        # print("testing")
+        # print("Bad visit removal ", np.sum(~mask_bad_visit))
+        # print("testing2")
+        # cat.remove_rows(~mask_bad_visit)
+
+        #Secondary peak cut, binary star cut
+        logger.info("Seconday peak cut, binary star cut")
+        source_sel_array = Table.read(self.get_input('selection_array'))
+        cat=cat[source_sel_array['dnnz_bin']>0]
 
         # Roohi: remove good seeing region in GAMA09H
         if 'GAMA09H' in self.get_input('shape_catalog') and self.config['rm_gama09h_region']==True:
@@ -667,7 +673,7 @@ class ReduceCat(PipelineStage):
 
         logger.info("Basic cleanup of raw catalog")
         sel_raw = np.ones(len(cat), dtype=bool)
-        print("Initial size", len(cat))
+        # print("Initial size", len(cat))
         # sel_raw *= cat['weak_lensing_flag']
         # print("After WL flag", np.sum(sel_raw))
         # sel_raw *= np.logical_not(cat['i_apertureflux_10_mag']>25.5)
@@ -995,15 +1001,14 @@ class ReduceCat(PipelineStage):
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
 
-        sel_binary_stars = self.get_binarystar_flags(cat)
-        sel_binary_stars = ~sel_binary_stars
-        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended*sel_binary_stars)
+        # sel_binary_stars = self.get_binarystar_flags(cat)
+        # sel_binary_stars = ~sel_binary_stars
+        sel = ~(sel_raw*sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
         print("final size", )
         logger.info("Will lose %d objects to depth, S/N, FDFC, BO mask, and stars" %
                     (np.sum(sel)))
         cat.remove_rows(sel)
         logger.info('Final catalog size: %d' % (len(cat)))
-        print('Final catalog size: %d' % (len(cat)))
 
         ####
         # Implement final cuts
