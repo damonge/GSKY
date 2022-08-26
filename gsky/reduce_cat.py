@@ -1051,7 +1051,7 @@ class ReduceCat(PipelineStage):
                 msk_bin = (cat['tomo_bin'] >= 0)
             subcat = cat[msk_bin]
             msel_arr[ibin], asel_arr[ibin], merr_arr[ibin], aerr_arr[ibin] = self.get_sel_bias(subcat['i_hsmshaperegauss_derived_weight'], 
-                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])[0]
+                subcat['i_apertureflux_10_mag'], subcat['i_hsmshaperegauss_resolution'])
 
         # Calibrated shears
         e1c, e2c, mhat, resp = self.shear_calibrate(cat, msel_arr, asel_arr)
