@@ -49,7 +49,7 @@ class CovPSFMocks(PipelineStage):
         Main routine. This stage:
         - Calls CovFromMocks in cov_from_mocks.py
         """
-        test = CovFromMocks()
+        test = CovPSFFromMocks()
         cls, ells = test.go()
 
         np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
