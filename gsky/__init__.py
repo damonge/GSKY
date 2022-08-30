@@ -14,6 +14,7 @@ from .power_specter import PowerSpecter  # noqa
 from .mock_generator import MockGen
 from .cov_gauss import CovGauss
 from .cov_mocks import CovMocks
+from .cov_psf_mocks import CovPSFMocks
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
 from .like_minimizer import LikeMinimizer
