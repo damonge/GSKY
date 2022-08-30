@@ -467,7 +467,7 @@ class CovPSFFromMocks(object):
                 if map_i == 0:
                     probe1 = 'residual'
                 else:
-                    prob1 = 'leakage'
+                    probe1 = 'leakage'
                 probe2 = 'wl_'+str(j)
                 spin1 = 2
                 spin2 = 2
