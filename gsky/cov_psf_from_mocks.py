@@ -295,7 +295,7 @@ class CovPSFFromMocks(object):
         if not hasattr(self, 'wsps'):
             logger.info('Applying workspace caching.')
             logger.info('Setting up workspace attribute.')
-            self.wsps = [[None for i in range(2)] for ii in range(4)]
+            self.wsps = [[None for i in range(4)] for ii in range(2)]
 
     def go(self):
         config={'plots_dir': None,
