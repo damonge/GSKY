@@ -560,6 +560,7 @@ class ReduceCatMocks(PipelineStage):
         # Calculate the mock ellitpicities
         de    =  dis1*out['noise1_int']+dis2*out['noise2_int'] # for denominators
         dd    =  dis1**2+dis2**2.
+        logger.info('dd: %f' % dd)
         # avoid dividing by zero (this term is 0 under the limit dd->0)
         tmp1  =  np.divide(dis1,dd,out=np.zeros_like(dd),where=dd!=0)
         tmp2  =  np.divide(dis2,dd,out=np.zeros_like(dd),where=dd!=0)
@@ -572,7 +573,7 @@ class ReduceCatMocks(PipelineStage):
         # update e1_mock and e2_mock
         out['e1_mock']=e1_mock/(1.+de)+out['noise1_mea']
         out['e2_mock']=e2_mock/(1.+de)+out['noise2_mea']
-        logger.info('e_old/e_mbias : %f %f', (datIn['e1_mock']/out['e1_mock'], datIn['e2_mock']/out['e2_mock']) )
+        # logger.info('e_old/e_mbias : %f %f', (datIn['e1_mock']/out['e1_mock'], datIn['e2_mock']/out['e2_mock']) )
         return out
 
     def run(self):
