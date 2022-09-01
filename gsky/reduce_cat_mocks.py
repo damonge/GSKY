@@ -561,6 +561,10 @@ class ReduceCatMocks(PipelineStage):
         de    =  dis1*out['noise1_int']+dis2*out['noise2_int'] # for denominators
         dd    =  dis1**2+dis2**2.
         np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_cov/test_real_1143_dd.npy', dd)
+        for i in range(len(dd)):
+            if dd[i]>1.0:
+                dd[i]=1.0
+                logger.info("set large dd value to 1")
         # avoid dividing by zero (this term is 0 under the limit dd->0)
         tmp1  =  np.divide(dis1,dd,out=np.zeros_like(dd),where=dd!=0)
         tmp2  =  np.divide(dis2,dd,out=np.zeros_like(dd),where=dd!=0)
