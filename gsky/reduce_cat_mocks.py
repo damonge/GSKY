@@ -560,7 +560,8 @@ class ReduceCatMocks(PipelineStage):
         # Calculate the mock ellitpicities
         de    =  dis1*out['noise1_int']+dis2*out['noise2_int'] # for denominators
         dd    =  dis1**2+dis2**2.
-        np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_cov/test_real_1143_dd.npy', dd)
+        # np.save('/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_cov/test_real_1143_dd.npy', dd)
+        dd[dd > 1.0] = 1.0
         for i in range(len(dd)):
             if dd[i]>1.0:
                 dd[i]=1.0
