@@ -361,8 +361,8 @@ class CovPSFFromMocks(object):
           'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_GAMA09H.fits',
           'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/clean_catalog_rm20sqdeg.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy',
-          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/ePSFres_map_psf_not_used_rm20sqdeg.fits',
-          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/ePSF_map_psf_not_used_rm20sqdeg.fits'}
+          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/ePSFres_map_psf_used_rm20sqdeg.fits',
+          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/ePSF_map_psf_used_rm20sqdeg.fits'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
         self.mpp = config['mapping']
