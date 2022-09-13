@@ -866,7 +866,7 @@ class ReduceCat(PipelineStage):
                 logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
                 star_cat.remove_rows(good_seeing_mask)
 
-            
+
             # Roohi: move VVDS RAs to be on same side of 0 degrees
             if 'VVDS' in self.get_input('shape_catalog'):
                 logger.info("Shifting star catalog RA by -30 degrees for VVDS")
@@ -1080,8 +1080,8 @@ class ReduceCat(PipelineStage):
 
 
         # Fourth moment PSF - PSF stars
-        if self.get_input('fourth_moment_catalog') != 'NONE':
-            logger.info('Reading fourth moment catalog from {}.'.format(self.get_input('fourth_moment_catalog')))
+        if self.get_input('fourth_moment_catalog_psf') != 'NONE':
+            logger.info('Reading fourth moment catalog from {}.'.format(self.get_input('fourth_moment_catalog_psf')))
             fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
             
             if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
