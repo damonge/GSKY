@@ -860,15 +860,20 @@ class ReduceCat(PipelineStage):
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
             star_cat = Table.read(self.get_input('star_catalog'))
+
+            if 'GAMA09H' in self.get_input('star_catalog') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (star_cat[self.config['ra']]>=132.5)&(star_cat[self.config['ra']]<=140.)&(star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
+                star_cat.remove_rows(good_seeing_mask)
+
+            
             # Roohi: move VVDS RAs to be on same side of 0 degrees
             if 'VVDS' in self.get_input('shape_catalog'):
-                print("Shifting star catalog RA by -30 degrees for VVDS")
-                print("Max and Min RA", np.max(star_cat[self.config['ra']]), np.min(star_cat[self.config['ra']]))
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
                 change_in_ra = -30.0
                 init_ra_vals = star_cat[self.config['ra']].copy()
                 star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
                 star_cat[self.config['ra']][star_cat[self.config['ra']]<0] += 360.0
-                print("Max and Min RA", np.max(star_cat[self.config['ra']]), np.min(star_cat[self.config['ra']]))
 
         mstar, descstar = self.make_star_map(star_cat, fsk,
                                              sel_clean *
@@ -883,6 +888,19 @@ class ReduceCat(PipelineStage):
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
             star_cat = Table.read(self.get_input('star_catalog'))
+
+            if 'GAMA09H' in self.get_input('star_catalog') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (star_cat[self.config['ra']]>=132.5)&(star_cat[self.config['ra']]<=140.)&(star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
+                star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('star_catalog'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = star_cat[self.config['ra']].copy()
+                star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                star_cat[self.config['ra']][star_cat[self.config['ra']]<0] += 360.0
+
             # TODO: do these stars need to have the same cuts as our sample?
             # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
             logger.info('Creating e_PSF and T_PSF maps.')
@@ -1065,6 +1083,19 @@ class ReduceCat(PipelineStage):
         if self.get_input('fourth_moment_catalog') != 'NONE':
             logger.info('Reading fourth moment catalog from {}.'.format(self.get_input('fourth_moment_catalog')))
             fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
+            
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
+                fourth_moment_star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('fourth_moment_catalog_psf'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
+                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
+
             # TODO: do these stars need to have the same cuts as our sample?
             # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
             logger.info('Creating M4_PSF maps.')
@@ -1107,6 +1138,19 @@ class ReduceCat(PipelineStage):
 
             #Fourth moment PSF - Non-PSF stars
             fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
+
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_nonpsf') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
+                fourth_moment_star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('fourth_moment_catalog_nonpsf'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
+                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
+
             mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_maps(fourth_moment_star_cat, fsk)
             logger.info("Computing w2e2.")
             w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
@@ -1146,6 +1190,19 @@ class ReduceCat(PipelineStage):
 
             # 4- delta_M4_PSF - PSF stars
             fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
+            
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
+                fourth_moment_star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('fourth_moment_catalog_psf'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
+                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
+
             logger.info('Creating M4_PSF residual maps.')
             mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
             logger.info("Computing w2e2.")
@@ -1187,6 +1244,19 @@ class ReduceCat(PipelineStage):
 
             # 4- delta_M4_PSF - non-PSF stars
             fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
+            
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_nonpsf') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
+                fourth_moment_star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('fourth_moment_catalog_nonpsf'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
+                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
+
             mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
             logger.info("Computing w2e2.")
             w2e2 = self.get_w2e2(fourth_moment_star_cat, delta_M4_plus, delta_M4_cross, fsk)
