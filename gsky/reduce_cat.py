@@ -328,7 +328,6 @@ class ReduceCat(PipelineStage):
 
         M4_plus_PSF = M40-M04
         M4_cross_PSF = 2*(M13+M31)
-        logger.info(star_cat[self.config['ra']])
         M4_PSFmaps, M4_PSFmasks = createSpin2Map(star_cat[self.config['ra']],
                                              star_cat[self.config['dec']],
                                              M4_plus_PSF, M4_cross_PSF, fsk,
@@ -1151,7 +1150,7 @@ class ReduceCat(PipelineStage):
                 fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
                 fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
 
-            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_maps(fourth_moment_star_cat, fsk)
+            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(fourth_moment_star_cat, fsk)
             logger.info("Computing w2e2.")
             w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
             logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_not_used')))
