@@ -69,6 +69,19 @@ class ASCIIFile(DataFile):
         # Maybe we should check if the file already exists here?
         return open(path, mode)
 
+class CSVFile(DataFile):
+    """
+    A data file in human-readable ASCII.
+    """
+    suffix = 'csv'
+
+    @classmethod
+    def open(cls, path, mode, **kwargs):
+        import fitsio
+        # Fitsio doesn't have pure 'w' modes, just 'rw'.
+        # Maybe we should check if the file already exists here?
+        return open(path, mode)
+
 
 class BinaryFile(DataFile):
     """

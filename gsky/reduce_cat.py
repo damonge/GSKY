@@ -1,5 +1,5 @@
 from ceci import PipelineStage
-from .types import FitsFile
+from .types import FitsFile, CSVFile
 from astropy.table import Table, vstack
 from astropy.coordinates import SkyCoord
 from astropy import units as u
@@ -29,6 +29,8 @@ class ReduceCat(PipelineStage):
     name = "ReduceCat"
     inputs = [('shape_catalog', FitsFile),
               ('star_catalog', FitsFile),
+              ('fourth_moment_catalog_psf', CSVFile),
+              ('fourth_moment_catalog_nonpsf', CSVFile),
               ('selection_array', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
                ('dust_map', FitsFile),
@@ -41,6 +43,10 @@ class ReduceCat(PipelineStage):
                ('ePSFres_map_psf_used', FitsFile),
                ('ePSF_map_psf_not_used', FitsFile),
                ('ePSFres_map_psf_not_used', FitsFile),
+               ('M4_PSF_map_psf_used', FitsFile),
+               ('M4_PSFres_map_psf_used', FitsFile),
+               ('M4_PSF_map_psf_not_used', FitsFile),
+               ('M4_PSFres_map_psf_not_used', FitsFile),
                ('TPSF_map', FitsFile),
                ('TPSFres_map', FitsFile),
                ('star_catalog_final', FitsFile)]
@@ -305,6 +311,37 @@ class ReduceCat(PipelineStage):
 
         return maps, e_plus_I, e_cross_I, T_I
 
+    def make_PSF_fourth_moment_maps(self, star_cat, fsk):
+        """
+        Get fourth moment PSF maps from catalog.
+        Here we go from weighted moments to ellipticities following
+        Hirata & Seljak, 2003, arXiv:0301054
+        :param cat:
+        :return:
+        """
+
+        M40 = star_cat['model_moment40']
+        M31 = star_cat['model_moment31']
+        M22 = star_cat['model_moment22']
+        M13 = star_cat['model_moment13']
+        M04 = star_cat['model_moment04']
+
+        M4_plus_PSF = M40-M04
+        M4_cross_PSF = 2*(M13+M31)
+
+        M4_PSFmaps, M4_PSFmasks = createSpin2Map(star_cat[self.config['ra']],
+                                             star_cat[self.config['dec']],
+                                             M4_plus_PSF, M4_cross_PSF, fsk,
+                                             shearrot=self.config['shearrot'])
+
+        # TPSFmap, _ = createMeanStdMaps(star_cat[self.config['ra']],
+        #                                      star_cat[self.config['dec']],
+        #                                      T_I, fsk)
+
+        maps = [M4_PSFmaps, M4_PSFmasks]
+
+        return maps, M4_plus_PSF, M4_cross_PSF
+
     def make_PSF_res_maps(self, star_cat, fsk):
         """
         Get e_PSF, 1, e_PSF, 2, T_PSF residual maps from catalog.
@@ -345,6 +382,50 @@ class ReduceCat(PipelineStage):
         maps = [ePSFresmaps, ePSFresmasks, TPSFresmap]
 
         return maps, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I
+
+    def make_PSF_res_fourth_moment_maps(self, star_cat, fsk):
+        """
+        Get fourth moment residual maps from catalog.
+        Here we go from weighted moments to ellipticities following
+        Hirata & Seljak, 2003, arXiv:0301054
+        :param cat:
+        :return:
+        """
+
+        M40 = star_cat['star_moment40']
+        M31 = star_cat['star_moment31']
+        M22 = star_cat['star_moment22']
+        M13 = star_cat['star_moment13']
+        M04 = star_cat['star_moment04']
+
+        M4_plus_I = M40-M04
+        M4_cross_I = 2*(M13+M31)
+
+        M40 = star_cat['model_moment40']
+        M31 = star_cat['model_moment31']
+        M22 = star_cat['model_moment22']
+        M13 = star_cat['model_moment13']
+        M04 = star_cat['model_moment04']
+
+        M4_plus_PSF = M40-M04
+        M4_cross_PSF = 2*(M13+M31)
+
+        delta_M4_plus = M4_plus_PSF - M4_plus_I
+        delta_M4_cross = M4_cross_PSF - M4_cross_I
+
+        M4_PSFresmaps, M4_PSFresmasks = createSpin2Map(star_cat[self.config['ra']],
+                                                   star_cat[self.config['dec']],
+                                                   delta_M4_plus, delta_M4_cross, fsk,
+                                                   shearrot=self.config['shearrot'])
+
+        # delta_T = T_PSF - T_I
+
+        # TPSFresmap, _ = createMeanStdMaps(star_cat[self.config['ra']], star_cat[self.config['dec']],
+        #                                            delta_T, fsk)
+
+        maps = [M4_PSFresmaps, M4_PSFresmasks]
+
+        return maps, delta_M4_plus, delta_M4_cross
 
     def shear_cut(self, cat):
         """
@@ -978,6 +1059,175 @@ class ReduceCat(PipelineStage):
             star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
         else:
             logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
+
+
+        # Fourth moment PSF - PSF stars
+        if self.get_input('fourth_moment_catalog') != 'NONE':
+            logger.info('Reading fourth moment catalog from {}.'.format(self.get_input('fourth_moment_catalog')))
+            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
+            # TODO: do these stars need to have the same cuts as our sample?
+            # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
+            logger.info('Creating M4_PSF maps.')
+            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(fourth_moment_star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSF_map_psf_used'), overwrite=True)
+
+            #Fourth moment PSF - Non-PSF stars
+            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
+            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_maps(fourth_moment_star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_not_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSF_map_psf_not_used'), overwrite=True)
+
+            # 4- delta_M4_PSF - PSF stars
+            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
+            logger.info('Creating M4_PSF residual maps.')
+            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(fourth_moment_star_cat, delta_M4_plus, delta_M4_cross, fsk)
+            # Write M4_PSFres map
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSFres_map_psf_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSFres binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSFres_map_psf_used'), overwrite=True)
+
+            # 4- delta_M4_PSF - non-PSF stars
+            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
+            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(fourth_moment_star_cat, delta_M4_plus, delta_M4_cross, fsk)
+            # Write M4_PSFres map
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSFres_map_psf_not_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSFres binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSFres_map_psf_not_used'), overwrite=True)
+
+            star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
+        else:
+            logger.info('Fourth moment catalog not provided. Not generating M4_PSF, M4_PSF residual maps.')
 
         # 5- Binary BO mask
         # mask_bo, fsg = self.make_bo_mask(cat[sel_area], fsk,
