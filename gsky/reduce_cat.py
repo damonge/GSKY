@@ -328,7 +328,7 @@ class ReduceCat(PipelineStage):
 
         M4_plus_PSF = M40-M04
         M4_cross_PSF = 2*(M13+M31)
-
+        logger.info(star_cat[self.config['ra']])
         M4_PSFmaps, M4_PSFmasks = createSpin2Map(star_cat[self.config['ra']],
                                              star_cat[self.config['dec']],
                                              M4_plus_PSF, M4_cross_PSF, fsk,

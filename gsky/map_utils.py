@@ -53,7 +53,7 @@ def createSpin2Map(ra, dec, q, u, fsk, weights=None, shearrot=None):
     nmap = np.bincount(flatmap[id_good],
                        weights=None,
                        minlength=fsk.get_size())
-
+    print(weightsmap)
     qmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
     umap[weightsmap != 0] /= weightsmap[weightsmap != 0]
 
