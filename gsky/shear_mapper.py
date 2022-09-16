@@ -68,14 +68,15 @@ class ShearMapper(PipelineStage):
         :param cat:
         :return:
         """
-
+        maps = []
         gammamaps, gammamasks = createSpin2Map(cat[self.config['ra']],
                                                cat[self.config['dec']],
                                                cat['i_hsmshaperegauss_e1_calib'],
                                                cat['i_hsmshaperegauss_e2_calib'], self.fsk,
                                                weights=cat['i_hsmshaperegauss_derived_weight'],
                                                shearrot=self.config['shearrot'])
-        maps = [gammamaps, gammamasks]
+        maps_combined = [gammamaps, gammamasks]
+        maps.append(maps_combined)
 
         return maps
 
@@ -372,8 +373,8 @@ class ShearMapper(PipelineStage):
         header = self.fsk.wcs.to_header()
         hdus = []
         shp_mp = [self.fsk.ny, self.fsk.nx]
-        logger.info(gammamap_allz)
-        print(gammamap_allz)
+        logger.info(len(gammamap_allz))
+        print(len(gammamap_allz))
         for im, m_list in enumerate(gammamap_allz):
             logger.info(im)
             print(im)
