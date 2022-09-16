@@ -175,7 +175,7 @@ class CovPSFFromMocksFourthMoment(object):
                 ra_full_arr = np.append(ra_full_arr, subcat[config['ra']])
                 dec_full_arr = np.append(dec_full_arr, subcat[config['dec']])
         gammamaps, gammamasks = createSpin2Map(ra_full_arr,
-                                               dec_full_arr
+                                               dec_full_arr,
                                                g1I_full_arr,
                                                g2I_full_arr, fsk,
                                                weights_full_arr,
