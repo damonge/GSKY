@@ -884,16 +884,16 @@ class ReduceCat(PipelineStage):
                            descript=descstar)
 
         # 3- e_PSF - PSF stars
-        if self.get_input('star_catalog') != 'NONE':
-            logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
-            star_cat = Table.read(self.get_input('star_catalog'))
+        if self.get_input('fourth_moment_catalog_psf') != 'NONE':
+            logger.info('Reading star catalog from {}.'.format(self.get_input('fourth_moment_catalog_psf')))
+            star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
 
-            if 'GAMA09H' in self.get_input('star_catalog') and self.config['rm_gama09h_region']==True:
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
                 good_seeing_mask = (star_cat[self.config['ra']]>=132.5)&(star_cat[self.config['ra']]<=140.)&(star_cat[self.config['dec']]>1.6)    
                 logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
                 star_cat.remove_rows(good_seeing_mask)
 
-            if 'VVDS' in self.get_input('star_catalog'):
+            if 'VVDS' in self.get_input('fourth_moment_catalog_psf'):
                 logger.info("Shifting star catalog RA by -30 degrees for VVDS")
                 change_in_ra = -30.0
                 init_ra_vals = star_cat[self.config['ra']].copy()
@@ -903,9 +903,9 @@ class ReduceCat(PipelineStage):
             # TODO: do these stars need to have the same cuts as our sample?
             # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
             logger.info('Creating e_PSF and T_PSF maps.')
-            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat[star_cat['i_calib_psf_used']==True], fsk)
+            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==True], e_plus_I, e_cross_I, fsk)
+            w2e2 = self.get_w2e2(star_cat, e_plus_I, e_cross_I, fsk)
             logger.info("Writing output to {}.".format(self.get_output('ePSF_map_psf_used')))
             header = fsk.wcs.to_header()
             hdus = []
@@ -947,49 +947,11 @@ class ReduceCat(PipelineStage):
             # star_cat['i_hsmshape_PSF_e2'] = e_cross_I
             # star_cat['i_hsmshape_PSF_T'] = T_I
 
-            #ePSF - Non-PSF stars
-            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
-            logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], e_plus_I, e_cross_I, fsk)
-            logger.info("Writing output to {}.".format(self.get_output('ePSF_map_psf_not_used')))
-            header = fsk.wcs.to_header()
-            hdus = []
-            shp_mp = [fsk.ny, fsk.nx]
-            # Maps
-            head = header.copy()
-            head['DESCR'] = ('e_PSF1', 'Description')
-            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
-                                      header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSF2', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('e_PSF weight mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('e_PSF binary mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            # w2e2
-            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
-            hdus.append(fits.BinTableHDU.from_columns(cols))
-            hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('ePSF_map_psf_not_used'), overwrite=True)
-
             # 4- delta_e_PSF - PSF stars
             logger.info('Creating e_PSF and T_PSF residual maps.')
-            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==True], fsk)
+            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==True], delta_e_plus, delta_e_cross, fsk)
+            w2e2 = self.get_w2e2(star_cat, delta_e_plus, delta_e_cross, fsk)
             # Write e_PSFres map
             logger.info("Writing output to {}.".format(self.get_output('ePSFres_map_psf_used')))
             header = fsk.wcs.to_header()
@@ -1025,10 +987,147 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map_psf_used'), overwrite=True)
 
-            # 4- delta_e_PSF - non-PSF stars
-            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat[star_cat['i_calib_psf_used']==False], fsk)
+            #fourth moment PSF - PSF stars
+            logger.info('Creating M4_PSF maps.')
+            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(star_cat[star_cat['i_calib_psf_used']==False], delta_e_plus, delta_e_cross, fsk)
+            w2e2 = self.get_w2e2(star_cat, M4_plus_I, M4_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSF_map_psf_used'), overwrite=True)
+
+            #fourth moment PSF residual - PSF stars
+            logger.info('Creating M4_PSF residual maps.')
+            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(star_cat, delta_M4_plus, delta_M4_cross, fsk)
+            # Write M4_PSFres map
+            logger.info("Writing output to {}.".format(self.get_output('M4_PSFres_map_psf_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('M4_PSFres weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('M4_PSFres binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('M4_PSFres_map_psf_used'), overwrite=True)
+        else:
+            logger.info('PSF star catalog not provided. Not generating e_PSF, M4_PSF, e_PSF residual, M4_PSF residual maps.')
+
+            #Non-PSF stars
+        if self.get_input('fourth_moment_catalog_nonpsf') != 'NONE':
+            logger.info('Reading star catalog from {}.'.format(self.get_input('fourth_moment_catalog_nonpsf')))
+            star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
+
+            if 'GAMA09H' in self.get_input('fourth_moment_catalog_nonpsf') and self.config['rm_gama09h_region']==True:
+                good_seeing_mask = (star_cat[self.config['ra']]>=132.5)&(star_cat[self.config['ra']]<=140.)&(star_cat[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
+                star_cat.remove_rows(good_seeing_mask)
+
+            if 'VVDS' in self.get_input('fourth_moment_catalog_nonpsf'):
+                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
+                change_in_ra = -30.0
+                init_ra_vals = star_cat[self.config['ra']].copy()
+                star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                star_cat[self.config['ra']][star_cat[self.config['ra']]<0] += 360.0
+
+            #ePSF - Non-PSF stars
+            mPSFstar, e_plus_I, e_cross_I, T_I = self.make_PSF_maps(star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(star_cat, e_plus_I, e_cross_I, fsk)
+            logger.info("Writing output to {}.".format(self.get_output('ePSF_map_psf_not_used')))
+            header = fsk.wcs.to_header()
+            hdus = []
+            shp_mp = [fsk.ny, fsk.nx]
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('e_PSF1', 'Description')
+            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
+                                      header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF2', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('e_PSF weight mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('e_PSF binary mask', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
+            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            # w2e2
+            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
+            hdus.append(fits.BinTableHDU.from_columns(cols))
+            hdulist = fits.HDUList(hdus)
+            hdulist.writeto(self.get_output('ePSF_map_psf_not_used'), overwrite=True)
+
+            
+            # 4- delta_e_PSF - non-PSF stars
+            mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat, fsk)
+            logger.info("Computing w2e2.")
+            w2e2 = self.get_w2e2(star_cat, delta_e_plus, delta_e_cross, fsk)
             # Write e_PSFres map
             logger.info("Writing output to {}.".format(self.get_output('ePSFres_map_psf_not_used')))
             header = fsk.wcs.to_header()
@@ -1073,86 +1172,12 @@ class ReduceCat(PipelineStage):
             # star_cat['i_shape_delta_PSF_T'] = delta_T
             # star_cat['i_hsmshape_e1'] = e_plus_I
             # star_cat['i_hsmshape_e2'] = e_cross_I
-            star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
-        else:
-            logger.info('Star catalog not provided. Not generating e_PSF, e_PSF residual maps.')
-
-
-        # Fourth moment PSF - PSF stars
-        if self.get_input('fourth_moment_catalog_psf') != 'NONE':
-            logger.info('Reading fourth moment catalog from {}.'.format(self.get_input('fourth_moment_catalog_psf')))
-            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
-            
-            if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
-                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
-                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
-                fourth_moment_star_cat.remove_rows(good_seeing_mask)
-
-            if 'VVDS' in self.get_input('fourth_moment_catalog_psf'):
-                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
-                change_in_ra = -30.0
-                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
-                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
-
-            # TODO: do these stars need to have the same cuts as our sample?
-            # star_cat_matched = self.match_star_cats(cat, sel_clean*sel_psf_valid*sel_stars, star_cat)
-            logger.info('Creating M4_PSF maps.')
-            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(fourth_moment_star_cat, fsk)
-            logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
-            logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_used')))
-            header = fsk.wcs.to_header()
-            hdus = []
-            shp_mp = [fsk.ny, fsk.nx]
-            # Maps
-            head = header.copy()
-            head['DESCR'] = ('M4_PSF1', 'Description')
-            hdu = fits.PrimaryHDU(data=mPSFstar[0][0].reshape(shp_mp),
-                                      header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('M4_PSF2', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[0][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('M4_PSF weight mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][0].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('M4_PSF binary mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFstar[1][2].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            # w2e2
-            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
-            hdus.append(fits.BinTableHDU.from_columns(cols))
-            hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('M4_PSF_map_psf_used'), overwrite=True)
-
+            # star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
+        
             #Fourth moment PSF - Non-PSF stars
-            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
-
-            if 'GAMA09H' in self.get_input('fourth_moment_catalog_nonpsf') and self.config['rm_gama09h_region']==True:
-                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
-                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
-                fourth_moment_star_cat.remove_rows(good_seeing_mask)
-
-            if 'VVDS' in self.get_input('fourth_moment_catalog_nonpsf'):
-                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
-                change_in_ra = -30.0
-                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
-                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
-
-            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(fourth_moment_star_cat, fsk)
+            mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(fourth_moment_star_cat, M4_plus_I, M4_cross_I, fsk)
+            w2e2 = self.get_w2e2(star_cat, M4_plus_I, M4_cross_I, fsk)
             logger.info("Writing output to {}.".format(self.get_output('M4_PSF_map_psf_not_used')))
             header = fsk.wcs.to_header()
             hdus = []
@@ -1187,78 +1212,10 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('M4_PSF_map_psf_not_used'), overwrite=True)
 
-            # 4- delta_M4_PSF - PSF stars
-            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_psf'))
-            
-            if 'GAMA09H' in self.get_input('fourth_moment_catalog_psf') and self.config['rm_gama09h_region']==True:
-                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
-                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
-                fourth_moment_star_cat.remove_rows(good_seeing_mask)
-
-            if 'VVDS' in self.get_input('fourth_moment_catalog_psf'):
-                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
-                change_in_ra = -30.0
-                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
-                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
-
-            logger.info('Creating M4_PSF residual maps.')
-            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
-            logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(fourth_moment_star_cat, delta_M4_plus, delta_M4_cross, fsk)
-            # Write M4_PSFres map
-            logger.info("Writing output to {}.".format(self.get_output('M4_PSFres_map_psf_used')))
-            header = fsk.wcs.to_header()
-            hdus = []
-            shp_mp = [fsk.ny, fsk.nx]
-            # Maps
-            head = header.copy()
-            head['DESCR'] = ('M4_PSFres1', 'Description')
-            hdu = fits.PrimaryHDU(data=mPSFresstar[0][0].reshape(shp_mp),
-                                      header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('M4_PSFres2', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[0][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head = header.copy()
-            head['DESCR'] = ('M4_PSFres weight mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][0].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('M4_PSFres binary mask', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][1].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
-                                header=head)
-            hdus.append(hdu)
-            # w2e2
-            cols = [fits.Column(name='w2e2', array=np.atleast_1d(w2e2), format='E')]
-            hdus.append(fits.BinTableHDU.from_columns(cols))
-            hdulist = fits.HDUList(hdus)
-            hdulist.writeto(self.get_output('M4_PSFres_map_psf_used'), overwrite=True)
-
             # 4- delta_M4_PSF - non-PSF stars
-            fourth_moment_star_cat = Table.read(self.get_input('fourth_moment_catalog_nonpsf'))
-            
-            if 'GAMA09H' in self.get_input('fourth_moment_catalog_nonpsf') and self.config['rm_gama09h_region']==True:
-                good_seeing_mask = (fourth_moment_star_cat[self.config['ra']]>=132.5)&(fourth_moment_star_cat[self.config['ra']]<=140.)&(fourth_moment_star_cat[self.config['dec']]>1.6)    
-                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(fourth_moment_star_cat)))
-                fourth_moment_star_cat.remove_rows(good_seeing_mask)
-
-            if 'VVDS' in self.get_input('fourth_moment_catalog_nonpsf'):
-                logger.info("Shifting star catalog RA by -30 degrees for VVDS")
-                change_in_ra = -30.0
-                init_ra_vals = fourth_moment_star_cat[self.config['ra']].copy()
-                fourth_moment_star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-                fourth_moment_star_cat[self.config['ra']][fourth_moment_star_cat[self.config['ra']]<0] += 360.0
-
-            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(fourth_moment_star_cat, fsk)
+            mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
-            w2e2 = self.get_w2e2(fourth_moment_star_cat, delta_M4_plus, delta_M4_cross, fsk)
+            w2e2 = self.get_w2e2(star_cat, delta_M4_plus, delta_M4_cross, fsk)
             # Write M4_PSFres map
             logger.info("Writing output to {}.".format(self.get_output('M4_PSFres_map_psf_not_used')))
             header = fsk.wcs.to_header()
@@ -1294,9 +1251,9 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('M4_PSFres_map_psf_not_used'), overwrite=True)
 
-            star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
+            # star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
         else:
-            logger.info('Fourth moment catalog not provided. Not generating M4_PSF, M4_PSF residual maps.')
+            logger.info('Non-PSF star catalog not provided. Not generating e_PSF, e_PSF residual, M4_PSF, M4_PSF residual maps.')
 
         # 5- Binary BO mask
         # mask_bo, fsg = self.make_bo_mask(cat[sel_area], fsk,
