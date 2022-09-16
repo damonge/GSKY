@@ -860,23 +860,23 @@ class ReduceCat(PipelineStage):
 
         if self.get_input('star_catalog') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('star_catalog')))
-            star_cat = Table.read(self.get_input('star_catalog'))
+            star_cat_old = Table.read(self.get_input('star_catalog'))
 
             if 'GAMA09H' in self.get_input('star_catalog') and self.config['rm_gama09h_region']==True:
-                good_seeing_mask = (star_cat[self.config['ra']]>=132.5)&(star_cat[self.config['ra']]<=140.)&(star_cat[self.config['dec']]>1.6)    
-                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
-                star_cat.remove_rows(good_seeing_mask)
+                good_seeing_mask = (star_cat_old[self.config['ra']]>=132.5)&(star_cat_old[self.config['ra']]<=140.)&(star_cat_old[self.config['dec']]>1.6)    
+                logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat_old)))
+                star_cat_old.remove_rows(good_seeing_mask)
 
 
             # Roohi: move VVDS RAs to be on same side of 0 degrees
             if 'VVDS' in self.get_input('shape_catalog'):
                 logger.info("Shifting star catalog RA by -30 degrees for VVDS")
                 change_in_ra = -30.0
-                init_ra_vals = star_cat[self.config['ra']].copy()
-                star_cat[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
-                star_cat[self.config['ra']][star_cat[self.config['ra']]<0] += 360.0
+                init_ra_vals = star_cat_old[self.config['ra']].copy()
+                star_cat_old[self.config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
+                star_cat_old[self.config['ra']][star_cat_old[self.config['ra']]<0] += 360.0
 
-        mstar, descstar = self.make_star_map(star_cat, fsk,
+        mstar, descstar = self.make_star_map(star_cat_old, fsk,
                                              sel_clean *
                                              sel_maglim *
                                              sel_stars *
@@ -1285,11 +1285,11 @@ class ReduceCat(PipelineStage):
                            descript='Masked fraction')
 
         # 7- Compute depth map
-        depth, desc = self.make_depth_map(star_cat, fsk)
+        depth, desc = self.make_depth_map(star_cat_old, fsk)
         fsk.write_flat_map(self.get_output('depth_map'),
                            depth, descript=desc)
 
-        seeing, seeing_desc = self.make_seeing_map(star_cat, fsk)
+        seeing, seeing_desc = self.make_seeing_map(star_cat_old, fsk)
         fsk.write_flat_map(self.get_output('seeing_map'),
                            seeing, descript=seeing_desc)
 
