@@ -146,6 +146,12 @@ class CovPSFFromMocksFourthMoment(object):
                 # msk_bin = (cat['tomo_bin'] >= 0) & (cat['shear_cat'])
                 msk_bin = (cat['tomo_bin'] >= 0) 
             subcat = cat[msk_bin]
+            if ibin==0:
+                g1I_full_arr = []
+                g2I_full_arr = []
+                weights_full_arr = []
+                ra_full_arr = []
+                dec_full_arr = []
             if config['shape_noise'] == False:
                 gammamaps, gammamasks = createSpin2Map(subcat[config['ra']],
                                                        subcat[config['dec']],
@@ -163,15 +169,19 @@ class CovPSFFromMocksFourthMoment(object):
                 # g2I =   subcat['e2_mock']/2./eres
                 g1I =   subcat['e1_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
                 g2I =   subcat['e2_mock']/2./eres/(1.+mbias[ibin])/(1.+msel[ibin])
-
-                gammamaps, gammamasks = createSpin2Map(subcat[config['ra']],
-                                                       subcat[config['dec']],
-                                                       g1I,
-                                                       g2I, fsk,
-                                                       weights=subcat['weight'],
-                                                       shearrot=config['shearrot'])
-            maps_combined = [gammamaps, gammamasks]
-            maps.append(maps_combined)
+                g1I_full_arr = np.append(g1I_full_arr, g1I)
+                g2I_full_arr = np.append(g2I_full_arr, g2I)
+                weights_full_arr = np.append(weights_full_arr, subcat['weight'])
+                ra_full_arr = np.append(ra_full_arr, subcat[config['ra']])
+                dec_full_arr = np.append(dec_full_arr, subcat[config['dec']])
+        gammamaps, gammamasks = createSpin2Map(ra_full_arr,
+                                               dec_full_arr
+                                               g1I_full_arr,
+                                               g2I_full_arr, fsk,
+                                               weights_full_arr,
+                                               shearrot=config['shearrot'])
+        maps_combined = [gammamaps, gammamasks]
+        maps.append(maps_combined)
 
         return maps
 
@@ -299,7 +309,7 @@ class CovPSFFromMocksFourthMoment(object):
         if not hasattr(self, 'wsps'):
             logger.info('Applying workspace caching.')
             logger.info('Setting up workspace attribute.')
-            self.wsps = [[None for i in range(4)] for ii in range(2)]
+            self.wsps = [[None for i in range(1)] for ii in range(4)]
 
     def go(self):
         config={'plots_dir': None,
@@ -316,8 +326,8 @@ class CovPSFFromMocksFourthMoment(object):
           'nz_bin_max': 4.0,
           'shape_noise': True,
           'rm_gama09h_region': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -357,12 +367,14 @@ class CovPSFFromMocksFourthMoment(object):
           'nz_bin_max': 4.0,
           'shape_noise': True,
           'rm_gama09h_region': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/VVDS/',
-          'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_VVDS.fits',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/clean_catalog.fits',
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/',
+          'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_XMM.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy',
-          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/M4_PSFres_map_psf_used.fits',
-          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/VVDS_ceci/M4_PSF_map_psf_used.fits'}
+          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/PSFres_map_psf_used.fits',
+          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/PSF_map_psf_used.fits',
+          'm4_psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/M4_PSFres_map_psf_used.fits',
+          'm4_psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/M4_PSF_map_psf_used.fits'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
         self.mpp = config['mapping']
@@ -420,95 +432,119 @@ class CovPSFFromMocksFourthMoment(object):
             self.bin_indxs = config['ntomo_bins']
         else:
             self.bin_indxs = range(self.nbins)
-        logger.info('getting e2rms')
-        e2rms = self.get_e2rms(cat, mhat_arr, msel_arr, config)
-        logger.info('getting w2e2')
-        w2e2 = self.get_w2e2(cat, mhat_arr, msel_arr, fsk, config, return_maps=False)
+        # logger.info('getting e2rms')
+        # e2rms = self.get_e2rms(cat, mhat_arr, msel_arr, config)
+        # logger.info('getting w2e2')
+        # w2e2 = self.get_w2e2(cat, mhat_arr, msel_arr, fsk, config, return_maps=False)
         logger.info('getting gamma maps')
         gammamaps = self.get_gamma_maps(cat, mhat_arr, msel_arr, fsk, config)
 
         res_hdulist = fits.open(config['psf_residual_map'])
-        fsk, resmaps = read_flat_map(None, hdu=[res_hdulist[0], res_hdulist[1]])
+        fsk_res, resmaps = read_flat_map(None, hdu=[res_hdulist[0], res_hdulist[1]])
         _, masks = read_flat_map(None, hdu=[res_hdulist[2], res_hdulist[3]])
         weight = masks[0]
-        f_res = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly),
-                                    weight.reshape([fsk.ny,fsk.nx]),
-                                    [resmaps[0].reshape([fsk.ny,fsk.nx]), resmaps[1].reshape([fsk.ny,fsk.nx])],
+        f_res = nmt.NmtFieldFlat(np.radians(fsk_res.lx), np.radians(fsk_res.ly),
+                                    weight.reshape([fsk_res.ny,fsk_res.nx]),
+                                    [resmaps[0].reshape([fsk_res.ny,fsk_res.nx]), resmaps[1].reshape([fsk_res.ny,fsk_res.nx])],
                                     templates=None)
 
         psf_hdulist = fits.open(config['psf_leakage_map'])
-        fsk, psfmaps = read_flat_map(None, hdu=[psf_hdulist[0], psf_hdulist[1]])
+        fsk_psf, psfmaps = read_flat_map(None, hdu=[psf_hdulist[0], psf_hdulist[1]])
         _, masks = read_flat_map(None, hdu=[psf_hdulist[2], psf_hdulist[3]])
         weight = masks[0]
-        f_psf = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly),
-                                    weight.reshape([fsk.ny,fsk.nx]),
-                                    [psfmaps[0].reshape([fsk.ny,fsk.nx]), psfmaps[1].reshape([fsk.ny,fsk.nx])],
+        f_psf = nmt.NmtFieldFlat(np.radians(fsk_psf.lx), np.radians(fsk_psf.ly),
+                                    weight.reshape([fsk_psf.ny,fsk_psf.nx]),
+                                    [psfmaps[0].reshape([fsk_psf.ny,fsk_psf.nx]), psfmaps[1].reshape([fsk_psf.ny,fsk_psf.nx])],
+                                    templates=None)
+
+        m4_res_hdulist = fits.open(config['m4_psf_residual_map'])
+        fsk_m4_res, m4_resmaps = read_flat_map(None, hdu=[m4_res_hdulist[0], m4_res_hdulist[1]])
+        _, masks = read_flat_map(None, hdu=[m4_res_hdulist[2], m4_res_hdulist[3]])
+        weight = masks[0]
+        f_m4_res = nmt.NmtFieldFlat(np.radians(fsk_m4_res.lx), np.radians(fsk_m4_res.ly),
+                                    weight.reshape([fsk_m4_res.ny,fsk_m4_res.nx]),
+                                    [m4_resmaps[0].reshape([fsk_m4_res.ny,fsk_m4_res.nx]), m4_resmaps[1].reshape([fsk_m4_res.ny,fsk_m4_res.nx])],
+                                    templates=None)
+
+        m4_psf_hdulist = fits.open(config['m4_psf_leakage_map'])
+        fsk_m4_psf, m4_psfmaps = read_flat_map(None, hdu=[m4_psf_hdulist[0], m4_psf_hdulist[1]])
+        _, masks = read_flat_map(None, hdu=[m4_psf_hdulist[2], m4_psf_hdulist[3]])
+        weight = masks[0]
+        f_m4_psf = nmt.NmtFieldFlat(np.radians(fsk_m4_psf.lx), np.radians(fsk_m4_psf.ly),
+                                    weight.reshape([fsk_m4_psf.ny,fsk_m4_psf.nx]),
+                                    [m4_psfmaps[0].reshape([fsk_m4_psf.ny,fsk_m4_psf.nx]), m4_psfmaps[1].reshape([fsk_m4_psf.ny,fsk_m4_psf.nx])],
                                     templates=None)
 
         #PowerSpecter
-        cls = np.zeros((2, 4, self.params['nell']))
+        cls = np.zeros((4, 1, self.params['nell']))
 
         b = nmt.NmtBinFlat(self.params['l0_bins'], self.params['lf_bins'])
         ells_uncoupled = b.get_effective_ells()
 
         masks = []
         weightmask=True
-        for i in range(self.params['nprobes']):
-            if weightmask ==True:
-                logger.info('Using weightmask.')
-                print(len(gammamaps))
-                mask_temp = gammamaps[i][1][0]
-                logger.info(mask_temp)
-            else:
-                logger.info('Using binary mask.')
-                mask_temp = gammamaps[i][1][1]
-            mask_temp = np.array(mask_temp).reshape([fsk.ny, fsk.nx])
-            masks.append(mask_temp)
+        if weightmask ==True:
+            logger.info('Using weightmask.')
+            mask_temp = gammamaps[0][1][0]
+            logger.info(mask_temp)
+        else:
+            logger.info('Using binary mask.')
+            mask_temp = gammamaps[0][1][1]
+        mask_temp = np.array(mask_temp).reshape([fsk.ny, fsk.nx])
+        masks.append(mask_temp)
         
         self.masks = masks
-        for map_i in range(2):
-            for j in range(self.nbins):
-                if map_i == 0:
-                    probe1 = 'residual'
-                else:
-                    probe1 = 'leakage'
-                probe2 = 'wl_'+str(j)
-                spin1 = 2
-                spin2 = 2
 
-                logger.info('Computing the power spectrum between probe1 = {} and probe2 = {}.'.format(probe1, probe2))
-                logger.info('Spins: spin1 = {}, spin2 = {}.'.format(spin1, spin2))
+        emaps = [gammamaps[0][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[0][0][1].reshape([fsk.ny, fsk.nx])]
+        f2_2 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[0], emaps, purify_b=False)
+        for map_i in range(4):
+            j=0
+            if map_i == 0:
+                probe1 = 'residual'
+            elif map_i == 1:
+                probe1 = 'leakage'
+            elif map_i == 2:
+                probe1 = 'm4residual'
+            elif map_i == 3:
+                probe1 = 'm4leakage'
+            probe2 = 'wl'
+            spin1 = 2
+            spin2 = 2
 
-                # Define flat sky spin-2 field
-                # emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
-                # f2_1 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
-                #                         emaps, purify_b=False)
-                if map_i==0:
-                    f2_1 = f_res
-                else:
-                    f2_1 = f_psf
-                # Define flat sky spin-2 field
-                emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
-                f2_2 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
-                                        emaps, purify_b=False)
+            logger.info('Computing the power spectrum between probe1 = {} and probe2 = {}.'.format(probe1, probe2))
+            logger.info('Spins: spin1 = {}, spin2 = {}.'.format(spin1, spin2))
 
-                if self.wsps[map_i][j] is None:
-                    logger.info('Workspace element for probe1, probe2 = {}, {} not set.'.format(probe1, probe2))
-                    logger.info('Computing workspace element.')
-                    wsp = nmt.NmtWorkspaceFlat()
-                    wsp.compute_coupling_matrix(f2_1, f2_2, b)
-                    self.wsps[map_i][j] = wsp
-                else:
-                    logger.info('Workspace element already set for probe1, probe2 = {}, {} not set.'.format(probe1, probe2))
-                # Compute pseudo-Cls
-                cl_coupled = nmt.compute_coupled_cell_flat(f2_1, f2_2, b)
-                # Uncoupling pseudo-Cls
-                cl_uncoupled = self.wsps[map_i][j].decouple_cell(cl_coupled)
+            # Define flat sky spin-2 field
+            # emaps = [gammamaps[j][0][0].reshape([fsk.ny, fsk.nx]), gammamaps[j][0][1].reshape([fsk.ny, fsk.nx])]
+            # f2_1 = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly), self.masks[j],
+            #                         emaps, purify_b=False)
+            if map_i==0:
+                f2_1 = f_res
+            elif map_i==1:
+                f2_1 = f_psf
+            elif map_i==2:
+                f2_1 = f_m4_res
+            elif map_i==3:
+                f2_1 = f_m4_psf
+            # Define flat sky spin-2 field
 
-                # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
-                tempclse = cl_uncoupled[0]
+            if self.wsps[map_i][j] is None:
+                logger.info('Workspace element for probe1, probe2 = {}, {} not set.'.format(probe1, probe2))
+                logger.info('Computing workspace element.')
+                wsp = nmt.NmtWorkspaceFlat()
+                wsp.compute_coupling_matrix(f2_1, f2_2, b)
+                self.wsps[map_i][j] = wsp
+            else:
+                logger.info('Workspace element already set for probe1, probe2 = {}, {} not set.'.format(probe1, probe2))
+            # Compute pseudo-Cls
+            cl_coupled = nmt.compute_coupled_cell_flat(f2_1, f2_2, b)
+            # Uncoupling pseudo-Cls
+            cl_uncoupled = self.wsps[map_i][j].decouple_cell(cl_coupled)
 
-                cls[map_i, j, :] = tempclse
+            # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
+            tempclse = cl_uncoupled[0]
+
+            cls[map_i, j, :] = tempclse
 
         return cls, ells_uncoupled
 
