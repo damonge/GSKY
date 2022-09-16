@@ -19,6 +19,7 @@ class ShearMapper(PipelineStage):
               # ('cosmos_weights', FitsFile),
               # ('pdf_matched', ASCIIFile)]
     outputs = [('gamma_maps', FitsFile),
+                ('gamma_map_allz', FitsFile),
                ('w2e2_maps', FitsFile)]
     config_options = {'mask_type': 'sirius',
                       'pz_code': 'dnnz',
@@ -58,6 +59,23 @@ class ShearMapper(PipelineStage):
                                                    shearrot=self.config['shearrot'])
             maps_combined = [gammamaps, gammamasks]
             maps.append(maps_combined)
+
+        return maps
+
+    def get_gamma_maps_allz(self, cat):
+        """
+        Get gamma1, gamma2 maps and corresponding mask from catalog.
+        :param cat:
+        :return:
+        """
+
+        gammamaps, gammamasks = createSpin2Map(cat[self.config['ra']],
+                                               cat[self.config['dec']],
+                                               cat['i_hsmshaperegauss_e1_calib'],
+                                               cat['i_hsmshaperegauss_e2_calib'], self.fsk,
+                                               weights=cat['i_hsmshaperegauss_derived_weight'],
+                                               shearrot=self.config['shearrot'])
+        maps = [gammamaps, gammamasks]
 
         return maps
 
@@ -280,6 +298,8 @@ class ShearMapper(PipelineStage):
         logger.info("Creating shear maps and corresponding masks.")
         gammamaps = self.get_gamma_maps(cat)
 
+        gammamap_allz = self.get_gamma_maps_allz(cat)
+
         logger.info("Writing output to {}.".format(self.get_output('gamma_maps')))
         header = self.fsk.wcs.to_header()
         hdus = []
@@ -346,6 +366,74 @@ class ShearMapper(PipelineStage):
 
         hdulist = fits.HDUList(hdus)
         hdulist.writeto(self.get_output('gamma_maps'), overwrite=True)
+
+
+        logger.info("Writing output to {}.".format(self.get_output('gamma_map_allz')))
+        header = self.fsk.wcs.to_header()
+        hdus = []
+        shp_mp = [self.fsk.ny, self.fsk.nx]
+        for im, m_list in enumerate(gammamap_allz):
+            if im == len(gammamap_allz) - 1:
+                bin_tag = 'all'
+            else:
+                bin_tag = im + 1
+
+            # Maps
+            head = header.copy()
+            head['DESCR'] = ('gamma1, bin {}'.format(bin_tag),
+                             'Description')
+            if im == 0:
+                hdu = fits.PrimaryHDU(data=m_list[0][0].reshape(shp_mp),
+                                      header=head)
+            else:
+                hdu = fits.ImageHDU(data=m_list[0][0].reshape(shp_mp),
+                                    header=head)
+
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('gamma2, bin {}'.format(bin_tag), 'Description')
+            hdu = fits.ImageHDU(data=m_list[0][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head = header.copy()
+            head['DESCR'] = ('gamma weight mask, bin {}'.format(bin_tag),
+                             'Description')
+            hdu = fits.ImageHDU(data=m_list[1][0].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('gamma binary mask, bin {}'.format(bin_tag),
+                             'Description')
+            hdu = fits.ImageHDU(data=m_list[1][1].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+            head['DESCR'] = ('counts map (shear sample), bin {}'.format(bin_tag),
+                             'Description')
+            hdu = fits.ImageHDU(data=m_list[1][2].reshape(shp_mp),
+                                header=head)
+            hdus.append(hdu)
+
+            # cols = [fits.Column(name='z_i', array=pzs_cosmos[im, 0, :],
+            #                     format='E'),
+            #         fits.Column(name='z_f', array=pzs_cosmos[im, 1, :],
+            #                     format='E'),
+            #         fits.Column(name='nz_cosmos', array=pzs_cosmos[im, 2, :],
+            #                     format='E'),
+            #         fits.Column(name='enz_cosmos', array=pzs_cosmos[im, 3, :],
+            #                     format='E')]
+            # for n in self.pdf_files.keys():
+            #     cols.append(fits.Column(name='nz_'+n,
+            #                             array=pzs_stack[n][im, 2, :],
+            #                             format='E'))
+            # hdus.append(fits.BinTableHDU.from_columns(cols))
+        # e2rms
+        cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
+                fits.Column(name='w2e2', array=w2e2, format='E'),
+                fits.Column(name='mhats', array=mhats, format='E'),
+                fits.Column(name='resps', array=resps, format='E')]
+        hdus.append(fits.BinTableHDU.from_columns(cols))
+
+        hdulist = fits.HDUList(hdus)
+        hdulist.writeto(self.get_output('gamma_map_allz'), overwrite=True)
 
         if self.get_output('w2e2_maps') != 'NONE':
             logger.info("Writing w2e2 maps to {}.".format(self.get_output('w2e2_maps')))
