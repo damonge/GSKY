@@ -701,6 +701,8 @@ class ReduceCat(PipelineStage):
 
         if band not in self.bands:
             raise ValueError("Band "+band+" not available")
+        
+        logger.info('Version test')
 
         logger.info('Initial catalog size: %d' % (len(cat)))
 
@@ -882,7 +884,7 @@ class ReduceCat(PipelineStage):
                                              sel_blended)
         fsk.write_flat_map(self.get_output('star_map'), mstar,
                            descript=descstar)
-
+        logger.info('Version test 2')
         # 3- e_PSF - PSF stars
         if self.get_input('fourth_moment_catalog_psf') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('fourth_moment_catalog_psf')))
@@ -946,7 +948,9 @@ class ReduceCat(PipelineStage):
             # star_cat['i_hsmshape_PSF_e1'] = e_plus_I
             # star_cat['i_hsmshape_PSF_e2'] = e_cross_I
             # star_cat['i_hsmshape_PSF_T'] = T_I
-
+            
+            logger.info('Version test 3')
+            
             # 4- delta_e_PSF - PSF stars
             logger.info('Creating e_PSF and T_PSF residual maps.')
             mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat, fsk)
@@ -987,6 +991,8 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSFres_map_psf_used'), overwrite=True)
 
+            logger.info('Version test 4')
+            
             #fourth moment PSF - PSF stars
             logger.info('Creating M4_PSF maps.')
             mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(star_cat, fsk)
@@ -1026,6 +1032,8 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('M4_PSF_map_psf_used'), overwrite=True)
 
+            logger.info('Version test 5')
+            
             #fourth moment PSF residual - PSF stars
             logger.info('Creating M4_PSF residual maps.')
             mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(star_cat, fsk)
@@ -1068,6 +1076,8 @@ class ReduceCat(PipelineStage):
         else:
             logger.info('PSF star catalog not provided. Not generating e_PSF, M4_PSF, e_PSF residual, M4_PSF residual maps.')
 
+            logger.info('Version test 6')
+            
             #Non-PSF stars
         if self.get_input('fourth_moment_catalog_nonpsf') != 'NONE':
             logger.info('Reading star catalog from {}.'.format(self.get_input('fourth_moment_catalog_nonpsf')))
@@ -1123,7 +1133,9 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('ePSF_map_psf_not_used'), overwrite=True)
 
-            
+ 
+            logger.info('Version test 7')
+                       
             # 4- delta_e_PSF - non-PSF stars
             mPSFresstar, delta_e_plus, delta_e_cross, delta_T, e_plus_I, e_cross_I = self.make_PSF_res_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
@@ -1173,7 +1185,9 @@ class ReduceCat(PipelineStage):
             # star_cat['i_hsmshape_e1'] = e_plus_I
             # star_cat['i_hsmshape_e2'] = e_cross_I
             # star_cat.write(self.get_output('star_catalog_final'), overwrite=True)
-        
+
+            logger.info('Version test 8')
+                    
             #Fourth moment PSF - Non-PSF stars
             mPSFstar, M4_plus_I, M4_cross_I = self.make_PSF_fourth_moment_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
@@ -1212,6 +1226,8 @@ class ReduceCat(PipelineStage):
             hdulist = fits.HDUList(hdus)
             hdulist.writeto(self.get_output('M4_PSF_map_psf_not_used'), overwrite=True)
 
+            logger.info('Version test 9')
+            
             # 4- delta_M4_PSF - non-PSF stars
             mPSFresstar, delta_M4_plus, delta_M4_cross = self.make_PSF_res_fourth_moment_maps(star_cat, fsk)
             logger.info("Computing w2e2.")
