@@ -372,7 +372,9 @@ class ShearMapper(PipelineStage):
         header = self.fsk.wcs.to_header()
         hdus = []
         shp_mp = [self.fsk.ny, self.fsk.nx]
+        logger.info(gammamap_allz.shape)
         for im, m_list in enumerate(gammamap_allz):
+            logger.info(im)
             if im == len(gammamap_allz) - 1:
                 bin_tag = 'all'
             else:
