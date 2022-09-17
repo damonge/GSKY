@@ -1,4 +1,4 @@
-fglobal:
+global:
   depth_cut: 24.5
   mapping:
     #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
