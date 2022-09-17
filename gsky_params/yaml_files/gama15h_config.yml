@@ -133,7 +133,7 @@ CovPSFMocksFourthMoment:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: cov_psf_from_mocks_psf_not_used
+  output_run_dir: cov_psf_from_mocks_psf_used
   clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/clean_catalog.fits
   mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
 
