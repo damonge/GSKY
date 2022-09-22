@@ -327,7 +327,7 @@ class ReduceCat(PipelineStage):
         M04 = star_cat['model_moment04']
 
         M4_plus_PSF = M40-M04
-        M4_cross_PSF = 2*(M13+M31)
+        M4_cross_PSF = -2*(M13+M31)
         M4_PSFmaps, M4_PSFmasks = createSpin2Map(star_cat[self.config['ra']],
                                              star_cat[self.config['dec']],
                                              M4_plus_PSF, M4_cross_PSF, fsk,
@@ -398,7 +398,7 @@ class ReduceCat(PipelineStage):
         M04 = star_cat['star_moment04']
 
         M4_plus_I = M40-M04
-        M4_cross_I = 2*(M13+M31)
+        M4_cross_I = -2*(M13+M31)
 
         M40 = star_cat['model_moment40']
         M31 = star_cat['model_moment31']
@@ -407,7 +407,7 @@ class ReduceCat(PipelineStage):
         M04 = star_cat['model_moment04']
 
         M4_plus_PSF = M40-M04
-        M4_cross_PSF = 2*(M13+M31)
+        M4_cross_PSF = -2*(M13+M31)
 
         delta_M4_plus = M4_plus_PSF - M4_plus_I
         delta_M4_cross = M4_cross_PSF - M4_cross_I
