@@ -130,7 +130,7 @@ class NoiseBiasFromMocks(object):
 
         return randomizedcat
     
-    def make_PSF_maps(self, star_cat, fsk):
+    def make_PSF_maps(self, star_cat, fsk, config):
         """
         Get e_PSF, 1, e_PSF, 2, T_PSF maps from catalog.
         Here we go from weighted moments to ellipticities following
@@ -155,7 +155,7 @@ class NoiseBiasFromMocks(object):
 
         return maps
 
-    def make_PSF_fourth_moment_maps(self, star_cat, fsk):
+    def make_PSF_fourth_moment_maps(self, star_cat, fsk, config):
         """
         Get fourth moment PSF maps from catalog.
         Here we go from weighted moments to ellipticities following
@@ -181,7 +181,7 @@ class NoiseBiasFromMocks(object):
 
         return maps
 
-    def make_PSF_res_maps(self, star_cat, fsk):
+    def make_PSF_res_maps(self, star_cat, fsk, config):
         """
         Get e_PSF, 1, e_PSF, 2, T_PSF residual maps from catalog.
         Here we go from weighted moments to ellipticities following
@@ -217,7 +217,7 @@ class NoiseBiasFromMocks(object):
 
         return maps
 
-    def make_PSF_res_fourth_moment_maps(self, star_cat, fsk):
+    def make_PSF_res_fourth_moment_maps(self, star_cat, fsk, config):
         """
         Get fourth moment residual maps from catalog.
         Here we go from weighted moments to ellipticities following
@@ -360,16 +360,16 @@ class NoiseBiasFromMocks(object):
         star_cat_randomized = self.randomize_shear_cat(star_cat)
 
         logger.info('Creating e_PSF and T_PSF maps.')
-        ePSFstar = self.make_PSF_maps(star_cat_randomized, fsk)
+        ePSFstar = self.make_PSF_maps(star_cat_randomized, fsk, config)
 
         logger.info('Creating e_PSF and T_PSF residual maps.')
-        ePSFresstar = self.make_PSF_res_maps(star_cat_randomized, fsk)
+        ePSFresstar = self.make_PSF_res_maps(star_cat_randomized, fsk, config)
 
         logger.info('Creating M4_PSF maps.')
-        m4PSFstar = self.make_PSF_fourth_moment_maps(star_cat_randomized, fsk)
+        m4PSFstar = self.make_PSF_fourth_moment_maps(star_cat_randomized, fsk, config)
 
         logger.info('Creating M4_PSF residual maps.')
-        m4PSFresstar = self.make_PSF_res_fourth_moment_maps(star_cat_randomized, fsk)
+        m4PSFresstar = self.make_PSF_res_fourth_moment_maps(star_cat_randomized, fsk, config)
 
         f_res = nmt.NmtFieldFlat(np.radians(fsk.lx), np.radians(fsk.ly),
                                     ePSFresstar[1][0].reshape([fsk.ny,fsk.nx]),
