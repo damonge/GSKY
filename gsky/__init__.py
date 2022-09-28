@@ -16,6 +16,7 @@ from .cov_gauss import CovGauss
 from .cov_mocks import CovMocks
 from .cov_psf_mocks import CovPSFMocks
 from .cov_psf_mocks_fourth_moment import CovPSFMocksFourthMoment
+from .noise_bias_mocks import NoiseBiasMocks
 from .cwsp_calculator import CwspCalc
 from .pspec_plotter import PSpecPlotter
 from .like_minimizer import LikeMinimizer
