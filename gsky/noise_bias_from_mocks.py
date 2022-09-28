@@ -208,7 +208,7 @@ class NoiseBiasFromMocks(object):
         delta_e_plus = star_cat['e1_psf_random'] - star_cat['e1_source_random']
         delta_e_cross = star_cat['e2_psf_random'] - star_cat['e2_source_random']
 
-        ePSFresmaps, ePSFresmasks = createSpin2Map(star_cat[sconfig['ra']],
+        ePSFresmaps, ePSFresmasks = createSpin2Map(star_cat[config['ra']],
                                                    star_cat[config['dec']],
                                                    delta_e_plus, delta_e_cross, fsk,
                                                    shearrot=config['shearrot'])
