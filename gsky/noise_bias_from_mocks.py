@@ -346,7 +346,7 @@ class NoiseBiasFromMocks(object):
         star_cat = Table.read(config['star_catalog'])
 
         if 'GAMA09H' in config['star_catalog'] and config['rm_gama09h_region']==True:
-            good_seeing_mask = (star_cat[config['ra']]>=132.5)&(star_cat[config['ra']]<=140.)&(star_cat_old[config['dec']]>1.6)    
+            good_seeing_mask = (star_cat[config['ra']]>=132.5)&(star_cat[config['ra']]<=140.)&(star_cat[config['dec']]>1.6)    
             logger.info("Good seeing removal %f", (np.sum(good_seeing_mask)/len(star_cat)))
             star_cat.remove_rows(good_seeing_mask)
         # Roohi: move VVDS RAs to be on same side of 0 degrees
