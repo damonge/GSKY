@@ -152,7 +152,7 @@ NoiseBiasMocks:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: noise_bias_mocks_psf_used
+  output_run_dir: noise_bias_mocks_psf_not_used
 
 MockGen:
     tracers: ['wl_0', 'wl_1', 'wl_2', 'wl_3']

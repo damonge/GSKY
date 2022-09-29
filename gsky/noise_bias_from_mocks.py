@@ -297,7 +297,7 @@ class NoiseBiasFromMocks(object):
           'nz_bin_max': 4.0,
           'shape_noise': True,
           'rm_gama09h_region': True,
-          'star_catalog': '/projects/HSC/weaklens/s19a_shape_catalog/star_catalog_higher_moments/XMM_psf.csv'}
+          'star_catalog': '/projects/HSC/weaklens/s19a_shape_catalog/star_catalog_higher_moments/XMM_nonpsf.csv'}
 
         n_realizations = 1000
         # n_realizations = 1
@@ -337,7 +337,7 @@ class NoiseBiasFromMocks(object):
           'shape_noise': True,
           'rm_gama09h_region': True,
           'masked_fraction': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/masked_fraction.fits',
-          'star_catalog': '/projects/HSC/weaklens/s19a_shape_catalog/star_catalog_higher_moments/XMM_psf.csv'}
+          'star_catalog': '/projects/HSC/weaklens/s19a_shape_catalog/star_catalog_higher_moments/XMM_nonpsf.csv'}
         logger.info('Running realization : {}.'.format(realization))
         # np.random.seed(realization)
         band = config['band']
