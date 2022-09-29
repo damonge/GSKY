@@ -353,7 +353,7 @@ class NoiseBiasFromMocks(object):
         if 'VVDS' in config['star_catalog']:
             logger.info("Shifting star catalog RA by -30 degrees for VVDS")
             change_in_ra = -30.0
-            init_ra_vals = star_cat[self.config['ra']].copy()
+            init_ra_vals = star_cat[config['ra']].copy()
             star_cat[config['ra']] = init_ra_vals+(np.ones(len(init_ra_vals))*change_in_ra)
             star_cat[config['ra']][star_cat[config['ra']]<0] += 360.0
 
