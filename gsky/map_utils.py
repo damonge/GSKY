@@ -125,6 +125,11 @@ def createWQUMap(ra, dec, q, u, fsk, weights=None):
     wumap = np.bincount(flatmap[id_good],
                        weights=u[id_good]*weights[id_good],
                        minlength=fsk.get_size())
+    weightsmap = np.bincount(flatmap[id_good],
+                             weights=weights,
+                             minlength=fsk.get_size())
+    wqmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
+    wumap[weightsmap != 0] /= weightsmap[weightsmap != 0]
 
     mp = [wqmap, wumap]
 
@@ -156,6 +161,11 @@ def createW2QU2Map(ra, dec, q, u, fsk, weights=None):
     w2u2map = np.bincount(flatmap[id_good],
                        weights=u[id_good]**2*weights[id_good]**2,
                        minlength=fsk.get_size())
+    weightsmap = np.bincount(flatmap[id_good],
+                             weights=weights,
+                             minlength=fsk.get_size())
+    w2q2map[weightsmap != 0] /= weightsmap[weightsmap != 0]
+    w2u2map[weightsmap != 0] /= weightsmap[weightsmap != 0]
 
     mp = [w2q2map, w2u2map]
 
