@@ -576,10 +576,7 @@ class ReduceCat(PipelineStage):
                                   e1,
                                   e2, fsk,
                                   weights=None)
-        logger.info("e1 mean square", wemaps[0]**2)
-        logger.info("e1 square mean", w2e2maps[0])
-        logger.info("e2 mean square", wemaps[1]**2)
-        logger.info("e2 square mean", w2e2maps[1])
+
         for i in range(len(wemaps[0])):
             if wemaps[0][i]**2 > w2e2maps[0]:
                 print(i, wemaps[0][i]**2, w2e2maps[0])
