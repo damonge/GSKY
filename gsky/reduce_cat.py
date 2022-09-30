@@ -13,7 +13,8 @@ from .map_utils import (createCountsMap,
                         createMask,
                         removeDisconnected,
                         createSpin2Map,
-                        createW2QU2Map)
+                        createW2QU2Map,
+                        createWQUMap)
 from .estDepth import get_depth
 from .estDepth import get_seeing
 from .plot_utils import plot_histo, plot_map
