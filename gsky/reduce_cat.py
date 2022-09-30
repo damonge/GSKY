@@ -570,7 +570,7 @@ class ReduceCat(PipelineStage):
                                   e2, fsk,
                                   weights=None)
 
-        w2e2 = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
+        w2e2 = 0.5*(np.std(w2e2maps[0]) + np.std(w2e2maps[1]))
 
         return w2e2
 
