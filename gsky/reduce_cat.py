@@ -570,7 +570,14 @@ class ReduceCat(PipelineStage):
                                   e2, fsk,
                                   weights=None)
 
-        w2e2 = 0.5*(np.std(w2e2maps[0]) + np.std(w2e2maps[1]))
+        wemaps = createWQUMap(cat[self.config['ra']],
+                                  cat[self.config['dec']],
+                                  e1,
+                                  e2, fsk,
+                                  weights=None)
+
+        
+        w2e2 = 0.5*(np.mean(w2e2maps[0] - (wemaps[0]**2)) + np.mean(w2e2maps[1] - (wemaps[1]**2)))
 
         return w2e2
 
