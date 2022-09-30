@@ -580,6 +580,7 @@ class ReduceCat(PipelineStage):
         logger.info("e1 square mean", w2e2maps[0])
         logger.info("e2 mean square", wemaps[1]**2)
         logger.info("e2 square mean", w2e2maps[1])
+
         w2e2 = 0.5*(np.mean(w2e2maps[0] - (wemaps[0]**2)) + np.mean(w2e2maps[1] - (wemaps[1]**2)))
 
         return w2e2
@@ -1268,7 +1269,7 @@ class ReduceCat(PipelineStage):
                                 header=head)
             hdus.append(hdu)
             head['DESCR'] = ('counts map (PSF star sample)', 'Description')
-            hdu = fits.ImageHDU(data=mPSFressta fr[1][2].reshape(shp_mp),
+            hdu = fits.ImageHDU(data=mPSFresstar[1][2].reshape(shp_mp),
                                 header=head)
             hdus.append(hdu)
             # w2e2
