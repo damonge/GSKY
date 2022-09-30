@@ -580,7 +580,11 @@ class ReduceCat(PipelineStage):
         logger.info("e1 square mean", w2e2maps[0])
         logger.info("e2 mean square", wemaps[1]**2)
         logger.info("e2 square mean", w2e2maps[1])
-
+        for i in range(len(wemaps[0])):
+            if wemaps[0][i]**2 > w2e2maps[0]:
+                print(i, wemaps[0][i]**2, w2e2maps[0])
+            if wemaps[1][i]**2 > w2e2maps[1]:
+                print(i, wemaps[1][i]**2, w2e2maps[1])
         w2e2 = 0.5*(np.mean(w2e2maps[0] - (wemaps[0]**2)) + np.mean(w2e2maps[1] - (wemaps[1]**2)))
 
         return w2e2
