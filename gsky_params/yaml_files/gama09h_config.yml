@@ -128,7 +128,7 @@ CovPSFMocksFourthMoment:
   oc_dpj_list: []
   oc_all_bands: False
   rm_gama09h_region: True
-  output_run_dir: cov_psf_from_mocks_psf_used
+  output_run_dir: cov_psf_from_mocks_psf_not_used
   clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_ceci/clean_catalog_rm20sqdeg.fits
   mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
 
