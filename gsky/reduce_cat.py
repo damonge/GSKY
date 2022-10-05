@@ -571,18 +571,19 @@ class ReduceCat(PipelineStage):
                                   e2, fsk,
                                   weights=None)
 
-        wemaps = createWQUMap(cat[self.config['ra']],
-                                  cat[self.config['dec']],
-                                  e1,
-                                  e2, fsk,
-                                  weights=None)
+        # wemaps = createWQUMap(cat[self.config['ra']],
+        #                           cat[self.config['dec']],
+        #                           e1,
+        #                           e2, fsk,
+        #                           weights=None)
 
-        for i in range(len(wemaps[0])):
-            if wemaps[0][i]**2 > w2e2maps[0][i]:
-                print(i, wemaps[0][i]**2, w2e2maps[0][i])
-            if wemaps[1][i]**2 > w2e2maps[1][i]:
-                print(i, wemaps[1][i]**2, w2e2maps[1][i])
-        w2e2 = 0.5*(np.mean(w2e2maps[0] - (wemaps[0]**2)) + np.mean(w2e2maps[1] - (wemaps[1]**2)))
+        # for i in range(len(wemaps[0])):
+        #     if wemaps[0][i]**2 > w2e2maps[0][i]:
+        #         print(i, wemaps[0][i]**2, w2e2maps[0][i])
+        #     if wemaps[1][i]**2 > w2e2maps[1][i]:
+        #         print(i, wemaps[1][i]**2, w2e2maps[1][i])
+        # w2e2 = 0.5*(np.mean(w2e2maps[0] - (wemaps[0]**2)) + np.mean(w2e2maps[1] - (wemaps[1]**2)))
+        w2e2 = 0.5*(np.mean(w2e2maps[0]) + np.mean(w2e2maps[1]))
 
         return w2e2
 
