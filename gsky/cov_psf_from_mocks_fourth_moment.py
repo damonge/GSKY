@@ -299,7 +299,7 @@ class CovPSFFromMocksFourthMoment(object):
         self.params = {}
         self.params['nprobes'] = 4
         self.params['ncls'] = int(self.params['nprobes']*(self.params['nprobes'] + 1.)/2.)
-        ell_bpws = [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0]
+        ell_bpws = [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
         self.params['l0_bins'] = np.array(ell_bpws)[:-1]
         self.params['lf_bins'] = np.array(ell_bpws)[1:]
         self.params['nell'] = int(self.params['l0_bins'].shape[0])
@@ -314,7 +314,7 @@ class CovPSFFromMocksFourthMoment(object):
     def go(self):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
-          'mapping': {'wcs': None, 'res': 0.02083333333333,
+          'mapping': {'wcs': None, 'res': 0.025,
                       'res_bo': 0.003, 'pad': 0.2,
                       'projection': 'CAR'},
           'band': 'i', 'depth_method': 'fluxerr',
@@ -355,7 +355,7 @@ class CovPSFFromMocksFourthMoment(object):
     def __call__(self, realization):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
-          'mapping': {'wcs': None, 'res': 0.02083333333333,
+          'mapping': {'wcs': None, 'res': 0.025,
                       'res_bo': 0.003, 'pad': 0.2,
                       'projection': 'CAR'},
           'band': 'i', 'depth_method': 'fluxerr',
