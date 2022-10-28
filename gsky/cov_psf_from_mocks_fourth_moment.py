@@ -314,7 +314,7 @@ class CovPSFFromMocksFourthMoment(object):
     def go(self):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
-          'mapping': {'wcs': None, 'res': 0.025,
+          'mapping': {'wcs': None, 'res': 0.02083333333333,
                       'res_bo': 0.003, 'pad': 0.2,
                       'projection': 'CAR'},
           'band': 'i', 'depth_method': 'fluxerr',
@@ -355,7 +355,7 @@ class CovPSFFromMocksFourthMoment(object):
     def __call__(self, realization):
         config={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
-          'mapping': {'wcs': None, 'res': 0.025,
+          'mapping': {'wcs': None, 'res': 0.02083333333333,
                       'res_bo': 0.003, 'pad': 0.2,
                       'projection': 'CAR'},
           'band': 'i', 'depth_method': 'fluxerr',
