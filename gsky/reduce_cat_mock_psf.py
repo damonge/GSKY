@@ -1374,32 +1374,32 @@ class ReduceCatMockPSF(PipelineStage):
         ####
 
         ####
-        # Plotting
-        for i_d, d in enumerate(dustmaps):
-            plot_map(self.config, fsk, d, 'dust_%d' % i_d)
-        plot_map(self.config, fsk, mstar, 'Nstar')
-        if self.get_input('star_catalog') != 'NONE':
-            plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
-            plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
-            plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
-            plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
-            plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
-            plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
-            plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
-            plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
-            plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
-            plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
-        # plot_map(self.config, fsg, mask_bo, 'bo_mask')
-        plot_map(self.config, fsk, masked_fraction_cont, 'masked_fraction')
-        plot_map(self.config, fsk, depth, 'depth_map')
-        # plot_histo(self.config, 'cmodel_mags',
-        #            [cat['%s_cmodel_mag' % b] for b in self.bands],
-        #            ['m_%s' % b for b in self.bands], bins=100, logy=True)
-        ####
+        # # Plotting
+        # for i_d, d in enumerate(dustmaps):
+        #     plot_map(self.config, fsk, d, 'dust_%d' % i_d)
+        # plot_map(self.config, fsk, mstar, 'Nstar')
+        # if self.get_input('star_catalog') != 'NONE':
+        #     plot_map(self.config, fsk, mPSFstar[0][0], 'e_PSF1')
+        #     plot_map(self.config, fsk, mPSFstar[0][1], 'e_PSF2')
+        #     plot_map(self.config, fsk, mPSFstar[1][0], 'e_PSF_w')
+        #     plot_map(self.config, fsk, mPSFstar[1][1], 'e_PSF_m')
+        #     plot_map(self.config, fsk, mPSFstar[1][2], 'e_PSF_c')
+        #     plot_map(self.config, fsk, mPSFresstar[0][0], 'e_PSFres1')
+        #     plot_map(self.config, fsk, mPSFresstar[0][1], 'e_PSFres2')
+        #     plot_map(self.config, fsk, mPSFresstar[1][0], 'e_PSFres_w')
+        #     plot_map(self.config, fsk, mPSFresstar[1][1], 'e_PSFres_m')
+        #     plot_map(self.config, fsk, mPSFresstar[1][2], 'e_PSFres_c')
+        # # plot_map(self.config, fsg, mask_bo, 'bo_mask')
+        # plot_map(self.config, fsk, masked_fraction_cont, 'masked_fraction')
+        # plot_map(self.config, fsk, depth, 'depth_map')
+        # # plot_histo(self.config, 'cmodel_mags',
+        # #            [cat['%s_cmodel_mag' % b] for b in self.bands],
+        # #            ['m_%s' % b for b in self.bands], bins=100, logy=True)
+        # ####
 
-        # Permissions on NERSC
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
-        os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
+        # # Permissions on NERSC
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type d -exec chmod -f 777 {} \;')
+        # os.system('find /global/cscratch1/sd/damonge/GSKY/ -type f -exec chmod -f 666 {} \;')
 
 if __name__ == '__main__':
     cls = PipelineStage.main()
