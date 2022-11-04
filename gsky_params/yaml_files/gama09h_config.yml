@@ -22,6 +22,11 @@ ReduceCat:
   depth_method: fluxerr
   rm_gama09h_region: True 
 
+ReduceCatMockPSF:
+  min_snr: 10.
+  depth_method: fluxerr
+  rm_gama09h_region: True 
+
 ReduceCatMocks:
   min_snr: 10.
   depth_method: fluxerr
