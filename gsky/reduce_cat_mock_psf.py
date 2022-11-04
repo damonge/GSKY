@@ -31,7 +31,7 @@ class ReduceCatMockPSF(PipelineStage):
     inputs = [('shape_catalog', FitsFile),
               ('star_catalog', FitsFile)]
     outputs = [('clean_catalog', FitsFile),
-               ('dust_map', FitsFile)
+               ('masked_fraction', FitsFile),
                ('ePSF_map', FitsFile),
                ('ePSFres_map', FitsFile),
                ('M4_PSF_map', FitsFile),
@@ -313,7 +313,7 @@ class ReduceCatMockPSF(PipelineStage):
         # M04 = star_cat['model_moment04']
 
         M4_plus_PSF = star_cat['m1']
-        M4_cross_PSF = -star_cat['m2']
+        M4_cross_PSF = star_cat['m2']
         M4_PSFmaps, M4_PSFmasks = createSpin2Map(star_cat[self.config['ra']],
                                              star_cat[self.config['dec']],
                                              M4_plus_PSF, M4_cross_PSF, fsk,
@@ -396,7 +396,7 @@ class ReduceCatMockPSF(PipelineStage):
         # M4_cross_PSF = -2*(M13+M31)
 
         delta_M4_plus = star_cat['dm1']
-        delta_M4_cross = -star_cat['dm1']
+        delta_M4_cross = star_cat['dm1']
 
         M4_PSFresmaps, M4_PSFresmasks = createSpin2Map(star_cat[self.config['ra']],
                                                    star_cat[self.config['dec']],
