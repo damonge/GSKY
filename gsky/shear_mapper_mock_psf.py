@@ -71,7 +71,7 @@ class ShearMapperMockPSF(PipelineStage):
                                                cat[self.config['dec']],
                                                cat['shear1'],
                                                cat['shear2'], self.fsk,
-                                               weights=cat['i_hsmshaperegauss_derived_weight'],
+                                               weights=cat['weight'],
                                                shearrot=self.config['shearrot'])
         maps_combined = [gammamaps, gammamasks]
         maps.append(maps_combined)
