@@ -257,7 +257,7 @@ class ShearMapperMockPSF(PipelineStage):
         #                   for ibin in range(self.nbins)])
         # resps = np.array([head_cat['RESPONS_%d' % (ibin+1)]
         #                   for ibin in range(self.nbins)])
-        cat = hdul[1].data
+        cat = Table.read(self.get_input('clean_catalog'))
         # Remove masked objects
         # if self.config['mask_type'] == 'arcturus':
         #     self.msk = cat['mask_Arcturus'].astype(bool)
