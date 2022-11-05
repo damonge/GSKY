@@ -67,9 +67,6 @@ class ShearMapperMockPSF(PipelineStage):
         :param cat:
         :return:
         """
-        print("shear1 NaNs", np.sum(np.isnan(cat['shear1'])))
-        print("shear2 NaNs", np.sum(np.isnan(cat['shear2'])))
-        print("weights NaNs", np.sum(np.isnan(cat['weight'])))
 
         maps = []
         gammamaps, gammamasks = createSpin2Map(cat[self.config['ra']],
@@ -301,10 +298,6 @@ class ShearMapperMockPSF(PipelineStage):
 
         # logger.info("Creating shear maps and corresponding masks.")
         # gammamaps = self.get_gamma_maps(cat)
-
-        print("shear1 NaNs", np.sum(np.isnan(cat['shear1'])))
-        print("shear2 NaNs", np.sum(np.isnan(cat['shear2'])))
-        print("weights NaNs", np.sum(np.isnan(cat['weight'])))
 
         gammamap_allz = self.get_gamma_maps_allz(cat)
 
