@@ -55,7 +55,7 @@ def createSpin2Map(ra, dec, q, u, fsk, weights=None, shearrot=None):
                        minlength=fsk.get_size())
     qmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
     umap[weightsmap != 0] /= weightsmap[weightsmap != 0]
-
+    print(np.sum(np.isnan(qmap)))
     if weights is not None:
         logger.info('Weights provided.')
         logger.info('Computing weightmask.')
