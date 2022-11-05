@@ -53,9 +53,14 @@ def createSpin2Map(ra, dec, q, u, fsk, weights=None, shearrot=None):
     nmap = np.bincount(flatmap[id_good],
                        weights=None,
                        minlength=fsk.get_size())
+    print("qmap NaNs pre div", np.sum(np.isnan(qmap)))
+    print("umap NaNs pre div", np.sum(np.isnan(umap)))
+    print("weightsmap NaNs pre div", np.sum(np.isnan(weightsmap)))
     qmap[weightsmap != 0] /= weightsmap[weightsmap != 0]
     umap[weightsmap != 0] /= weightsmap[weightsmap != 0]
-    print(np.sum(np.isnan(qmap)))
+    print("qmap NaNs", np.sum(np.isnan(qmap)))
+    print("umap NaNs", np.sum(np.isnan(umap)))
+    print("weightsmap NaNs", np.sum(np.isnan(weightsmap)))
     if weights is not None:
         logger.info('Weights provided.')
         logger.info('Computing weightmask.')
