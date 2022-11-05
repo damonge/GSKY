@@ -40,7 +40,10 @@ def createSpin2Map(ra, dec, q, u, fsk, weights=None, shearrot=None):
     if weights is not None:
         q = weights*copy.deepcopy(q)
         u = weights*copy.deepcopy(u)
-
+    print("q NaNs", np.sum(np.isnan(q)))
+    print("u NaNs", np.sum(np.isnan(u)))
+    print("q NaNs", np.sum(np.isnan(q[id_good])))
+    print("u NaNs", np.sum(np.isnan(u[id_good])))
     qmap = np.bincount(flatmap[id_good],
                        weights=q[id_good],
                        minlength=fsk.get_size())
