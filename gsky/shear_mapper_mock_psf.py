@@ -4,6 +4,7 @@ import numpy as np
 from .flatmaps import read_flat_map
 from .map_utils import createSpin2Map, createW2QU2Map
 from astropy.io import fits
+from astropy.table import Table
 import os
 from .plot_utils import plot_map, plot_curves
 
