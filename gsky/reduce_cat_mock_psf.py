@@ -396,7 +396,7 @@ class ReduceCatMockPSF(PipelineStage):
         # M4_cross_PSF = -2*(M13+M31)
 
         delta_M4_plus = star_cat['dm1']
-        delta_M4_cross = star_cat['dm1']
+        delta_M4_cross = star_cat['dm2']
 
         M4_PSFresmaps, M4_PSFresmasks = createSpin2Map(star_cat[self.config['ra']],
                                                    star_cat[self.config['dec']],
