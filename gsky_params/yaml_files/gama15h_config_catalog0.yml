@@ -1,0 +1,248 @@
+global:
+  depth_cut: 24.5
+  mapping:
+    #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
+    # res: 0.01466666666667 #0.88 arcmin
+    res: 0.01666666666667 #1 arcmin
+    # res: 0.025 #1.5 arcmin
+    pad: 0.2
+    res_bo: 0.003
+    projection: CAR
+  mask_type: sirius
+  band: i
+  mask_thr: 0.5
+  shearrot: noflip
+  sys_collapse_type: average
+  pz_code: dnnz
+  pz_mark: best
+  pz_bins: [0.3, 0.6, 0.9, 1.2, 1.5]
+  plots_dir: None
+
+ReduceCat:
+  min_snr: 10.
+  depth_method: fluxerr
+
+ReduceCatMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/catalog0/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
+
+SystMapper:
+  ccd_drop: [9]
+
+SystReMapper:
+  maps_path: /tigress/rdalal/s19a_shear/shared_frames/decasu_output_16k_res
+
+COSMOSWeight:
+  n_neighbors: 20
+
+GalMapper:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+
+ShearMapper:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+
+ShearMapperMocks:
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/catalog0/clean_catalog.fits
+
+ACTMapper:
+  act_inputs:
+    - ['y',
+       '/global/cscratch1/sd/damonge/GSKY/ACT_data/y_boss.fits',
+       '/global/cscratch1/sd/damonge/GSKY/ACT_data/mask_y_boss.fits']
+    - ['kappa',
+       '/global/cscratch1/sd/damonge/GSKY/ACT_data/kappa_boss.fits',
+       '/global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits']
+
+#PowerSpecter:
+#  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+#  gaus_covar_type: analytic
+#  noise_bias_type: analytic
+#  guess_spectrum: /global/homes/d/damonge/LSST/LSS_HSC/HyperSupremeStructure-HSC-LSS/hsc_lss_params/cls_guess_i24p5.txt
+#  mask_systematics: True
+#  oc_dpj_list: [airmass,seeing,sigma_sky]
+#  oc_all_bands: True
+#  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClFit_Dpj0_DpjBands1
+
+PowerSpecter:
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: catalog0
+
+CovMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  mocks_dir: /projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA15H/
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  # ell_bpws: [100.0,400.0,1000.0,1400.0,1800.0,2200.0,3800.0,6200.0,9400.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: cov_from_mocks_final_nz_with_corr_catalog0
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/catalog0/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
+
+CovPSFMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  mocks_dir: /projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA15H/
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  # ell_bpws: [100.0,400.0,1000.0,1400.0,1800.0,2200.0,3800.0,6200.0,9400.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: cov_psf_from_mocks_psf_used_catalog0
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/catalog0/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
+
+CovPSFMocksFourthMoment:
+  min_snr: 10.
+  depth_method: fluxerr
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  mocks_dir: /projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA15H/
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  # ell_bpws: [100.0,400.0,1000.0,1400.0,1800.0,2200.0,3800.0,6200.0,9400.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: cov_psf_from_mocks_psf_not_used_catalog0
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA15H_ceci/catalog0/clean_catalog.fits
+  mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
+
+NoiseBiasMocks:
+  min_snr: 10.
+  depth_method: fluxerr
+  nz_bin_num: 100
+  nz_bin_max: 4.0
+  shape_noise: True
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  # ell_bpws: [100.0,400.0,1000.0,1400.0,1800.0,2200.0,3800.0,6200.0,9400.0,15800.0]
+  noise_bias_type: analytic
+  guess_spectrum: NONE
+  mask_systematics: False
+  # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: noise_bias_mocks_psf_used
+
+MockGen:
+  tracers: ['gc_0', 'gc_1', 'gc_2', 'gc_3']
+  probes: ['galaxy_density', 'galaxy_density', 'galaxy_density', 'galaxy_density']
+  spins: [0, 0, 0, 0]
+  nrealiz: 1000
+  theory_sacc: '/tigress/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs/inputs/CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpj/saccfile_noise-free_guess_spectra_lmax=3e4.sacc'
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,
+             3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  pixwindow: 0
+  nell_theor: 5000
+  noisemodel: ['data', 'data', 'data', 'data']
+  posfromshearcat: 1
+  ntomo_bins: [0, 1, 2, 3]
+  Ngal: [308766, 310182, 230967, 137175]
+  noise_sacc: 'NONE'
+  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThIt_NoDpjAll
+
+GuessSpecter:
+  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj
+  cpl_cl: True
+  ellmax: 30000
+  hmparams:
+#    corr_halo_mod: True
+#    massdef: 'M500c'
+#    pprof: 'Arnaud'
+#    mmin: 11.28
+#    mminp: 2.02
+#    m0: 9.65
+#    m0p: -0.90
+#    m1: 12.85
+#    m1p: 2.98
+#    bhydro: 0.49
+#    zshift_bin0: 0.09
+#    zshift_bin1: 0.11
+#    zshift_bin2: 0.17
+#    zshift_bin3: 0.19
+#    zwidth_bin0: 0.17
+#    zwidth_bin1: 0.14
+#    zwidth_bin2: 0.09
+#    zwidth_bin3: 0.07
+#  cosmo:
+#    sigma8: 0.92
+#    Omega_c: 0.14
+#    Omega_b: 0.0493
+#    Omega_k: 0.0
+#    h: 0.6736
+#    n_s: 0.9649
+#    w0: -1.
+#    wa: 0.
+    corr_halo_mod: True
+    massdef: 'M200c'
+    pprof: 'Battaglia'
+    mmin: 12.02
+    mminp: -1.3
+    m0: 6.6
+    m0p: -1.4
+    m1: 13.27
+    m1p: -0.3
+    bhydro: 0.2
+    zshift_bin0: -0.064
+    zshift_bin1: -0.087
+    zshift_bin2: -0.07
+    zshift_bin3: -0.03
+    zwidth_bin0: -0.1
+    zwidth_bin1: -0.01
+    zwidth_bin2: 0.082
+    zwidth_bin3: 0.18
+  cosmo:
+    sigma8: 0.8111
+    Omega_c: 0.264
+    Omega_b: 0.0493
+    Omega_k: 0.0
+    h: 0.6736
+    n_s: 0.9649
+    w0: -1.
+    wa: 0.
+
+CovGauss:
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  gaus_covar_type: analytic
+  # guess_spectrum: /global/cscratch1/sd/anicola/DATA/HSCxACT/HSC/HSC_processed/outputs_oldbins/GAMA15H_ceci/CovAna_NoiAna_MskSiriusSyst_ClThCpld_NoDpj/guess_spectra_cpld.sacc
+  guess_spectrum: NONE
+  mask_systematics: False
+  oc_dpj_list: []
+  oc_all_bands: False
+  output_run_dir: catalog0
+
+CwspCalc:
+  ell_bpws: [100.0,200.0,300.0,400.0,600.0,800.0,1000.0,1400.0,1800.0,2200.0,3000.0,3800.0,4600.0,6200.0,7800.0,9400.0,12600.0,15800.0]
+  mask_systematics: False
+  oc_dpj_list: []
+  oc_all_bands: True
+  output_run_dir: CovAna_NoiAna_MskSiriusSyst_ClData_NoDpj
