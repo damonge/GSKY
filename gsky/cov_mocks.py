@@ -31,7 +31,7 @@ class CovMocks(PipelineStage):
           'nz_bin_max': 4.0,
           'shearrot': 'noflip',
           'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
 
     def get_output_fname(self,name,ext=None):
         self.output_dir=self.get_output('dummy',final_name=True)[:-5]
