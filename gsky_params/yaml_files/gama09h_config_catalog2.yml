@@ -30,7 +30,7 @@ ReduceCatMockPSF:
 ReduceCatMocks:
   min_snr: 10.
   depth_method: fluxerr
-  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg/_ceci/catalog2/clean_catalog_rm20sqdeg.fits
+  clean_catalog_data: /tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg_ceci/catalog2/clean_catalog_rm20sqdeg.fits
   mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
   rm_gama09h_region: True
 
