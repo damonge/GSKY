@@ -19,7 +19,7 @@ class CovPSFMocksFourthMoment(PipelineStage):
     outputs = [('dummy',DummyFile)]
     config_options={'plots_dir': None,
           'min_snr': 10., 'depth_cut': 24.5,
-          'mapping': {'wcs': None, 'res': 0.0285,
+          'mapping': {'wcs': None, 'res': 0.01666666666667,
                       'res_bo': 0.003, 'pad': 0.1,
                       'projection': 'CAR'},
           'band': 'i', 'depth_method': 'fluxerr',
