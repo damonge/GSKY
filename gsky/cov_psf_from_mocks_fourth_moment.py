@@ -327,7 +327,7 @@ class CovPSFFromMocksFourthMoment(object):
           'shape_noise': True,
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -369,12 +369,12 @@ class CovPSFFromMocksFourthMoment(object):
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/',
           'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_XMM.fits',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy',
-          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/ePSFres_map_psf_used.fits',
-          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/ePSF_map_psf_used.fits',
-          'm4_psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/M4_PSFres_map_psf_used.fits',
-          'm4_psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci_larger_pixel_size_1.5/M4_PSF_map_psf_used.fits'}
+          'psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/ePSFres_map_psf_used.fits',
+          'psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/ePSF_map_psf_used.fits',
+          'm4_psf_residual_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/M4_PSFres_map_psf_used.fits',
+          'm4_psf_leakage_map': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/XMM_ceci/catalog1/M4_PSF_map_psf_used.fits'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
         self.mpp = config['mapping']
