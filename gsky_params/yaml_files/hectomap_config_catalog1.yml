@@ -64,7 +64,7 @@ PowerSpecter:
   mask_systematics: False
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: catalog1
+  output_run_dir: allz_catalog1
 
 CovMocks:
   min_snr: 10.

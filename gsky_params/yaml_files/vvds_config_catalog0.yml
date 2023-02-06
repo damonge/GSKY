@@ -69,7 +69,7 @@ PowerSpecter:
   # oc_dpj_list: ['airmass','dust', 'ccdtemp', 'exptime', 'skylevel', 'nvisit', 'seeing','sigma_sky']
   oc_dpj_list: []
   oc_all_bands: False
-  output_run_dir: catalog0
+  output_run_dir: allz_catalog0
 
 CovMocks:
   min_snr: 10.
