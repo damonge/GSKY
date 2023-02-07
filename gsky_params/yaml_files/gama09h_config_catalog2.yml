@@ -137,7 +137,6 @@ CovAllzMocks:
   mock_correction_factors: /tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy
   rm_gama09h_region: True
 
-
 CovPSFMocksFourthMoment:
   min_snr: 10.
   depth_method: fluxerr
