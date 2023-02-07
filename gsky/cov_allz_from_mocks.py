@@ -366,7 +366,7 @@ class CovAllzFromMocks(object):
           'shape_noise': True,
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA09H/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg_ceci/catalog0/clean_catalog_rm20sqdeg.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg_ceci/catalog1/clean_catalog_rm20sqdeg.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -408,7 +408,7 @@ class CovAllzFromMocks(object):
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA09H/',
           'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_GAMA09H.fits',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg_ceci/catalog0/clean_catalog_rm20sqdeg.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/GAMA09H_rm20sqdeg_ceci/catalog1/clean_catalog_rm20sqdeg.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
