@@ -125,7 +125,7 @@ class CovAllzFromMocks(object):
         out['e2_mock']=e2_mock/(1.+de)+out['noise2_mea']
         return out
 
-    def get_gamma_maps_allz(self, cat):
+    def get_gamma_maps_allz(self, cat, mbias, msel, fsk, config):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
