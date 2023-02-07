@@ -16,6 +16,7 @@ from .power_specter import PowerSpecter  # noqa
 from .mock_generator import MockGen
 from .cov_gauss import CovGauss
 from .cov_mocks import CovMocks
+from .cov_allz_mocks import CovAllzMocks
 from .cov_psf_mocks import CovPSFMocks
 from .cov_psf_mocks_fourth_moment import CovPSFMocksFourthMoment
 from .noise_bias_mocks import NoiseBiasMocks

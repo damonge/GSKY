@@ -6,15 +6,15 @@ from .map_utils import createCountsMap
 from astropy.io import fits
 import os
 from .plot_utils import plot_map, plot_curves
-from gsky.cov_from_mocks import CovFromMocks
+from gsky.cov_allz_from_mocks import CovAllzFromMocks
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class CovMocks(PipelineStage):
-    name = "CovMocks"
+class CovAllzMocks(PipelineStage):
+    name = "CovAllzMocks"
     inputs = []
     outputs = [('dummy',DummyFile)]
     config_options={'plots_dir': None,
@@ -31,7 +31,7 @@ class CovMocks(PipelineStage):
           'nz_bin_max': 4.0,
           'shearrot': 'noflip',
           'ra':  'ra_mock', 'dec':  'dec_mock', 'shape_noise': True,
-          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/GAMA09H/'}
+          'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/XMM/'}
 
     def get_output_fname(self,name,ext=None):
         self.output_dir=self.get_output('dummy',final_name=True)[:-5]
@@ -49,7 +49,7 @@ class CovMocks(PipelineStage):
         Main routine. This stage:
         - Calls CovFromMocks in cov_from_mocks.py
         """
-        test = CovFromMocks()
+        test = CovAllzFromMocks()
         cls, ells = test.go()
 
         np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
