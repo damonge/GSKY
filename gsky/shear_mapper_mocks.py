@@ -520,9 +520,9 @@ class ShearMapperMocks(PipelineStage):
             # hdus.append(fits.BinTableHDU.from_columns(cols))
         # e2rms
         cols = [fits.Column(name='e2rms', array=e2rms, format='2E'),
-                fits.Column(name='w2e2', array=w2e2, format='E'),
-                fits.Column(name='mhats', array=mhats, format='E'),
-                fits.Column(name='resps', array=resps, format='E')]
+                fits.Column(name='w2e2', array=w2e2, format='E')]
+                # fits.Column(name='mhats', array=mhats, format='E'),
+                # fits.Column(name='resps', array=resps, format='E')]
         hdus.append(fits.BinTableHDU.from_columns(cols))
 
         hdulist = fits.HDUList(hdus)
