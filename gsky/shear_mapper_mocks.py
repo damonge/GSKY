@@ -80,7 +80,7 @@ class ShearMapperMocks(PipelineStage):
 
         return maps
 
-    def get_gamma_maps_allz(self, cat, mbias, msel, fsk, config):
+    def get_gamma_maps_allz(self, cat, mbias, msel):
         """
         Get gamma1, gamma2 maps and corresponding mask from catalog.
         :param cat:
@@ -114,16 +114,16 @@ class ShearMapperMocks(PipelineStage):
             g1I_full_arr = np.append(g1I_full_arr, g1I)
             g2I_full_arr = np.append(g2I_full_arr, g2I)
             weights_full_arr = np.append(weights_full_arr, subcat['weight'])
-            ra_full_arr = np.append(ra_full_arr, subcat[config['ra']])
-            dec_full_arr = np.append(dec_full_arr, subcat[config['dec']])
+            ra_full_arr = np.append(ra_full_arr, subcat[self.config['ra']])
+            dec_full_arr = np.append(dec_full_arr, subcat[self.config['dec']])
 
 
         gammamaps, gammamasks = createSpin2Map(ra_full_arr,
                                                dec_full_arr,
                                                g1I_full_arr,
-                                               g2I_full_arr, fsk,
+                                               g2I_full_arr, self.fsk,
                                                weights_full_arr,
-                                               shearrot=config['shearrot'])
+                                               shearrot=self.config['shearrot'])
         maps_combined = [gammamaps, gammamasks]
         maps.append(maps_combined)
 
