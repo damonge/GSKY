@@ -535,12 +535,8 @@ class CovAllzFromMocks(object):
 
                     # For two spin-2 fields, NaMaster gives: n_cls=4, [C_E1E2,C_E1B2,C_E2B1,C_B1B2]
                     tempclse = cl_uncoupled[0]
-                    tempclseb = cl_uncoupled[1]
-                    tempclsb = cl_uncoupled[3]
 
                     cls[j, jj, :] = tempclse
-                    cls[j+self.params['nspin2'], jj, :] = tempclseb
-                    cls[j+self.params['nspin2'], jj+self.params['nspin2'], :] = tempclsb
 
         return cls, ells_uncoupled
 
