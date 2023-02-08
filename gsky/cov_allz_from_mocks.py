@@ -366,7 +366,7 @@ class CovAllzFromMocks(object):
           'shape_noise': True,
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/catalog1/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/catalog2/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
 
         n_realizations = len(os.listdir(config['mocks_dir']))
@@ -408,7 +408,7 @@ class CovAllzFromMocks(object):
           'rm_gama09h_region': True,
           'mocks_dir': '/projects/HSC/weaklens/xlshare/S19ACatalogs/catalog_mock/fields/WIDE12H/',
           'selection_array': '/projects/HSC/weaklens/xlshare/S19ACatalogs/photoz_2pt/fiducial_dnnzbin_w95c027/source_sel_WIDE12H.fits',
-          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/catalog1/clean_catalog.fits',
+          'clean_catalog_data': '/tigress/rdalal/fourier_space_shear/GSKY_outputs/WIDE12H_ceci/catalog2/clean_catalog.fits',
           'mock_correction_factors': '/tigress/rdalal/fourier_space_shear/mocks_correction_factor.npy'}
         logger.info('Running realization : {}.'.format(realization))
         band = config['band']
