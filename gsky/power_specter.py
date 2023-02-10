@@ -1513,7 +1513,7 @@ class PowerSpecter(PipelineStage) :
         lth,clth=self.get_cl_guess(ell_eff, cls_wdpj, tracers_sacc)
 
         logger.info("Computing deprojection bias.")
-        cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)
+        #cls_wdpj, cl_deproj_bias=self.get_dpj_bias(tracers_wc, tracers_sacc, lth, clth, cls_wdpj_coupled, wsp, bpws)
 
         logger.info("Computing noise bias.")
         nls, nls_corr = self.get_noise(tracers_nc,wsp,bpws)
@@ -1525,8 +1525,8 @@ class PowerSpecter(PipelineStage) :
         self.write_vector_to_sacc(self.get_output_fname('noi_bias_cpld_mskcorr',ext='sacc'), tracers_sacc,
                                   nls_corr, ell_eff, windows)
         logger.info('Written coupled and mask-corrected noise bias.')
-        self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
-                                  cl_deproj_bias, ell_eff, windows)
+        # self.write_vector_to_sacc(self.get_output_fname('dpj_bias',ext='sacc'), tracers_sacc,
+        #                           cl_deproj_bias, ell_eff, windows)
         logger.info('Written deprojection bias.')
         self.write_vector_to_sacc(self.get_output_fname('power_spectra_wodpj',ext='sacc'), tracers_sacc,
                                   cls_wodpj, ell_eff, windows)
