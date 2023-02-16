@@ -339,8 +339,10 @@ class CovFromMocks(object):
 
         cls = np.concatenate([res[0][..., np.newaxis,:] for res in reslist], axis=2)
         tempells = reslist[0][1]
+        realization_number = reslist[0][2]
 
-        return cls, tempells
+
+        return cls, tempells, realization_number
 
     def __call__(self, realization):
         config={'plots_dir': None,
