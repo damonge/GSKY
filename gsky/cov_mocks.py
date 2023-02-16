@@ -50,13 +50,16 @@ class CovMocks(PipelineStage):
         - Calls CovFromMocks in cov_from_mocks.py
         """
         test = CovFromMocks()
-        cls, ells = test.go()
+        cls, ells, realization_num = test.go()
 
         np.save(self.get_output_fname('cls_signal_realiz', 'npy'), cls)
         logger.info('Written signal cls to {}.'.format(self.get_output_fname('cls_signal_realiz', ext='npy')))
 
         np.save(self.get_output_fname('l_eff_noise', 'npy'), ells)
         logger.info('Written ells to {}.'.format(self.get_output_fname('l_eff_noise', ext='npy')))
+
+        np.save(self.get_output_fname('cls_signal_realization_number', 'npy'), realization_num)
+        logger.info('Written realization numbers to {}.'.format(self.get_output_fname('cls_signal_realization_number', ext='npy')))
 
 if __name__ == '__main__':
     cls = PipelineStage.main()

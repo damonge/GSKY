@@ -492,7 +492,7 @@ class CovFromMocks(object):
                     cls[j+self.params['nspin2'], jj, :] = tempclseb
                     cls[j+self.params['nspin2'], jj+self.params['nspin2'], :] = tempclsb
 
-        return cls, ells_uncoupled
+        return cls, ells_uncoupled, name
 
 
         # # If noise is True, then we need to compute the noise from simulations
