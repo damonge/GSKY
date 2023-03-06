@@ -3,7 +3,8 @@ global:
   mapping:
     #wcs: /global/cscratch1/sd/damonge/GSKY/ACT_data/mask_kappa_boss.fits
     # res: 0.01466666666667 #0.88 arcmin
-    res: 0.01666666666667 #1 arcmin
+    res: 0.00833333333333
+    #res: 0.01666666666667 #1 arcmin
     # res: 0.025 #1.5 arcmin
     pad: 0.2
     res_bo: 0.003

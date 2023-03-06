@@ -123,10 +123,15 @@ class ACTMapper(PipelineStage):
         """ Returns an input ACT map cut to the HSC footprint.
         """
         mp_out = np.zeros([self.fsk_hsc.ny, self.fsk_hsc.nx])
+        print('Shape of zeros map is', mp_out.shape)
+        print('HSC initial and final y is', self.iy0_hsc, self.iyf_hsc)
+        print('HSC initial and final x is', self.ix0_hsc, self.ixf_hsc)
+        print('ACT initial and final y is', self.iy0_act, self.iyf_act)
+        print('ACT initial and final x is', self.ix0_act, self.ixf_act)
         mp_out[self.iy0_hsc:self.iyf_hsc,
                self.ix0_hsc:self.ixf_hsc] = mp[self.iy0_act:self.iyf_act,
                                                self.ix0_act:self.ixf_act]
-        return mp_out
+        return mp_out # subtract 1 from y dimension on right?
 
     def run(self):
         """
